@@ -1,0 +1,1 @@
+uvicorn avernus:avernus --port 6969
