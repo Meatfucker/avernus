@@ -2,8 +2,8 @@ from diffusers import StableDiffusionXLPipeline, utils
 import torch
 import gc
 import logging
-#logging.getLogger("diffusers").setLevel(logging.ERROR)
-#utils.logging.disable_progress_bar()
+logging.getLogger("diffusers").setLevel(logging.ERROR)
+utils.logging.disable_progress_bar()
 
 async def generate_sdxl(prompt,
                         negative_prompt=None,

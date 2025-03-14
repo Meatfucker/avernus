@@ -4,8 +4,8 @@ from optimum.quanto import freeze, qfloat8, quantize
 import torch
 import gc
 import logging
-#logging.getLogger("diffusers").setLevel(logging.ERROR)
-#utils.logging.disable_progress_bar()
+logging.getLogger("diffusers").setLevel(logging.ERROR)
+utils.logging.disable_progress_bar()
 
 
 async def generate_flux(prompt,
