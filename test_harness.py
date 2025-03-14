@@ -24,8 +24,6 @@ async def llm_chat_test():
         response = await client.llm_chat("What was the best color again and what was the thing that was that color?",
                                          "Goekdeniz-Guelmez/Josiefied-Qwen2.5-7B-Instruct-abliterated-v2",
                                          messages)
-        logger.info("test_harness")
-        logger.info(response)
     except Exception as e:
         logger.info(f"LLM FAIL: {e}")
     finally:

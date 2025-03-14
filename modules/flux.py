@@ -5,6 +5,7 @@ import torch
 import gc
 import logging
 logging.getLogger("diffusers").setLevel(logging.ERROR)
+logging.getLogger("torch").setLevel(logging.ERROR)
 utils.logging.disable_progress_bar()
 
 
@@ -18,7 +19,7 @@ async def generate_flux(prompt,
     if model_name is None:
         model_name = "black-forest-labs/FLUX.1-dev"
         revision = "refs/pr/3"
-    dtype = torch.float16
+    dtype = torch.bfloat16
     scheduler = FlowMatchEulerDiscreteScheduler.from_pretrained(model_name, subfolder="scheduler", revision=revision)
     text_encoder = CLIPTextModel.from_pretrained("openai/clip-vit-large-patch14", torch_dtype=dtype)
     tokenizer = CLIPTokenizer.from_pretrained("openai/clip-vit-large-patch14", torch_dtype=dtype)

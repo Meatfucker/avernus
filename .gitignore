@@ -1,3 +1,7 @@
 # Project exclude paths
 /venv/
 /.idea/
+/sdxl_image_0.png
+/sdxl_image_1.png
+/sdxl_image_2.png
+/sdxl_image_3.png
