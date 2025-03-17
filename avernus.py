@@ -2,7 +2,7 @@ import base64
 from io import BytesIO
 from fastapi import FastAPI, Request
 from modules.chat import generate_chat
-from modules.sdxl import generate_sdxl
+from modules.sdxl import generate_sdxl, generate_lora_sdxl
 from modules.flux import generate_flux
 from loguru import logger
 
@@ -30,11 +30,16 @@ async def sdxl_generate(request: Request):
         prompt = data.get("prompt")
         negative_prompt = data.get("negative_prompt")
         model_name = data.get("model_name")
+        lora_name = data.get("lora_name")
         width = data.get("width")
         height = data.get("width")
         steps = data.get("steps")
         batch_size = data.get("batch_size")
-        response = await generate_sdxl(prompt, negative_prompt, model_name, width, height, steps, batch_size)
+        if lora_name:
+            response = await generate_lora_sdxl(prompt, negative_prompt, model_name, lora_name, width, height, steps, batch_size)
+        else:
+            response = await generate_sdxl(prompt, negative_prompt, model_name, width, height, steps,
+                                                batch_size)
         base64_images = [image_to_base64(img) for img in response]
     except Exception as e:
         logger.info(f"sdxl_generate ERROR: {e}")

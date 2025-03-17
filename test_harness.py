@@ -10,7 +10,8 @@ async def main():
     start_time = time.time()
     await llm_chat_test()
     await sdxl_test()
-    await flux_test()
+    await sdxl_lora_test()
+    #await flux_test()
     end_time = time.time()
     elapsed_time = end_time - start_time
     logger.info(f"Total runtime: {elapsed_time:.2f} seconds")
@@ -37,6 +38,19 @@ async def sdxl_test():
     try:
         images = await client.sdxl_image("Taco")
         await base64_image_to_file(images, "sdxl")
+    except Exception as e:
+        logger.info(f"SDXL FAIL: {e}")
+    finally:
+        sdxl_end_time = time.time()
+        sdxl_elapsed_time = sdxl_end_time - sdxl_start_time
+        logger.info(f"Total SDXL runtime: {sdxl_elapsed_time:.2f} seconds")
+
+async def sdxl_lora_test():
+    logger.info('Testing Avernus SDXL lora')
+    sdxl_start_time = time.time()
+    try:
+        images = await client.sdxl_image("matlighty bald man wearing lingerie casting a chicken spell", lora_name="lighty.safetensors")
+        await base64_image_to_file(images, "sdxl_lora")
     except Exception as e:
         logger.info(f"SDXL FAIL: {e}")
     finally:
