@@ -8,7 +8,7 @@ client = AvernusClient("127.0.0.1", "6969")
 
 async def main():
     start_time = time.time()
-    await llm_chat_test()
+    #await llm_chat_test()
     await sdxl_test()
     await sdxl_lora_test()
     #await flux_test()
@@ -36,7 +36,7 @@ async def sdxl_test():
     logger.info('Testing Avernus SDXL')
     sdxl_start_time = time.time()
     try:
-        images = await client.sdxl_image("Taco")
+        images = await client.sdxl_image("wizard")
         await base64_image_to_file(images, "sdxl")
     except Exception as e:
         logger.info(f"SDXL FAIL: {e}")
@@ -62,7 +62,7 @@ async def flux_test():
     logger.info('Testing Avernus Flux')
     flux_start_time = time.time()
     try:
-        images = await client.flux_image("Mucus Balloon")
+        images = await client.flux_image("Mucus Balloon", batch_size=4)
         await base64_image_to_file(images, "flux")
     except Exception as e:
         logger.info(f"Flux FAIL: {e}")

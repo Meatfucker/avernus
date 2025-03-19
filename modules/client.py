@@ -25,8 +25,8 @@ class AvernusClient:
             logger.info(f"EXCEPTION ERROR: {e}")
             return {"ERROR": str(e)}
 
-    async def sdxl_image(self, prompt, negative_prompt=None, model_name=None, lora_name=None, width=1024, height=1024, steps=30,
-                         batch_size=4):
+    async def sdxl_image(self, prompt, negative_prompt=None, model_name=None, lora_name=None, width=None, height=None,
+                         steps=None, batch_size=None):
         url = f"http://{self.base_url}/sdxl_generate"
         data = {"prompt": prompt,
                 "negative_prompt": negative_prompt,
@@ -36,6 +36,7 @@ class AvernusClient:
                 "height": height,
                 "steps": steps,
                 "batch_size": batch_size}
+        logger.info(data)
         try:
             async with httpx.AsyncClient(timeout=3600) as client:
                 response = await client.post(url, json=data)
@@ -47,7 +48,7 @@ class AvernusClient:
             logger.info(f"ERROR: {e}")
             return {"ERROR": str(e)}
 
-    async def flux_image(self, prompt, negative_prompt=None, model_name=None, width=1024, height=1024, steps=30,
+    async def flux_image(self, prompt, negative_prompt=None, model_name=None, width=None, height=None, steps=None,
                          batch_size=1):
         url = f"http://{self.base_url}/flux_generate"
         data = {"prompt": prompt,

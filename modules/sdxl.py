@@ -6,14 +6,21 @@ logging.getLogger("diffusers").setLevel(logging.ERROR)
 utils.logging.disable_progress_bar()
 
 async def generate_sdxl(prompt,
+                        width,
+                        height,
+                        steps,
+                        batch_size,
                         negative_prompt=None,
                         model_name=None,
-                        width=1024,
-                        height=1024,
-                        steps=30,
-                        batch_size=4):
+                        ):
+    width = width if width is not None else 1024
+    height = height if height is not None else 1024
+    steps = steps if steps is not None else 30
+    batch_size = batch_size if batch_size is not None else 4
+
     if model_name is None:
         model_name = "misri/zavychromaxl_v100"
+
     generator = StableDiffusionXLPipeline.from_pretrained(model_name,
                                                          torch_dtype=torch.float16,
                                                          use_safetensors=True).to("cuda")
@@ -31,13 +38,18 @@ async def generate_sdxl(prompt,
     return images
 
 async def generate_lora_sdxl(prompt,
-                        negative_prompt=None,
-                        model_name=None,
-                        lora_name=None,
-                        width=1024,
-                        height=1024,
-                        steps=30,
-                        batch_size=4):
+                             width,
+                             height,
+                             steps,
+                             batch_size,
+                             negative_prompt=None,
+                             model_name=None,
+                             lora_name=None,
+                             ):
+    width = width if width is not None else 1024
+    height = height if height is not None else 1024
+    steps = steps if steps is not None else 30
+    batch_size = batch_size if batch_size is not None else 4
     if model_name is None:
         model_name = "misri/zavychromaxl_v100"
     generator = StableDiffusionXLPipeline.from_pretrained(model_name,

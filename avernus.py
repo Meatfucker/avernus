@@ -32,14 +32,16 @@ async def sdxl_generate(request: Request):
         model_name = data.get("model_name")
         lora_name = data.get("lora_name")
         width = data.get("width")
-        height = data.get("width")
+        height = data.get("height")
         steps = data.get("steps")
         batch_size = data.get("batch_size")
         if lora_name:
-            response = await generate_lora_sdxl(prompt, negative_prompt, model_name, lora_name, width, height, steps, batch_size)
+            response = await generate_lora_sdxl(prompt, width, height, steps, batch_size,
+                                                negative_prompt=negative_prompt, model_name=model_name,
+                                                lora_name=lora_name)
         else:
-            response = await generate_sdxl(prompt, negative_prompt, model_name, width, height, steps,
-                                                batch_size)
+            response = await generate_sdxl(prompt, width, height, steps, batch_size,
+                                           negative_prompt=negative_prompt, model_name=model_name)
         base64_images = [image_to_base64(img) for img in response]
     except Exception as e:
         logger.info(f"sdxl_generate ERROR: {e}")
@@ -58,7 +60,7 @@ async def flux_generate(request: Request):
         height = data.get("height")
         steps = data.get("steps")
         batch_size = data.get("batch_size")
-        response = await generate_flux(prompt, negative_prompt, model_name, width, height, steps, batch_size)
+        response = await generate_flux(prompt, width, height, steps, batch_size, negative_prompt=negative_prompt, model_name=model_name)
         base64_images = [image_to_base64(img) for img in response]
     except Exception as e:
         logger.info(f"flux_generate ERROR: {e}")
