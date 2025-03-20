@@ -14,7 +14,6 @@ async def generate_flux(prompt,
                         height,
                         steps,
                         batch_size,
-                        negative_prompt=None,
                         model_name=None,
                         ):
     width = width if width is not None else 1024
@@ -54,7 +53,6 @@ async def generate_flux(prompt,
     generator.enable_model_cpu_offload()
     generator.set_progress_bar_config(disable=True)
     images = generator(prompt=prompt,
-                       negative_prompt=negative_prompt,
                        width=width, height=height,
                        num_inference_steps=steps,
                        num_images_per_prompt=batch_size).images
@@ -69,7 +67,6 @@ async def generate_lora_flux(prompt,
                         height,
                         steps,
                         batch_size,
-                        negative_prompt=None,
                         model_name=None,
                         lora_name=None
                         ):
@@ -111,7 +108,6 @@ async def generate_lora_flux(prompt,
     generator.enable_model_cpu_offload()
     generator.set_progress_bar_config(disable=True)
     images = generator(prompt=prompt,
-                       negative_prompt=negative_prompt,
                        width=width, height=height,
                        num_inference_steps=steps,
                        num_images_per_prompt=batch_size).images

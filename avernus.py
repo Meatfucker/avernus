@@ -54,7 +54,6 @@ async def flux_generate(request: Request):
     try:
         data = await request.json()
         prompt = data.get("prompt")
-        negative_prompt = data.get("negative_prompt")
         model_name = data.get("model_name")
         width = data.get("width")
         height = data.get("height")
@@ -65,7 +64,7 @@ async def flux_generate(request: Request):
         #    response = await generate_lora_flux(prompt, width, height, steps, batch_size, negative_prompt=negative_prompt,
         #                                   model_name=model_name, lora_name=lora_name)
         #else:
-        response = await generate_flux(prompt, width, height, steps, batch_size, negative_prompt=negative_prompt, model_name=model_name)
+        response = await generate_flux(prompt, width, height, steps, batch_size, model_name=model_name)
         base64_images = [image_to_base64(img) for img in response]
     except Exception as e:
         logger.info(f"flux_generate ERROR: {e}")

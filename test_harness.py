@@ -11,8 +11,8 @@ async def main():
     #await llm_chat_test()
     #await sdxl_test()
     #await sdxl_lora_test()
-    #await flux_test()
-    await flux_lora_test()
+    await flux_test()
+    #await flux_lora_test()
     end_time = time.time()
     elapsed_time = end_time - start_time
     logger.info(f"Total runtime: {elapsed_time:.2f} seconds")
