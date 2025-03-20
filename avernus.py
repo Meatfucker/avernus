@@ -3,7 +3,7 @@ from io import BytesIO
 from fastapi import FastAPI, Request
 from modules.chat import generate_chat
 from modules.sdxl import generate_sdxl, generate_lora_sdxl
-from modules.flux import generate_flux
+from modules.flux import generate_flux, generate_lora_flux
 from loguru import logger
 
 avernus = FastAPI()
@@ -60,6 +60,11 @@ async def flux_generate(request: Request):
         height = data.get("height")
         steps = data.get("steps")
         batch_size = data.get("batch_size")
+        lora_name = data.get("lora_name")
+        #if lora_name:
+        #    response = await generate_lora_flux(prompt, width, height, steps, batch_size, negative_prompt=negative_prompt,
+        #                                   model_name=model_name, lora_name=lora_name)
+        #else:
         response = await generate_flux(prompt, width, height, steps, batch_size, negative_prompt=negative_prompt, model_name=model_name)
         base64_images = [image_to_base64(img) for img in response]
     except Exception as e:

@@ -9,9 +9,10 @@ client = AvernusClient("127.0.0.1", "6969")
 async def main():
     start_time = time.time()
     #await llm_chat_test()
-    await sdxl_test()
-    await sdxl_lora_test()
+    #await sdxl_test()
+    #await sdxl_lora_test()
     #await flux_test()
+    await flux_lora_test()
     end_time = time.time()
     elapsed_time = end_time - start_time
     logger.info(f"Total runtime: {elapsed_time:.2f} seconds")
@@ -63,6 +64,19 @@ async def flux_test():
     flux_start_time = time.time()
     try:
         images = await client.flux_image("Mucus Balloon", batch_size=4)
+        await base64_image_to_file(images, "flux")
+    except Exception as e:
+        logger.info(f"Flux FAIL: {e}")
+    finally:
+        flux_end_time = time.time()
+        flux_elapsed_time = flux_end_time - flux_start_time
+        logger.info(f"Total Flux runtime: {flux_elapsed_time:.2f} seconds")
+
+async def flux_lora_test():
+    logger.info('Testing Avernus Flux')
+    flux_start_time = time.time()
+    try:
+        images = await client.flux_image("Mucus Balloon", batch_size=4, lora_name="matlighty.safetensors")
         await base64_image_to_file(images, "flux")
     except Exception as e:
         logger.info(f"Flux FAIL: {e}")
