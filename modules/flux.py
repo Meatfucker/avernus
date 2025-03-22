@@ -73,7 +73,7 @@ async def generate_lora_flux(prompt,
     width = width if width is not None else 1024
     height = height if height is not None else 1024
     steps = steps if steps is not None else 30
-    batch_size = batch_size if batch_size is not None else 4
+    batch_size = batch_size if batch_size is not None else 1
     if model_name is None:
         model_name = "black-forest-labs/FLUX.1-dev"
         revision = "refs/pr/3"
