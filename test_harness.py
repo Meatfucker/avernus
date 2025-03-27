@@ -11,8 +11,10 @@ async def main():
     #await llm_chat_test()
     #await sdxl_test()
     #await sdxl_lora_test()
-    await flux_test()
+    await sdxl_lora_list_test()
+    #await flux_test()
     #await flux_lora_test()
+    await flux_lora_list_test()
     end_time = time.time()
     elapsed_time = end_time - start_time
     logger.info(f"Total runtime: {elapsed_time:.2f} seconds")
@@ -59,6 +61,19 @@ async def sdxl_lora_test():
         sdxl_elapsed_time = sdxl_end_time - sdxl_start_time
         logger.info(f"Total SDXL runtime: {sdxl_elapsed_time:.2f} seconds")
 
+async def sdxl_lora_list_test():
+    logger.info('Testing Avernus SDXL lora list')
+    sdxl_lora_list_start_time = time.time()
+    try:
+        loras = await client.list_sdxl_loras()
+        logger.info(loras)
+    except Exception as e:
+        logger.info(f"SDXL lora list FAIL: {e}")
+    finally:
+        sdxl_lora_list_end_time = time.time()
+        sdxl_lora_list_elapsed_time = sdxl_lora_list_end_time - sdxl_lora_list_start_time
+        logger.info(f"Total SDXL Lora list runtime: {sdxl_lora_list_elapsed_time:.2f} seconds")
+
 async def flux_test():
     logger.info('Testing Avernus Flux')
     flux_start_time = time.time()
@@ -84,6 +99,19 @@ async def flux_lora_test():
         flux_end_time = time.time()
         flux_elapsed_time = flux_end_time - flux_start_time
         logger.info(f"Total Flux runtime: {flux_elapsed_time:.2f} seconds")
+
+async def flux_lora_list_test():
+    logger.info('Testing Avernus Flux lora list')
+    flux_lora_list_start_time = time.time()
+    try:
+        loras = await client.list_flux_loras()
+        logger.info(loras)
+    except Exception as e:
+        logger.info(f"Flux lora list FAIL: {e}")
+    finally:
+        flux_lora_list_end_time = time.time()
+        flux_lora_list_elapsed_time = flux_lora_list_end_time - flux_lora_list_start_time
+        logger.info(f"Total Flux Lora list runtime: {flux_lora_list_elapsed_time:.2f} seconds")
 
 async def base64_image_to_file(base64_images, prefix=""):
     for i, b64_img in enumerate(base64_images):

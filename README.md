@@ -17,7 +17,6 @@ Start via `start_avernus.sh` after entering the venv or conda environment. I rec
 
 - Add proper installer and startup script for windows and linux
 - Add an endpoint to list local models.
-- Add an endpoint to list local loras.
 - Add WAN2.1 support (waiting on diffusers update)
 - Add retrieval augmented generation support.
 - Add audio generation endpoints

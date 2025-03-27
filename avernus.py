@@ -1,5 +1,6 @@
 import base64
 from io import BytesIO
+import os
 from fastapi import FastAPI, Request
 from modules.chat import generate_chat
 from modules.sdxl import generate_sdxl, generate_lora_sdxl
@@ -70,6 +71,32 @@ async def flux_generate(request: Request):
         logger.info(f"flux_generate ERROR: {e}")
         return None
     return base64_images
+
+@avernus.get("/list_sdxl_loras")
+async def list_sdxl_loras():
+    logger.info("list_sdxl_loras request received")
+    try:
+        loras_dir = "loras/sdxl"
+        if not os.path.exists(loras_dir):
+            return {"error": "Directory not found"}
+        filenames = [f for f in os.listdir(loras_dir) if os.path.isfile(os.path.join(loras_dir, f))]
+        return {"loras": filenames}
+    except Exception as e:
+        logger.error(f"list_sdxl_loras ERROR: {e}")
+        return {"error": str(e)}
+
+@avernus.get("/list_flux_loras")
+async def list_flux_loras():
+    logger.info("list_flux_loras request received")
+    try:
+        loras_dir = "loras/flux"
+        if not os.path.exists(loras_dir):
+            return {"error": "Directory not found"}
+        filenames = [f for f in os.listdir(loras_dir) if os.path.isfile(os.path.join(loras_dir, f))]
+        return {"loras": filenames}
+    except Exception as e:
+        logger.error(f"list_flux_loras ERROR: {e}")
+        return {"error": str(e)}
 
 def image_to_base64(image):
     buffered = BytesIO()
