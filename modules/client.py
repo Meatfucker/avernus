@@ -38,7 +38,6 @@ class AvernusClient:
                 "height": height,
                 "steps": steps,
                 "batch_size": batch_size}
-        logger.info(data)
         try:
             async with httpx.AsyncClient(timeout=3600) as client:
                 response = await client.post(url, json=data)
