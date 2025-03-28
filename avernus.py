@@ -9,6 +9,11 @@ from loguru import logger
 
 avernus = FastAPI()
 
+@avernus.get("/status")
+async def status():
+    logger.info("status request received")
+    return {"status": str("Ok!")}
+
 @avernus.post("/llm_chat")
 async def llm_chat(request: Request):
     logger.info("llm_chat request received")

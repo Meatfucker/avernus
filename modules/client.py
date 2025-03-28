@@ -103,3 +103,19 @@ class AvernusClient:
         except Exception as e:
             logger.error(f"list_flux_loras ERROR: {e}")
             return {"ERROR": str(e)}
+
+    async def check_status(self):
+        """Attempts to contact the avernus server and returns a dict with status information from the server"""
+        url = f"http://{self.base_url}/status"
+
+        try:
+            async with httpx.AsyncClient(timeout=30.0) as client:
+                response = await client.get(url)
+            if response.status_code == 200:
+                return response.json()
+            else:
+                logger.info(f"STATUS ERROR: {response.status_code}, Response: {response.text}")
+                return {"ERROR": response.text}
+        except Exception as e:
+            logger.error(f"status ERROR: {e}")
+            return {"ERROR": str(e)}

@@ -8,16 +8,30 @@ client = AvernusClient("127.0.0.1", "6969")
 
 async def main():
     start_time = time.time()
+    await check_status()
     #await llm_chat_test()
     #await sdxl_test()
     #await sdxl_lora_test()
-    await sdxl_lora_list_test()
+    #await sdxl_lora_list_test()
     #await flux_test()
     #await flux_lora_test()
-    await flux_lora_list_test()
+    #await flux_lora_list_test()
     end_time = time.time()
     elapsed_time = end_time - start_time
     logger.info(f"Total runtime: {elapsed_time:.2f} seconds")
+
+async def check_status():
+    logger.info("Checking Avernus Status")
+    status_start_time = time.time()
+    try:
+        status = await client.check_status()
+        logger.info(status)
+    except Exception as e:
+        logger.info(f"Avernus status FAIL: {e}")
+    finally:
+        status_end_time = time.time()
+        status_elapsed_time = status_end_time - status_start_time
+        logger.info(f"Total Avernus status runtime: {status_elapsed_time:.2f} seconds")
 
 async def llm_chat_test():
     logger.info('Testing Avernus LLM')
