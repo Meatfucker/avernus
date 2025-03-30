@@ -10,11 +10,12 @@ async def main():
     start_time = time.time()
     await check_status()
     #await llm_chat_test()
+    #await multimodal_llm_chat_test()
     #await sdxl_test()
     #await sdxl_lora_test()
     #await sdxl_lora_list_test()
     #await flux_test()
-    #await flux_lora_test()
+    await flux_lora_test()
     #await flux_lora_list_test()
     end_time = time.time()
     elapsed_time = end_time - start_time
@@ -42,6 +43,35 @@ async def llm_chat_test():
         response = await client.llm_chat("What was the best color again and what was the thing that was that color?",
                                          "Goekdeniz-Guelmez/Josiefied-Qwen2.5-7B-Instruct-abliterated-v2",
                                          messages)
+        logger.info(f"LLM SUCCESS: {response}")
+    except Exception as e:
+        logger.info(f"LLM FAIL: {e}")
+    finally:
+        llm_end_time = time.time()
+        llm_elapsed_time = llm_end_time - llm_start_time
+        logger.info(f"Total LLM runtime: {llm_elapsed_time:.2f} seconds")
+
+async def multimodal_llm_chat_test():
+    logger.info('Testing Avernus Multimodal LLM')
+    llm_start_time = time.time()
+    messages = [
+        {
+            "role": "system",
+            "content": [{"type": "text", "text": "You are a helpful assistant."}]
+        },
+        {
+            "role": "user",
+            "content": [
+                {"type": "image",
+                 "url": "https://huggingface.co/datasets/huggingface/documentation-images/resolve/main/p-blog/candy.JPG"},
+                {"type": "text", "text": "What animal is on the candy?"}
+            ]
+        }
+    ]
+    try:
+        response = await client.multimodal_llm_chat("What was the best color again and what was the thing that was that color?",
+                                                    messages=messages)
+        logger.info(f"Multimodal LLM SUCCESS: {response}")
     except Exception as e:
         logger.info(f"LLM FAIL: {e}")
     finally:
@@ -105,7 +135,7 @@ async def flux_lora_test():
     logger.info('Testing Avernus Flux')
     flux_start_time = time.time()
     try:
-        images = await client.flux_image("Mucus Balloon", batch_size=4, lora_name="matlighty.safetensors")
+        images = await client.flux_image("man with a tattoo on his forehead", batch_size=4, lora_name="botgrinder.safetensors")
         await base64_image_to_file(images, "flux")
     except Exception as e:
         logger.info(f"Flux FAIL: {e}")

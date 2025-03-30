@@ -26,6 +26,23 @@ class AvernusClient:
             logger.info(f"EXCEPTION ERROR: {e}")
             return {"ERROR": str(e)}
 
+    async def multimodal_llm_chat(self, prompt, model_name=None, messages=None):
+        """This takes a prompt, and optionally a model name and chat history, then returns a response"""
+        url = f"http://{self.base_url}/multimodal_llm_chat"
+        data = {"prompt": prompt, "model_name": model_name, "messages": messages}
+
+        try:
+            async with httpx.AsyncClient(timeout=3600.0) as client:
+                response = await client.post(url, json=data)
+            if response.status_code == 200:
+                return response.json()
+            else:
+                logger.info(f"STATUS ERROR: {response.status_code}, Response: {response.text}")
+                return {"ERROR": response.text}
+        except Exception as e:
+            logger.info(f"EXCEPTION ERROR: {e}")
+            return {"ERROR": str(e)}
+
     async def sdxl_image(self, prompt, negative_prompt=None, model_name=None, lora_name=None, width=None, height=None,
                          steps=None, batch_size=None):
         """This takes a prompt and optional other variables and returns a list of base64 encoded images"""

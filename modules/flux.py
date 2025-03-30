@@ -103,7 +103,10 @@ async def generate_lora_flux(prompt,
         vae=vae,
         transformer=transformer,
     )
-    generator.load_lora_weights(f"loras/flux/{lora_name}", weight_name=lora_name)
+    try:
+        generator.load_lora_weights(f"loras/flux/{lora_name}", weight_name=lora_name)
+    except Exception as e:
+        print(f"FLUX LORA ERROR: {e}")
     generator.to("cuda")
     generator.enable_model_cpu_offload()
     generator.set_progress_bar_config(disable=True)

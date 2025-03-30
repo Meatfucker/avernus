@@ -2,7 +2,7 @@ import base64
 from io import BytesIO
 import os
 from fastapi import FastAPI, Request
-from modules.chat import generate_chat
+from modules.chat import generate_chat, generate_multimodal_chat
 from modules.sdxl import generate_sdxl, generate_lora_sdxl
 from modules.flux import generate_flux, generate_lora_flux
 from loguru import logger
@@ -25,6 +25,20 @@ async def llm_chat(request: Request):
         response = await generate_chat(prompt, model_name, messages)
     except Exception as e:
         logger.error(f"llm_chat ERROR: {e}")
+        return {"error": str(e)}
+    return response
+
+@avernus.post("/multimodal_llm_chat")
+async def multimodal_llm_chat(request: Request):
+    logger.info("multimodal_llm_chat request received")
+    try:
+        data = await request.json()
+        prompt = data.get("prompt")
+        model_name = data.get("model_name")
+        messages = data.get("messages")
+        response = await generate_multimodal_chat(prompt, model_name, messages=messages)
+    except Exception as e:
+        logger.error(f"multimodal_llm_chat ERROR: {e}")
         return {"error": str(e)}
     return response
 
@@ -66,11 +80,11 @@ async def flux_generate(request: Request):
         steps = data.get("steps")
         batch_size = data.get("batch_size")
         lora_name = data.get("lora_name")
-        #if lora_name:
-        #    response = await generate_lora_flux(prompt, width, height, steps, batch_size, negative_prompt=negative_prompt,
-        #                                   model_name=model_name, lora_name=lora_name)
-        #else:
-        response = await generate_flux(prompt, width, height, steps, batch_size, model_name=model_name)
+        if lora_name:
+            response = await generate_lora_flux(prompt, width, height, steps, batch_size,
+                                           model_name=model_name, lora_name=lora_name)
+        else:
+            response = await generate_flux(prompt, width, height, steps, batch_size, model_name=model_name)
         base64_images = [image_to_base64(img) for img in response]
     except Exception as e:
         logger.info(f"flux_generate ERROR: {e}")
@@ -85,7 +99,7 @@ async def list_sdxl_loras():
         if not os.path.exists(loras_dir):
             return {"error": "Directory not found"}
         filenames = [f for f in os.listdir(loras_dir) if os.path.isfile(os.path.join(loras_dir, f))]
-        return {"loras": filenames}
+        return filenames
     except Exception as e:
         logger.error(f"list_sdxl_loras ERROR: {e}")
         return {"error": str(e)}
@@ -98,7 +112,7 @@ async def list_flux_loras():
         if not os.path.exists(loras_dir):
             return {"error": "Directory not found"}
         filenames = [f for f in os.listdir(loras_dir) if os.path.isfile(os.path.join(loras_dir, f))]
-        return {"loras": filenames}
+        return filenames
     except Exception as e:
         logger.error(f"list_flux_loras ERROR: {e}")
         return {"error": str(e)}

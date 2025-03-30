@@ -1,1 +1,1 @@
-uvicorn avernus:avernus --port 6969
+uvicorn avernus:avernus --host 0.0.0.0 --port 6969
