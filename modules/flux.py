@@ -88,12 +88,6 @@ async def generate_lora_flux(prompt,
     vae = AutoencoderKL.from_pretrained(model_name, subfolder="vae", torch_dtype=dtype, revision=revision)
     transformer = FluxTransformer2DModel.from_pretrained(model_name, subfolder="transformer", torch_dtype=dtype,
                                                          revision=revision)
-
-    quantize(transformer, weights=qfloat8)
-    freeze(transformer)
-    quantize(text_encoder_2, weights=qfloat8)
-    freeze(text_encoder_2)
-
     generator = FluxPipeline(
         scheduler=scheduler,
         text_encoder=text_encoder,
@@ -107,6 +101,12 @@ async def generate_lora_flux(prompt,
         generator.load_lora_weights(f"loras/flux/{lora_name}", weight_name=lora_name)
     except Exception as e:
         print(f"FLUX LORA ERROR: {e}")
+    quantize(transformer, weights=qfloat8)
+    freeze(transformer)
+    quantize(text_encoder_2, weights=qfloat8)
+    freeze(text_encoder_2)
+
+
     generator.to("cuda")
     generator.enable_model_cpu_offload()
     generator.set_progress_bar_config(disable=True)
