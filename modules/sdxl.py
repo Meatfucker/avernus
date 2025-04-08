@@ -56,6 +56,7 @@ async def generate_lora_sdxl(prompt,
                                                          torch_dtype=torch.float16,
                                                          use_safetensors=True).to("cuda")
     generator.load_lora_weights(f"loras/sdxl/{lora_name}", weight_name=lora_name)
+    generator.enable_model_cpu_offload()
     generator.set_progress_bar_config(disable=True)
     images = generator(prompt=prompt,
                        negative_prompt=negative_prompt,

@@ -21,4 +21,5 @@ Start via `start_avernus.sh` after entering the venv or conda environment. I rec
 - Add retrieval augmented generation support.
 - Add audio generation endpoints
 - Add svg model endpoint
+- Return different status codes if a generation ooms
 
