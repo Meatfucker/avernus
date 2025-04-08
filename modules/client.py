@@ -1,4 +1,3 @@
-import requests
 import httpx
 from loguru import logger
 
@@ -66,6 +65,31 @@ class AvernusClient:
             logger.info(f"ERROR: {e}")
             return {"ERROR": str(e)}
 
+    async def sdxl_image_i2i(self, prompt, image, negative_prompt=None, model_name=None, lora_name=None, width=None, height=None,
+                         steps=None, batch_size=None, strength=None):
+        """This takes a prompt, a base64 image, and optional other variables and returns a list of base64 encoded images"""
+        url = f"http://{self.base_url}/sdxl_generate"
+        data = {"prompt": prompt,
+                "image": image,
+                "negative_prompt": negative_prompt,
+                "model_name": model_name,
+                "lora_name": lora_name,
+                "width": width,
+                "height": height,
+                "steps": steps,
+                "batch_size": batch_size,
+                "strength": strength}
+        try:
+            async with httpx.AsyncClient(timeout=3600) as client:
+                response = await client.post(url, json=data)
+            if response.status_code == 200:
+                return response.json()
+            else:
+                logger.info(f"ERROR: {response.status_code}")
+        except Exception as e:
+            logger.info(f"ERROR: {e}")
+            return {"ERROR": str(e)}
+
     async def flux_image(self, prompt, negative_prompt=None, model_name=None, lora_name=None, width=None, height=None, steps=None,
                          batch_size=None):
         """This takes a prompt and optional other variables and returns a list of base64 encoded images"""
@@ -78,6 +102,31 @@ class AvernusClient:
                 "height": height,
                 "steps": steps,
                 "batch_size": batch_size}
+        try:
+            async with httpx.AsyncClient(timeout=3600) as client:
+                response = await client.post(url, json=data)
+            if response.status_code == 200:
+                return response.json()
+            else:
+                logger.info(f"ERROR: {response.status_code}")
+        except Exception as e:
+            logger.info(f"ERROR: {e}")
+            return {"ERROR": str(e)}
+
+    async def flux_image_i2i(self, prompt, image, negative_prompt=None, model_name=None, lora_name=None, width=None, height=None, steps=None,
+                         batch_size=None, strength=None):
+        """This takes a prompt and optional other variables and returns a list of base64 encoded images"""
+        url = f"http://{self.base_url}/flux_generate"
+        data = {"prompt": prompt,
+                "image": image,
+                "negative_prompt": negative_prompt,
+                "model_name": model_name,
+                "lora_name": lora_name,
+                "width": width,
+                "height": height,
+                "steps": steps,
+                "batch_size": batch_size,
+                "strength": strength}
         try:
             async with httpx.AsyncClient(timeout=3600) as client:
                 response = await client.post(url, json=data)

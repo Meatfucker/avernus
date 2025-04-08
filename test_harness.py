@@ -2,7 +2,9 @@ from modules.client import AvernusClient
 import asyncio
 import time
 import base64
+from io import BytesIO
 from loguru import logger
+from PIL import Image
 
 client = AvernusClient("127.0.0.1", "6969")
 
@@ -13,9 +15,13 @@ async def main():
     #await multimodal_llm_chat_test()
     #await sdxl_test()
     #await sdxl_lora_test()
+    #await sdxl_i2i_test()
+    #await sdxl_i2i_lora_test()
     #await sdxl_lora_list_test()
     #await flux_test()
-    await flux_lora_test()
+    #await flux_lora_test()
+    await flux_i2i_test()
+    await flux_lora_i2i_test()
     #await flux_lora_list_test()
     end_time = time.time()
     elapsed_time = end_time - start_time
@@ -26,9 +32,9 @@ async def check_status():
     status_start_time = time.time()
     try:
         status = await client.check_status()
-        logger.info(status)
+        logger.success(status)
     except Exception as e:
-        logger.info(f"Avernus status FAIL: {e}")
+        logger.error(f"Avernus status FAIL: {e}")
     finally:
         status_end_time = time.time()
         status_elapsed_time = status_end_time - status_start_time
@@ -43,9 +49,9 @@ async def llm_chat_test():
         response = await client.llm_chat("What was the best color again and what was the thing that was that color?",
                                          "Goekdeniz-Guelmez/Josiefied-Qwen2.5-7B-Instruct-abliterated-v2",
                                          messages)
-        logger.info(f"LLM SUCCESS: {response}")
+        logger.success(f"LLM SUCCESS: {response}")
     except Exception as e:
-        logger.info(f"LLM FAIL: {e}")
+        logger.error(f"LLM FAIL: {e}")
     finally:
         llm_end_time = time.time()
         llm_elapsed_time = llm_end_time - llm_start_time
@@ -71,9 +77,9 @@ async def multimodal_llm_chat_test():
     try:
         response = await client.multimodal_llm_chat("What was the best color again and what was the thing that was that color?",
                                                     messages=messages)
-        logger.info(f"Multimodal LLM SUCCESS: {response}")
+        logger.success(f"Multimodal LLM SUCCESS: {response}")
     except Exception as e:
-        logger.info(f"LLM FAIL: {e}")
+        logger.error(f"LLM FAIL: {e}")
     finally:
         llm_end_time = time.time()
         llm_elapsed_time = llm_end_time - llm_start_time
@@ -85,12 +91,45 @@ async def sdxl_test():
     try:
         images = await client.sdxl_image("wizard")
         await base64_image_to_file(images, "sdxl")
+        logger.success("SDXL SUCCESS")
     except Exception as e:
-        logger.info(f"SDXL FAIL: {e}")
+        logger.error(f"SDXL FAIL: {e}")
     finally:
         sdxl_end_time = time.time()
         sdxl_elapsed_time = sdxl_end_time - sdxl_start_time
         logger.info(f"Total SDXL runtime: {sdxl_elapsed_time:.2f} seconds")
+
+async def sdxl_i2i_test():
+    logger.info('Testing Avernus SDXL I2I')
+    sdxl_start_time = time.time()
+    try:
+        image = Image.open("tests/sdxl_image_0.png")
+        image = image_to_base64(image)
+        images = await client.sdxl_image_i2i("warrior princess", image, strength=0.7)
+        await base64_image_to_file(images, "sdxl_i2i")
+        logger.success("SDXL I2I SUCCESS")
+    except Exception as e:
+        logger.info(f"SDXL I2I FAIL: {e}")
+    finally:
+        sdxl_end_time = time.time()
+        sdxl_elapsed_time = sdxl_end_time - sdxl_start_time
+        logger.info(f"Total SDXL I2I runtime: {sdxl_elapsed_time:.2f} seconds")
+
+async def sdxl_i2i_lora_test():
+    logger.info('Testing Avernus SDXL LORA I2I')
+    sdxl_start_time = time.time()
+    try:
+        image = Image.open("tests/sdxl_image_0.png")
+        image = image_to_base64(image)
+        images = await client.sdxl_image_i2i("matlighty man robot hooker", image, strength=0.7, lora_name="lighty.safetensors")
+        await base64_image_to_file(images, "sdxl_i2i_lora")
+        logger.success("SDXL LORA I2I SUCCESS")
+    except Exception as e:
+        logger.error(f"SDXL LORA I2I FAIL: {e}")
+    finally:
+        sdxl_end_time = time.time()
+        sdxl_elapsed_time = sdxl_end_time - sdxl_start_time
+        logger.info(f"Total SDXL LORA I2I runtime: {sdxl_elapsed_time:.2f} seconds")
 
 async def sdxl_lora_test():
     logger.info('Testing Avernus SDXL lora')
@@ -98,21 +137,22 @@ async def sdxl_lora_test():
     try:
         images = await client.sdxl_image("matlighty bald man wearing lingerie casting a chicken spell", lora_name="lighty.safetensors")
         await base64_image_to_file(images, "sdxl_lora")
+        logger.success("SDXL LORA SUCCESS")
     except Exception as e:
-        logger.info(f"SDXL FAIL: {e}")
+        logger.error(f"SDXL LORA FAIL: {e}")
     finally:
         sdxl_end_time = time.time()
         sdxl_elapsed_time = sdxl_end_time - sdxl_start_time
-        logger.info(f"Total SDXL runtime: {sdxl_elapsed_time:.2f} seconds")
+        logger.info(f"Total SDXL LORA runtime: {sdxl_elapsed_time:.2f} seconds")
 
 async def sdxl_lora_list_test():
     logger.info('Testing Avernus SDXL lora list')
     sdxl_lora_list_start_time = time.time()
     try:
         loras = await client.list_sdxl_loras()
-        logger.info(loras)
+        logger.success(loras)
     except Exception as e:
-        logger.info(f"SDXL lora list FAIL: {e}")
+        logger.error(f"SDXL LORA LIST FAIL: {e}")
     finally:
         sdxl_lora_list_end_time = time.time()
         sdxl_lora_list_elapsed_time = sdxl_lora_list_end_time - sdxl_lora_list_start_time
@@ -124,34 +164,68 @@ async def flux_test():
     try:
         images = await client.flux_image("Mucus Balloon", batch_size=4)
         await base64_image_to_file(images, "flux")
+        logger.success("FLUX SUCCESS")
     except Exception as e:
-        logger.info(f"Flux FAIL: {e}")
+        logger.error(f"FLUX FAIL: {e}")
     finally:
         flux_end_time = time.time()
         flux_elapsed_time = flux_end_time - flux_start_time
         logger.info(f"Total Flux runtime: {flux_elapsed_time:.2f} seconds")
 
 async def flux_lora_test():
-    logger.info('Testing Avernus Flux')
+    logger.info('Testing Avernus Flux Lora')
     flux_start_time = time.time()
     try:
-        images = await client.flux_image("man with a tattoo on his forehead", batch_size=4, lora_name="botgrinder.safetensors")
-        await base64_image_to_file(images, "flux")
+        images = await client.flux_image("man with a tattoo on his forehead", batch_size=4, lora_name="lighty_peft.safetensors")
+        await base64_image_to_file(images, "flux_lora")
+        logger.success("FLUX LORA SUCCESS")
     except Exception as e:
-        logger.info(f"Flux FAIL: {e}")
+        logger.error(f"FLUX LORA FAIL: {e}")
     finally:
         flux_end_time = time.time()
         flux_elapsed_time = flux_end_time - flux_start_time
-        logger.info(f"Total Flux runtime: {flux_elapsed_time:.2f} seconds")
+        logger.info(f"Total Flux Lora runtime: {flux_elapsed_time:.2f} seconds")
+
+async def flux_i2i_test():
+    logger.info('Testing Avernus Flux I2I')
+    flux_i2i_start_time = time.time()
+    try:
+        image = Image.open("tests/flux_image_0.png")
+        image = image_to_base64(image)
+        images = await client.flux_image_i2i("basketball", image, batch_size=4, strength=0.7)
+        await base64_image_to_file(images, "flux_i2i")
+        logger.success("FLUX I2I SUCCESS")
+    except Exception as e:
+        logger.error(f"FLUX I2I FAIL: {e}")
+    finally:
+        flux_i2i_end_time = time.time()
+        flux_i2i_elapsed_time = flux_i2i_end_time - flux_i2i_start_time
+        logger.info(f"Total Flux i2i runtime: {flux_i2i_elapsed_time:.2f} seconds")
+
+async def flux_lora_i2i_test():
+    logger.info('Testing Avernus Flux Lora I2I')
+    flux_i2i_start_time = time.time()
+    try:
+        image = Image.open("tests/flux_image_0.png")
+        image = image_to_base64(image)
+        images = await client.flux_image_i2i("matlighty man monstrous creature", image, batch_size=4, strength=0.9, lora_name="lighty_peft.safetensors")
+        await base64_image_to_file(images, "flux_lora_i2i")
+        logger.success("FLUX LORA I2I SUCCESS")
+    except Exception as e:
+        logger.error(f"FLUX LORA I2I FAIL: {e}")
+    finally:
+        flux_i2i_end_time = time.time()
+        flux_i2i_elapsed_time = flux_i2i_end_time - flux_i2i_start_time
+        logger.info(f"Total Flux Lora i2i runtime: {flux_i2i_elapsed_time:.2f} seconds")
 
 async def flux_lora_list_test():
     logger.info('Testing Avernus Flux lora list')
     flux_lora_list_start_time = time.time()
     try:
         loras = await client.list_flux_loras()
-        logger.info(loras)
+        logger.success(loras)
     except Exception as e:
-        logger.info(f"Flux lora list FAIL: {e}")
+        logger.error(f"Flux lora list FAIL: {e}")
     finally:
         flux_lora_list_end_time = time.time()
         flux_lora_list_elapsed_time = flux_lora_list_end_time - flux_lora_list_start_time
@@ -160,9 +234,13 @@ async def flux_lora_list_test():
 async def base64_image_to_file(base64_images, prefix=""):
     for i, b64_img in enumerate(base64_images):
         img_data = base64.b64decode(b64_img)  # Decode base64 string
-        filename = f"{prefix}_image_{i}.png"  # Create a unique filename
+        filename = f"tests/{prefix}_image_{i}.png"  # Create a unique filename
         with open(filename, "wb") as f:
             f.write(img_data)  # Write binary data to file
-        logger.info(f"Saved {filename}")
+
+def image_to_base64(image):
+    buffered = BytesIO()
+    image.save(buffered, format="PNG")
+    return base64.b64encode(buffered.getvalue()).decode("utf-8")
 
 asyncio.run(main())
