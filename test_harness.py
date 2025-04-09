@@ -11,18 +11,18 @@ client = AvernusClient("127.0.0.1", "6969")
 async def main():
     start_time = time.time()
     await check_status()
-    #await llm_chat_test()
-    #await multimodal_llm_chat_test()
-    #await sdxl_test()
-    #await sdxl_lora_test()
-    #await sdxl_i2i_test()
-    #await sdxl_i2i_lora_test()
-    #await sdxl_lora_list_test()
-    #await flux_test()
-    #await flux_lora_test()
+    await llm_chat_test()
+    await multimodal_llm_chat_test()
+    await sdxl_test()
+    await sdxl_lora_test()
+    await sdxl_i2i_test()
+    await sdxl_i2i_lora_test()
+    await sdxl_lora_list_test()
+    await flux_test()
+    await flux_lora_test()
     await flux_i2i_test()
     await flux_lora_i2i_test()
-    #await flux_lora_list_test()
+    await flux_lora_list_test()
     end_time = time.time()
     elapsed_time = end_time - start_time
     logger.info(f"Total runtime: {elapsed_time:.2f} seconds")
@@ -89,7 +89,8 @@ async def sdxl_test():
     logger.info('Testing Avernus SDXL')
     sdxl_start_time = time.time()
     try:
-        images = await client.sdxl_image("wizard")
+        images = await client.sdxl_image("wizard",
+                                         batch_size=2)
         await base64_image_to_file(images, "sdxl")
         logger.success("SDXL SUCCESS")
     except Exception as e:
@@ -105,7 +106,10 @@ async def sdxl_i2i_test():
     try:
         image = Image.open("tests/sdxl_image_0.png")
         image = image_to_base64(image)
-        images = await client.sdxl_image_i2i("warrior princess", image, strength=0.7)
+        images = await client.sdxl_image("warrior princess",
+                                         image=image,
+                                         strength=0.7,
+                                         batch_size=2)
         await base64_image_to_file(images, "sdxl_i2i")
         logger.success("SDXL I2I SUCCESS")
     except Exception as e:
@@ -121,7 +125,11 @@ async def sdxl_i2i_lora_test():
     try:
         image = Image.open("tests/sdxl_image_0.png")
         image = image_to_base64(image)
-        images = await client.sdxl_image_i2i("matlighty man robot hooker", image, strength=0.7, lora_name="lighty.safetensors")
+        images = await client.sdxl_image("matlighty man robot hooker",
+                                         image=image,
+                                         strength=0.7,
+                                         lora_name="lighty.safetensors",
+                                         batch_size=2)
         await base64_image_to_file(images, "sdxl_i2i_lora")
         logger.success("SDXL LORA I2I SUCCESS")
     except Exception as e:
@@ -135,7 +143,9 @@ async def sdxl_lora_test():
     logger.info('Testing Avernus SDXL lora')
     sdxl_start_time = time.time()
     try:
-        images = await client.sdxl_image("matlighty bald man wearing lingerie casting a chicken spell", lora_name="lighty.safetensors")
+        images = await client.sdxl_image("matlighty bald man wearing lingerie casting a chicken spell",
+                                         lora_name="lighty.safetensors",
+                                         batch_size=2)
         await base64_image_to_file(images, "sdxl_lora")
         logger.success("SDXL LORA SUCCESS")
     except Exception as e:
@@ -162,7 +172,8 @@ async def flux_test():
     logger.info('Testing Avernus Flux')
     flux_start_time = time.time()
     try:
-        images = await client.flux_image("Mucus Balloon", batch_size=4)
+        images = await client.flux_image("Mucus Balloon",
+                                         batch_size=2)
         await base64_image_to_file(images, "flux")
         logger.success("FLUX SUCCESS")
     except Exception as e:
@@ -176,7 +187,9 @@ async def flux_lora_test():
     logger.info('Testing Avernus Flux Lora')
     flux_start_time = time.time()
     try:
-        images = await client.flux_image("man with a tattoo on his forehead", batch_size=4, lora_name="lighty_peft.safetensors")
+        images = await client.flux_image("man with a tattoo on his forehead",
+                                         batch_size=2,
+                                         lora_name="lighty_peft.safetensors")
         await base64_image_to_file(images, "flux_lora")
         logger.success("FLUX LORA SUCCESS")
     except Exception as e:
@@ -192,7 +205,10 @@ async def flux_i2i_test():
     try:
         image = Image.open("tests/flux_image_0.png")
         image = image_to_base64(image)
-        images = await client.flux_image_i2i("basketball", image, batch_size=4, strength=0.7)
+        images = await client.flux_image("basketball",
+                                         image=image,
+                                         batch_size=2,
+                                         strength=0.7)
         await base64_image_to_file(images, "flux_i2i")
         logger.success("FLUX I2I SUCCESS")
     except Exception as e:
@@ -208,7 +224,11 @@ async def flux_lora_i2i_test():
     try:
         image = Image.open("tests/flux_image_0.png")
         image = image_to_base64(image)
-        images = await client.flux_image_i2i("matlighty man monstrous creature", image, batch_size=4, strength=0.9, lora_name="lighty_peft.safetensors")
+        images = await client.flux_image("matlighty man monstrous creature",
+                                         image=image,
+                                         batch_size=2,
+                                         strength=0.9,
+                                         lora_name="lighty_peft.safetensors")
         await base64_image_to_file(images, "flux_lora_i2i")
         logger.success("FLUX LORA I2I SUCCESS")
     except Exception as e:

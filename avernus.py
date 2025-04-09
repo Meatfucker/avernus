@@ -1,129 +1,105 @@
 import base64
 from io import BytesIO
 import os
-from fastapi import FastAPI, Request
+from fastapi import FastAPI, Request, Body
+from modules.logging_config import setup_logging
 from modules.chat import generate_chat, generate_multimodal_chat
-from modules.sdxl import generate_sdxl, generate_lora_sdxl, generate_sdxl_i2i, generate_lora_sdxl_i2i
-from modules.flux import generate_flux, generate_lora_flux, generate_flux_i2i, generate_lora_flux_i2i
+from modules.sdxl import generate_sdxl
+from modules.flux import generate_flux
+from modules.pydantic_models import (FluxRequest, FluxResponse, FluxLoraListResponse, SDXLRequest, SDXLResponse,
+                                     SDXLLoraListResponse, LLMRequest, LLMResponse, MultiModalLLMRequest,
+                                     MultiModalLLMResponse, StatusResponse)
 from loguru import logger
 from PIL import Image
 
+setup_logging()
 avernus = FastAPI()
 
-@avernus.get("/status")
+@avernus.get("/status", response_model=StatusResponse)
 async def status():
     """ This returns Ok when hit"""
     logger.info("status request received")
     return {"status": str("Ok!")}
 
-@avernus.post("/llm_chat")
-async def llm_chat(request: Request):
+@avernus.post("/llm_chat", response_model=LLMResponse)
+async def llm_chat(request: Request, data: LLMRequest = Body(...)):
     """This takes a prompt, and optionally a Huggingface model name, and/or a Huggingface formatted message history.
     See test_harness.py for an example of one"""
-    logger.info("llm_chat request received")
+    logger.info(f"{request.client.host}:{request.client.port} - llm_chat request received")
+    kwargs = {"prompt": data.prompt,
+              "model_name": data.model_name,
+              "messages": data.messages}
     try:
-        data = await request.json()
-        prompt = data.get("prompt")
-        model_name = data.get("model_name")
-        messages = data.get("messages")
-        response = await generate_chat(prompt, model_name, messages)
+        response = await generate_chat(**kwargs)
     except Exception as e:
         logger.error(f"llm_chat ERROR: {e}")
         return {"error": str(e)}
-    return response
+    return {"response": response}
 
-@avernus.post("/multimodal_llm_chat")
-async def multimodal_llm_chat(request: Request):
+@avernus.post("/multimodal_llm_chat", response_model=MultiModalLLMResponse)
+async def multimodal_llm_chat(data: MultiModalLLMRequest = Body(...)):
     """Same as above but also will eventually take a base64 image for multimodal chat. Does not currently work"""
     logger.info("multimodal_llm_chat request received")
     try:
-        data = await request.json()
-        prompt = data.get("prompt")
-        model_name = data.get("model_name")
-        messages = data.get("messages")
+        prompt = data.prompt
+        model_name = data.model_name
+        messages = data.messages
         response = await generate_multimodal_chat(prompt, model_name, messages=messages)
     except Exception as e:
         logger.error(f"multimodal_llm_chat ERROR: {e}")
         return {"error": str(e)}
     return response
 
-@avernus.post("/sdxl_generate")
-async def sdxl_generate(request: Request):
+@avernus.post("/sdxl_generate", response_model=SDXLResponse)
+async def sdxl_generate(data: SDXLRequest = Body(...)):
     """Generates some number of sdxl images based on user inputs."""
     logger.info("sdxl_generate request received")
+    kwargs = {"prompt": data.prompt,
+              "negative_prompt": data.negative_prompt,
+              "width": data.width,
+              "height": data.height,
+              "steps": data.steps,
+              "batch_size": data.batch_size,
+              "model_name": data.model_name}
+    if data.lora_name:
+        kwargs["lora_name"] = data.lora_name
+    if data.image:
+        kwargs["image"] = base64_to_image(data.image)
+    if data.strength is not None and data.image:
+        kwargs["strength"] = data.strength
     try:
-        data = await request.json()
-        prompt = data.get("prompt")
-        negative_prompt = data.get("negative_prompt")
-        model_name = data.get("model_name")
-        lora_name = data.get("lora_name")
-        width = data.get("width")
-        height = data.get("height")
-        steps = data.get("steps")
-        batch_size = data.get("batch_size")
-        strength = data.get("strength")
-        image = data.get("image")
-        if lora_name:
-            if image:
-                image = base64_to_image(image)
-                response = await generate_lora_sdxl_i2i(prompt, image, width, height, steps, batch_size, strength,
-                                                        negative_prompt=negative_prompt, model_name=model_name,
-                                                        lora_name=lora_name)
-            else:
-                response = await generate_lora_sdxl(prompt, width, height, steps, batch_size,
-                                                    negative_prompt=negative_prompt, model_name=model_name,
-                                                    lora_name=lora_name)
-        else:
-            if image:
-                image = base64_to_image(image)
-                response = await generate_sdxl_i2i(prompt, image, width, height, steps, batch_size, strength,
-                                                   negative_prompt=negative_prompt, model_name=model_name)
-            else:
-                response = await generate_sdxl(prompt, width, height, steps, batch_size,
-                                               negative_prompt=negative_prompt, model_name=model_name)
+        response = await generate_sdxl(**kwargs)
         base64_images = [image_to_base64(img) for img in response]
     except Exception as e:
         logger.info(f"sdxl_generate ERROR: {e}")
         return None
-    return base64_images
+    return {"images": base64_images}
 
-@avernus.post("/flux_generate")
-async def flux_generate(request: Request):
+@avernus.post("/flux_generate", response_model=FluxResponse)
+async def flux_generate(data: FluxRequest = Body(...)):
     """Generates some number of Flux images based on user inputs"""
     logger.info("flux_generate request received")
+    kwargs = {"prompt": data.prompt,
+              "width": data.width,
+              "height": data.height,
+              "steps": data.steps,
+              "batch_size": data.batch_size,
+              "model_name": data.model_name}
+    if data.lora_name:
+        kwargs["lora_name"] = data.lora_name
+    if data.image:
+        kwargs["image"] = base64_to_image(data.image)
+    if data.strength is not None and data.image:
+        kwargs["strength"] = data.strength
     try:
-        data = await request.json()
-        prompt = data.get("prompt")
-        model_name = data.get("model_name")
-        width = data.get("width")
-        height = data.get("height")
-        steps = data.get("steps")
-        batch_size = data.get("batch_size")
-        lora_name = data.get("lora_name")
-        image = data.get("image")
-        strength = data.get("strength")
-        if lora_name:
-            if image:
-                image = base64_to_image(image)
-                response = await generate_lora_flux_i2i(prompt, image, width, height, steps, batch_size,
-                                                        model_name=model_name, lora_name=lora_name, strength=strength)
-            else:
-                response = await generate_lora_flux(prompt, width, height, steps, batch_size,
-                                                    model_name=model_name, lora_name=lora_name)
-        else:
-            if image:
-                image = base64_to_image(image)
-                response = await generate_flux_i2i(prompt, image, width, height, steps, batch_size,
-                                                   model_name=model_name, strength=strength)
-            else:
-                response = await generate_flux(prompt, width, height, steps, batch_size, model_name=model_name)
+        response = await generate_flux(**kwargs)
         base64_images = [image_to_base64(img) for img in response]
     except Exception as e:
         logger.info(f"flux_generate ERROR: {e}")
         return None
-    return base64_images
+    return {"images": base64_images}
 
-@avernus.get("/list_sdxl_loras")
+@avernus.get("/list_sdxl_loras", response_model=SDXLLoraListResponse)
 async def list_sdxl_loras():
     """Returns a list of the files located in the sdxl loras directory."""
     logger.info("list_sdxl_loras request received")
@@ -132,12 +108,12 @@ async def list_sdxl_loras():
         if not os.path.exists(loras_dir):
             return {"error": "Directory not found"}
         filenames = [f for f in os.listdir(loras_dir) if os.path.isfile(os.path.join(loras_dir, f))]
-        return filenames
+        return {"loras": filenames}
     except Exception as e:
         logger.error(f"list_sdxl_loras ERROR: {e}")
         return {"error": str(e)}
 
-@avernus.get("/list_flux_loras")
+@avernus.get("/list_flux_loras", response_model=FluxLoraListResponse)
 async def list_flux_loras():
     """Returns a list of the files located in the flux loras directory"""
     logger.info("list_flux_loras request received")
@@ -146,7 +122,7 @@ async def list_flux_loras():
         if not os.path.exists(loras_dir):
             return {"error": "Directory not found"}
         filenames = [f for f in os.listdir(loras_dir) if os.path.isfile(os.path.join(loras_dir, f))]
-        return filenames
+        return {"loras": filenames}
     except Exception as e:
         logger.error(f"list_flux_loras ERROR: {e}")
         return {"error": str(e)}
@@ -165,6 +141,8 @@ def base64_to_image(base64_string):
     image_data = base64.b64decode(base64_string)
     image = Image.open(BytesIO(image_data))
     return image
+
+
 
 if __name__ == "__main__":
     import uvicorn
