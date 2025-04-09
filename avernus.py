@@ -19,7 +19,7 @@ avernus = FastAPI()
 async def status():
     """ This returns Ok when hit"""
     logger.info("status request received")
-    return {"status": str("Ok!")}
+    return {"status": str("Ok!"), "version": str("0.2.0")}
 
 @avernus.post("/llm_chat", response_model=LLMResponse)
 async def llm_chat(request: Request, data: LLMRequest = Body(...)):

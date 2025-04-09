@@ -3,6 +3,7 @@ from pydantic import BaseModel, Field
 
 class StatusResponse(BaseModel):
     status: str = Field(..., example="Ok!")
+    version: str = Field(..., example="0.2.0")
 
 class LLMRequest(BaseModel):
     prompt: str = Field(..., example="Who is the best at hackey sack?")
