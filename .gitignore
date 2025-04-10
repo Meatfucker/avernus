@@ -3,4 +3,8 @@
 /.idea/
 /tests/*
 /loras/sdxl/*
+!loras/sdxl
+!/loras/sdxl/putsdxllorashere.txt
 /loras/flux/*
+!/loras/flux
+!/loras/flux/putfluxlorashere.txt
