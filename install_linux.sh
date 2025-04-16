@@ -10,4 +10,8 @@ python3 -m venv $VENV_DIR
 source $VENV_DIR/bin/activate
 
 # Install the requirements
-uvicorn avernus:avernus --host 0.0.0.0 --port 6969
+pip install -r requirements.txt
+
+# Keep the terminal open (Optional)
+echo "Installation complete. Press Enter to exit."
+read
