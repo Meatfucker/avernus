@@ -5,13 +5,9 @@ This is a ml inference server based on huggingface libraries which provides a RE
 It is fairly basic with only a few endpoints at moment which can be documented by accessing the server at http://127.0.0.1:6969/docs if using the default port.
 
 # Install:
-Create a python environment using either python venv or conda.
+Run the install script for either windows or linux depending on your operating system.
 
-Enter the environment
-
-Install the requirements file using pip.
-
-Start via `start_avernus.sh` after entering the venv or conda environment. I recommend against installing python packages for this program outside of an environment. The startup script also contains the url and port of the avernus server, if you want to change the port or bind to a specific device.
+Start via `start_avernus.sh` or `start_avernus.bat` dependiing on your operating system. The startup script also contains the url and port of the avernus server, if you want to change the port or bind to a specific device.
 
 # TODO:
 
