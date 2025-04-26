@@ -8,6 +8,23 @@ class AvernusClient:
         self.port = port
         self.base_url = f"{self.url}:{self.port}"
 
+    async def rag_retrieve(self, prompt, num_results=1):
+        """This takes a prompt and optionally a number of results, and then returns the mathing RAG documents"""
+        url = f"http://{self.base_url}/rag_retrieve"
+        data = {"prompt": prompt, "num_results": num_results}
+
+        try:
+            async with httpx.AsyncClient(timeout=3600.0) as client:
+                response = await client.post(url, json=data)
+            if response.status_code == 200:
+                return response.json().get("response", "")
+            else:
+                logger.info(f"RAG ERROR: {response.status_code}, Response: {response.text}")
+                return {"RAG ERROR": response.text}
+        except Exception as e:
+            logger.info(f"EXCEPTION ERROR: {e}")
+            return {"ERROR": str(e)}
+
     async def llm_chat(self, prompt, model_name=None, messages=None):
         """This takes a prompt, and optionally a model name and chat history, then returns a response"""
         url = f"http://{self.base_url}/llm_chat"
@@ -19,8 +36,8 @@ class AvernusClient:
             if response.status_code == 200:
                 return response.json().get("response", "")
             else:
-                logger.info(f"STATUS ERROR: {response.status_code}, Response: {response.text}")
-                return {"ERROR": response.text}
+                logger.info(f"LLM ERROR: {response.status_code}, Response: {response.text}")
+                return {"LLM ERROR": response.text}
         except Exception as e:
             logger.info(f"EXCEPTION ERROR: {e}")
             return {"ERROR": str(e)}
@@ -36,8 +53,8 @@ class AvernusClient:
             if response.status_code == 200:
                 return response.json()
             else:
-                logger.info(f"STATUS ERROR: {response.status_code}, Response: {response.text}")
-                return {"ERROR": response.text}
+                logger.info(f"MULTIMODAL LLM ERROR: {response.status_code}, Response: {response.text}")
+                return {"MULTIMODAL LLM ERROR": response.text}
         except Exception as e:
             logger.info(f"EXCEPTION ERROR: {e}")
             return {"ERROR": str(e)}
@@ -62,7 +79,7 @@ class AvernusClient:
             if response.status_code == 200:
                 return response.json().get("images", [])
             else:
-                logger.info(f"ERROR: {response.status_code}")
+                logger.info(f"SDXL ERROR: {response.status_code}")
         except Exception as e:
             logger.info(f"ERROR: {e}")
             return {"ERROR": str(e)}
@@ -86,7 +103,7 @@ class AvernusClient:
             if response.status_code == 200:
                 return response.json().get("images", [])
             else:
-                logger.info(f"ERROR: {response.status_code}")
+                logger.info(f"FLUX ERROR: {response.status_code}")
         except Exception as e:
             logger.info(f"ERROR: {e}")
             return {"ERROR": str(e)}
@@ -101,7 +118,7 @@ class AvernusClient:
             if response.status_code == 200:
                 return response.json().get("loras", [])
             else:
-                logger.info(f"STATUS ERROR: {response.status_code}, Response: {response.text}")
+                logger.info(f"LIST SDXL LORAS ERROR: {response.status_code}, Response: {response.text}")
                 return {"ERROR": response.text}
         except Exception as e:
             logger.error(f"list_sdxl_loras ERROR: {e}")
@@ -117,7 +134,7 @@ class AvernusClient:
             if response.status_code == 200:
                 return response.json().get("loras", [])
             else:
-                logger.info(f"STATUS ERROR: {response.status_code}, Response: {response.text}")
+                logger.info(f"LIST FLUX LORAS ERROR: {response.status_code}, Response: {response.text}")
                 return {"ERROR": response.text}
         except Exception as e:
             logger.error(f"list_flux_loras ERROR: {e}")

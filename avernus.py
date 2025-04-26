@@ -6,9 +6,10 @@ from modules.logging_config import setup_logging
 from modules.chat import generate_chat, generate_multimodal_chat
 from modules.sdxl import generate_sdxl
 from modules.flux import generate_flux
+from modules.rag import retrieve_rag
 from modules.pydantic_models import (FluxRequest, FluxResponse, FluxLoraListResponse, SDXLRequest, SDXLResponse,
                                      SDXLLoraListResponse, LLMRequest, LLMResponse, MultiModalLLMRequest,
-                                     MultiModalLLMResponse, StatusResponse)
+                                     MultiModalLLMResponse, StatusResponse, RAGResponse, RAGRequest)
 from loguru import logger
 from PIL import Image
 
@@ -19,7 +20,21 @@ avernus = FastAPI()
 async def status():
     """ This returns Ok when hit"""
     logger.info("status request received")
-    return {"status": str("Ok!"), "version": str("0.2.0")}
+    return {"status": str("Ok!"), "version": str("0.3.0")}
+
+@avernus.post("/rag_retrieve", response_model=RAGResponse)
+async def rag_retrieve(request: Request, data: RAGRequest = Body(...)):
+    """This takes a prompt and an optional number of results to return and then returns a list of strings"""
+    logger.info(f"{request.client.host}:{request.client.port} - rag request received")
+    kwargs = {"prompt": data.prompt}
+    if data.num_results:
+        kwargs["num_results"] = data.num_results
+    try:
+        response = await retrieve_rag(**kwargs)
+    except Exception as e:
+        logger.error(f"rag_retrieve ERROR: {e}")
+        return {"error": str(e)}
+    return {"response": response}
 
 @avernus.post("/llm_chat", response_model=LLMResponse)
 async def llm_chat(request: Request, data: LLMRequest = Body(...)):
@@ -141,7 +156,6 @@ def base64_to_image(base64_string):
     image_data = base64.b64decode(base64_string)
     image = Image.open(BytesIO(image_data))
     return image
-
 
 
 if __name__ == "__main__":

@@ -23,6 +23,7 @@ async def main():
     #await flux_i2i_test()
     #await flux_lora_i2i_test()
     #await flux_lora_list_test()
+    await rag_retrieval_test()
     end_time = time.time()
     elapsed_time = end_time - start_time
     logger.info(f"Total runtime: {elapsed_time:.2f} seconds")
@@ -250,6 +251,20 @@ async def flux_lora_list_test():
         flux_lora_list_end_time = time.time()
         flux_lora_list_elapsed_time = flux_lora_list_end_time - flux_lora_list_start_time
         logger.info(f"Total Flux Lora list runtime: {flux_lora_list_elapsed_time:.2f} seconds")
+
+async def rag_retrieval_test():
+    logger.info('Testing Avernus RAG retrieval')
+    rag_start_time = time.time()
+    try:
+        rag_results = await client.rag_retrieve("What is the atlas", num_results=2)
+        for result in rag_results:
+            logger.success(result)
+    except Exception as e:
+        logger.error(f"Rag retrieve FAIL: {e}")
+    finally:
+        rag_end_time = time.time()
+        rag_elapsed_time = rag_end_time - rag_start_time
+        logger.info(f"Total RAG retrieval runtime: {rag_elapsed_time:.2f} seconds")
 
 async def base64_image_to_file(base64_images, prefix=""):
     for i, b64_img in enumerate(base64_images):

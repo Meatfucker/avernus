@@ -5,6 +5,13 @@ class StatusResponse(BaseModel):
     status: str = Field(..., example="Ok!")
     version: str = Field(..., example="0.2.0")
 
+class RAGRequest(BaseModel):
+    prompt: str = Field(..., example="What is answer to life, the universe, and everything")
+    num_results: Optional[int] = Field(..., example=2)
+
+class RAGResponse(BaseModel):
+    response: List[str] = Field(..., example=["glip", "glop", "blip", "blop"])
+
 class LLMRequest(BaseModel):
     prompt: str = Field(..., example="Who is the best at hackey sack?")
     model_name: Optional[str] = Field(None, example="Goekdeniz-Guelmez/Josiefied-Qwen2.5-7B-Instruct-abliterated-v2")
