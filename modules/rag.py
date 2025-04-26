@@ -7,15 +7,25 @@ from unstructured.partition.html import partition_html
 from loguru import logger
 import re
 
-async def retrieve_rag(prompt, num_results=1):
+async def retrieve_rag(prompt, num_results=5, similarity_threshold=0.8):
     model = SentenceTransformer('intfloat/e5-base-v2')
     index = faiss.read_index("rag/rag_index.faiss")
     with open("rag/rag_index.pkl", "rb") as f:
         documents = pickle.load(f)
     query_embedding = model.encode([prompt])
-    D, I = index.search(np.array(query_embedding), k=num_results)
-    retrieved_docs = [documents[i] for i in I[0]]
+
+    # Normalize the query embedding
+    query_embedding = query_embedding / np.linalg.norm(query_embedding, axis=1, keepdims=True)
+
+    d, i = index.search(np.array(query_embedding), k=num_results)
+
+    retrieved_docs = []
+    for score, idx in zip(d[0], i[0]):
+        if score >= similarity_threshold:  # higher is better now
+            retrieved_docs.append(documents[idx])
+
     return retrieved_docs
+
 
 def create_rag_embeddings():
     try:
@@ -40,7 +50,6 @@ def create_rag_embeddings():
         logger.error(f"URL Retrieval failed: {e}")
         exit(1)
 
-    # Save documents
     try:
         logger.info("Saving document index")
         with open("rag/rag_index.pkl", "wb") as f:
@@ -50,20 +59,22 @@ def create_rag_embeddings():
         logger.error(f"Error saving document index: {e}")
         exit(1)
 
-    # Embed and index documents
     try:
         logger.info("Creating RAG embeddings")
         model = SentenceTransformer('intfloat/e5-base-v2')
         vectors = model.encode(documents)
+
+        # Normalize vectors to unit length
+        vectors = vectors / np.linalg.norm(vectors, axis=1, keepdims=True)
+
         dimension = vectors.shape[1]
-        index = faiss.IndexFlatL2(dimension)
-        index.add(np.array(vectors))
-        logger.success("Embeddings created")
+        index = faiss.IndexFlatIP(dimension)  # Inner Product (cosine after normalization)
+        index.add(vectors)
+        logger.success("Embeddings created and normalized")
     except Exception as e:
         logger.error(f"Error creating embeddings: {e}")
         exit(1)
 
-    # Save FAISS index
     try:
         logger.info("Saving embedding index")
         faiss.write_index(index, "rag/rag_index.faiss")
@@ -73,6 +84,7 @@ def create_rag_embeddings():
         exit(1)
 
     logger.success("Rag DB successfully created")
+
 
 if __name__ == "__main__":
     create_rag_embeddings()
