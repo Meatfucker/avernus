@@ -7,21 +7,26 @@ from unstructured.partition.html import partition_html
 from loguru import logger
 import re
 
-async def retrieve_rag(prompt, num_results=5, similarity_threshold=0.8):
+
+async def retrieve_rag(prompt, max_candidates=20, similarity_threshold=0.8):
+    """Retrieve documents dynamically based on a similarity threshold."""
     model = SentenceTransformer('intfloat/e5-base-v2')
     index = faiss.read_index("rag/rag_index.faiss")
+
     with open("rag/rag_index.pkl", "rb") as f:
         documents = pickle.load(f)
-    query_embedding = model.encode([prompt])
 
-    # Normalize the query embedding
+    query_embedding = model.encode([prompt])
     query_embedding = query_embedding / np.linalg.norm(query_embedding, axis=1, keepdims=True)
 
-    d, i = index.search(np.array(query_embedding), k=num_results)
+    # Fetch more candidates than you expect to use
+    D, I = index.search(np.array(query_embedding), k=max_candidates)
 
     retrieved_docs = []
-    for score, idx in zip(d[0], i[0]):
-        if score >= similarity_threshold:  # higher is better now
+    for score, idx in zip(D[0], I[0]):
+        if idx == -1:
+            continue  # sometimes FAISS returns -1 if no match
+        if score >= similarity_threshold:
             retrieved_docs.append(documents[idx])
 
     return retrieved_docs

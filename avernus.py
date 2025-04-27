@@ -27,8 +27,10 @@ async def rag_retrieve(request: Request, data: RAGRequest = Body(...)):
     """This takes a prompt and an optional number of results to return and then returns a list of strings"""
     logger.info(f"{request.client.host}:{request.client.port} - rag request received")
     kwargs = {"prompt": data.prompt}
-    if data.num_results:
-        kwargs["num_results"] = data.num_results
+    if data.max_candidates:
+        kwargs["max_candidates"] = data.max_candidates
+    if data.similarity_threshold:
+        kwargs["similarity_threshold"] = data.similarity_threshold
     try:
         response = await retrieve_rag(**kwargs)
     except Exception as e:

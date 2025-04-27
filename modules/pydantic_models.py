@@ -7,7 +7,8 @@ class StatusResponse(BaseModel):
 
 class RAGRequest(BaseModel):
     prompt: str = Field(..., example="What is answer to life, the universe, and everything")
-    num_results: Optional[int] = Field(..., example=2)
+    max_candidates: Optional[int] = Field(..., example=20)
+    similarity_threshold: Optional[float] = Field(..., example=0.8)
 
 class RAGResponse(BaseModel):
     response: List[str] = Field(..., example=["glip", "glop", "blip", "blop"])
