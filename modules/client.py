@@ -8,7 +8,7 @@ class AvernusClient:
         self.port = port
         self.base_url = f"{self.url}:{self.port}"
 
-    async def rag_retrieve(self, prompt, max_candidates=20, similarity_threshold=0.8):
+    async def rag_retrieve(self, prompt, max_candidates=20, similarity_threshold=0.6):
         """This takes a prompt and optionally a number of results, and then returns the mathing RAG documents"""
         url = f"http://{self.base_url}/rag_retrieve"
         data = {"prompt": prompt, "max_candidates": max_candidates, "similarity_threshold": similarity_threshold}

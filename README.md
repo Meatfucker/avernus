@@ -11,7 +11,7 @@ Run the install script for either windows or linux depending on your operating s
 
 Start via `start_avernus.sh` or `start_avernus.bat` dependiing on your operating system. The startup script also contains the url and port of the avernus server, if you want to change the port or bind to a specific device.
 
-If you want to use the rag endpoint you need to place urls, one per line in rag/urls and then run modules/rag.py to create the embeddings. This only needs to done once each time you change the urls.
+If you want to use the rag endpoint you need to place urls, one per line in rag/urls. Document files go in the rag/docs directory and then run create_embeddings.sh to create the embeddings. This only needs to done once each time you change the urls.
 
 # Endpoints:
 

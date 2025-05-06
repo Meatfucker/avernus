@@ -256,7 +256,7 @@ async def rag_retrieval_test():
     logger.info('Testing Avernus RAG retrieval')
     rag_start_time = time.time()
     try:
-        rag_results = await client.rag_retrieve("What is the atlas", num_results=2)
+        rag_results = await client.rag_retrieve("What is the Atlas of Worlds")
         for result in rag_results:
             logger.success(result)
     except Exception as e:
