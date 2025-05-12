@@ -1,5 +1,4 @@
 import gc
-import logging
 from diffusers import (StableDiffusionXLPipeline, StableDiffusionXLControlNetPipeline, StableDiffusionXLImg2ImgPipeline,
                        StableDiffusionXLControlNetImg2ImgPipeline, utils)
 import torch

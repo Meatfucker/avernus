@@ -1,12 +1,12 @@
 numpy~=2.2.3
 pillow~=11.1.0
 h11~=0.14.0
-pip~=24.0
+pip~=25.1
 protobuf~=6.30.0
 Jinja2~=3.1.6
 filelock~=3.17.0
 accelerate~=1.4.0
-torch~=2.6.0
+torch~=2.7.0
 huggingface-hub~=0.29.2
 packaging~=24.2
 safetensors~=0.5.3

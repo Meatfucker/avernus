@@ -49,8 +49,6 @@ async def generate_flux(prompt,
                                  tokenizer_2=tokenizer_2,
                                  vae=vae,
                                  transformer=transformer)
-        generator.enable_vae_slicing()
-
     if lora_name is not None:
         try:
             generator.load_lora_weights(f"loras/flux/{lora_name}", weight_name=lora_name)
@@ -61,6 +59,7 @@ async def generate_flux(prompt,
     quantize(text_encoder_2, weights=qfloat8)
     freeze(text_encoder_2)
     generator.to("cuda")
+    generator.enable_model_cpu_offload()
     generator.set_progress_bar_config(disable=True)
     if image is not None:
         images = generator(prompt=prompt,
