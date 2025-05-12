@@ -74,7 +74,8 @@ async def generate_flux(prompt,
                            num_inference_steps=steps,
                            num_images_per_prompt=batch_size).images
     generator.to("cpu")
-    del generator
+
+    del generator, scheduler, text_encoder, text_encoder_2, tokenizer, tokenizer_2, vae, transformer
     torch.cuda.empty_cache()
     gc.collect()
     return images
