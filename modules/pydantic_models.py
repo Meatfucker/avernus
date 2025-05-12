@@ -40,12 +40,18 @@ class FluxRequest(BaseModel):
     lora_name: Optional[str] = Field(None, example="lora_name.safetensors")
     image: Optional[str] = Field(None, example="a9d8fp0sa9dfpasdfllkajsdflkjadslf...")
     strength: Optional[float] = Field(None, example=0.75)
+    controlnet_processor: Optional[str] = Field(None, example="canny")
+    controlnet_image: Optional[str] = Field(None, example="a9d8fp0sa9dfpasdfllkajsdflkjadslf...")
+    controlnet_conditioning: Optional[float] = Field(None, example=0.5)
 
 class FluxResponse(BaseModel):
     images: List[str] = Field(..., example=["kajsdflsadfsadf....", "lkjdsaflkjsadlkfjsa3423....", "lwerewjrlwkejrwewr..."])
 
 class FluxLoraListResponse(BaseModel):
     loras: List[str] = Field(..., example=["lora1.safetensors", "lora2.safetensors", "lora3.safetensors"])
+
+class SDXLControlnetListResponse(BaseModel):
+    sdxl_controlnets: List[str] = Field(..., example=["canny", "depth"])
 
 class SDXLRequest(BaseModel):
     prompt: str = Field(..., example="A big green monster")
@@ -58,6 +64,11 @@ class SDXLRequest(BaseModel):
     lora_name: Optional[str] = Field(None, example="lora_name.safetensors")
     image: Optional[str] = Field(None, example="a9d8fp0sa9dfpasdfllkajsdflkjadslf...")
     strength: Optional[float] = Field(None, example=0.75)
+    controlnet_processor: Optional[str] = Field(None, example="canny")
+    controlnet_image: Optional[str] = Field(None, example="a9d8fp0sa9dfpasdfllkajsdflkjadslf...")
+    controlnet_conditioning: Optional[float] = Field(None, example=0.5)
+    ip_adapter_image: Optional[str] = Field(None, example="a9d8fp0sa9dfpasdfllkajsdflkjadslf...")
+    ip_adapter_strength: Optional[float] = Field(None, example=0.6)
 
 class SDXLResponse(BaseModel):
     images: List[str] = Field(..., example=["kajsdflsadfsadf....", "lkjdsaflkjsadlkfjsa3423....", "lwerewjrlwkejrwewr..."])

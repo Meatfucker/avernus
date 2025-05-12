@@ -1,10 +1,7 @@
 import torch
 from transformers import pipeline
-from transformers import logging as t_logging
 import gc
-import logging
-logging.getLogger("transformers").setLevel(logging.ERROR)
-t_logging.disable_progress_bar()
+
 
 async def generate_chat(prompt, model_name, messages=None):
     if model_name is None:

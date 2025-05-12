@@ -7,9 +7,9 @@ from modules.chat import generate_chat, generate_multimodal_chat
 from modules.sdxl import generate_sdxl
 from modules.flux import generate_flux
 from modules.rag import retrieve_rag
-from modules.pydantic_models import (FluxRequest, FluxResponse, FluxLoraListResponse, SDXLRequest, SDXLResponse,
-                                     SDXLLoraListResponse, LLMRequest, LLMResponse, MultiModalLLMRequest,
-                                     MultiModalLLMResponse, StatusResponse, RAGResponse, RAGRequest)
+from modules.pydantic_models import (FluxRequest, FluxResponse, FluxLoraListResponse, LLMRequest, LLMResponse,
+                                     MultiModalLLMRequest, MultiModalLLMResponse, RAGResponse, RAGRequest, SDXLRequest,
+                                     SDXLResponse, SDXLLoraListResponse, SDXLControlnetListResponse, StatusResponse)
 from loguru import logger
 from PIL import Image
 
@@ -78,6 +78,14 @@ async def sdxl_generate(data: SDXLRequest = Body(...)):
               "steps": data.steps,
               "batch_size": data.batch_size,
               "model_name": data.model_name}
+    if data.controlnet_processor:
+        kwargs["controlnet_processor"] = data.controlnet_processor
+        kwargs["controlnet_image"] = base64_to_image(data.controlnet_image)
+    if data.controlnet_conditioning:
+        kwargs["controlnet_conditioning"] = data.controlnet_conditioning
+    if data.ip_adapter_image:
+        kwargs["ip_adapter_strength"] = data.ip_adapter_strength
+        kwargs["ip_adapter_image"] = base64_to_image(data.ip_adapter_image)
     if data.lora_name:
         kwargs["lora_name"] = data.lora_name
     if data.image:
@@ -142,6 +150,16 @@ async def list_flux_loras():
         return {"loras": filenames}
     except Exception as e:
         logger.error(f"list_flux_loras ERROR: {e}")
+        return {"error": str(e)}
+
+@avernus.get("/list_sdxl_controlnets", response_model=SDXLControlnetListResponse)
+async def list_sdxl_controlnets():
+    """Returns a list of available sdxl controlnets"""
+    logger.info("list_sdxl_controlnets request received")
+    try:
+        return {"sdxl_controlnets": ["depth", "canny"]}
+    except Exception as e:
+        logger.error(f"list_sdxl_controlnets ERROR: {e}")
         return {"error": str(e)}
 
 def image_to_base64(image):

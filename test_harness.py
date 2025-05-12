@@ -1,4 +1,4 @@
-from modules.client import AvernusClient
+from modules.avernus_client import AvernusClient
 import asyncio
 import time
 import base64
@@ -18,12 +18,18 @@ async def main():
     #await sdxl_i2i_test()
     #await sdxl_i2i_lora_test()
     #await sdxl_lora_list_test()
+    await sdxl_controlnets_list_test()
+    #await sdxl_controlnet_test()
+    #await sdxl_controlnet_lora_test()
+    #await sdxl_controlnet_i2i_test()
+    #await sdxl_controlnet_i2i_lora_test()
+    await sdxl_ipadapter_test()
     #await flux_test()
     #await flux_lora_test()
     #await flux_i2i_test()
     #await flux_lora_i2i_test()
     #await flux_lora_list_test()
-    await rag_retrieval_test()
+    #await rag_retrieval_test()
     end_time = time.time()
     elapsed_time = end_time - start_time
     logger.info(f"Total runtime: {elapsed_time:.2f} seconds")
@@ -120,6 +126,113 @@ async def sdxl_i2i_test():
         sdxl_elapsed_time = sdxl_end_time - sdxl_start_time
         logger.info(f"Total SDXL I2I runtime: {sdxl_elapsed_time:.2f} seconds")
 
+async def sdxl_ipadapter_test():
+    logger.info('Testing Avernus SDXL IPADAPTER')
+    sdxl_start_time = time.time()
+    try:
+        image = Image.open("tests/mushroom.png")
+        image = image_to_base64(image)
+        images = await client.sdxl_image("marijuana leaf",
+                                         ip_adapter_image=image,
+                                         ip_adapter_strength=0.6,
+                                         batch_size=2)
+        await base64_image_to_file(images, "sdxl_ipadapter")
+        logger.success("SDXL IPADAPTER SUCCESS")
+    except Exception as e:
+        logger.info(f"SDXL IPADAPTER FAIL: {e}")
+    finally:
+        sdxl_end_time = time.time()
+        sdxl_elapsed_time = sdxl_end_time - sdxl_start_time
+        logger.info(f"Total SDXL IPADAPTER runtime: {sdxl_elapsed_time:.2f} seconds")
+
+async def sdxl_controlnet_test():
+    logger.info('Testing Avernus SDXL Controlnet')
+    sdxl_controlnet_start_time = time.time()
+    try:
+        image = Image.open("tests/sdxl_image_0.png")
+        image = image_to_base64(image)
+        images = await client.sdxl_image("statue",
+                                         batch_size=2,
+                                         controlnet_image=image,
+                                         controlnet_processor="canny",
+                                         controlnet_conditioning=0.5)
+        await base64_image_to_file(images, "sdxl_controlnet")
+        logger.success("SDXL CONTROLNET SUCCESS")
+    except Exception as e:
+        logger.error(f"SDXL CONTROLNET FAIL: {e}")
+    finally:
+        sdxl_controlnet_end_time = time.time()
+        sdxl_controlnet_elapsed_time = sdxl_controlnet_end_time - sdxl_controlnet_start_time
+        logger.info(f"Total SDXL CONTROLNET runtime: {sdxl_controlnet_elapsed_time:.2f} seconds")
+
+async def sdxl_controlnet_lora_test():
+    logger.info('Testing Avernus SDXL Controlnet LORA')
+    sdxl_controlnet_lora_start_time = time.time()
+    try:
+        image = Image.open("tests/sdxl_image_0.png")
+        image = image_to_base64(image)
+        images = await client.sdxl_image("wood statue",
+                                         batch_size=2,
+                                         lora_name="lighty.safetensors",
+                                         controlnet_image=image,
+                                         controlnet_processor="canny",
+                                         controlnet_conditioning=0.5)
+        await base64_image_to_file(images, "sdxl_controlnet_lora")
+        logger.success("SDXL CONTROLNET LORA SUCCESS")
+    except Exception as e:
+        logger.error(f"SDXL CONTROLNET LORA FAIL: {e}")
+    finally:
+        sdxl_controlnet_lora_end_time = time.time()
+        sdxl_controlnet_lora_elapsed_time = sdxl_controlnet_lora_end_time - sdxl_controlnet_lora_start_time
+        logger.info(f"Total SDXL CONTROLNET LORA runtime: {sdxl_controlnet_lora_elapsed_time:.2f} seconds")
+
+async def sdxl_controlnet_i2i_test():
+    logger.info('Testing Avernus SDXL I2I Controlnet')
+    sdxl_controlnet_i2i_start_time = time.time()
+    try:
+        image = Image.open("tests/sdxl_i2i_image_0.png")
+        image = image_to_base64(image)
+        controlnet_image = Image.open("tests/sdxl_image_0.png")
+        controlnet_image = image_to_base64(controlnet_image)
+        images = await client.sdxl_image("cartoon",
+                                         batch_size=2,
+                                         image=image,
+                                         controlnet_image=controlnet_image,
+                                         controlnet_processor="canny",
+                                         controlnet_conditioning=0.5)
+        await base64_image_to_file(images, "sdxl_controlnet_i2i")
+        logger.success("SDXL CONTROLNET I2I SUCCESS")
+    except Exception as e:
+        logger.error(f"SDXL CONTROLNET I2I FAIL: {e}")
+    finally:
+        sdxl_controlnet_i2i_end_time = time.time()
+        sdxl_controlnet_i2i_elapsed_time = sdxl_controlnet_i2i_end_time - sdxl_controlnet_i2i_start_time
+        logger.info(f"Total SDXL CONTROLNET I2I runtime: {sdxl_controlnet_i2i_elapsed_time:.2f} seconds")
+
+async def sdxl_controlnet_i2i_lora_test():
+    logger.info('Testing Avernus SDXL I2I Controlnet LORA')
+    sdxl_controlnet_i2i_lora_start_time = time.time()
+    try:
+        image = Image.open("tests/sdxl_i2i_image_0.png")
+        image = image_to_base64(image)
+        controlnet_image = Image.open("tests/sdxl_image_0.png")
+        controlnet_image = image_to_base64(controlnet_image)
+        images = await client.sdxl_image("jello monster",
+                                         batch_size=2,
+                                         image=image,
+                                         lora_name="lighty.safetensors",
+                                         controlnet_image=controlnet_image,
+                                         controlnet_processor="depth",
+                                         controlnet_conditioning=0.5)
+        await base64_image_to_file(images, "sdxl_controlnet_i2i_lora")
+        logger.success("SDXL CONTROLNET I2I LORA SUCCESS")
+    except Exception as e:
+        logger.error(f"SDXL CONTROLNET I2I LORA FAIL: {e}")
+    finally:
+        sdxl_controlnet_i2i_lora_end_time = time.time()
+        sdxl_controlnet_i2i_lora_elapsed_time = sdxl_controlnet_i2i_lora_end_time - sdxl_controlnet_i2i_lora_start_time
+        logger.info(f"Total SDXL CONTROLNET I2I LORA runtime: {sdxl_controlnet_i2i_lora_elapsed_time:.2f} seconds")
+
 async def sdxl_i2i_lora_test():
     logger.info('Testing Avernus SDXL LORA I2I')
     sdxl_start_time = time.time()
@@ -169,12 +282,25 @@ async def sdxl_lora_list_test():
         sdxl_lora_list_elapsed_time = sdxl_lora_list_end_time - sdxl_lora_list_start_time
         logger.info(f"Total SDXL Lora list runtime: {sdxl_lora_list_elapsed_time:.2f} seconds")
 
+async def sdxl_controlnets_list_test():
+    logger.info('Testing Avernus SDXL controlnets list')
+    sdxl_lora_list_start_time = time.time()
+    try:
+        controlnets = await client.list_sdxl_controlnets()
+        logger.success(controlnets)
+    except Exception as e:
+        logger.error(f"SDXL CONTROLNETS LIST FAIL: {e}")
+    finally:
+        sdxl_lora_list_end_time = time.time()
+        sdxl_lora_list_elapsed_time = sdxl_lora_list_end_time - sdxl_lora_list_start_time
+        logger.info(f"Total SDXL CONTROLNETS list runtime: {sdxl_lora_list_elapsed_time:.2f} seconds")
+
 async def flux_test():
     logger.info('Testing Avernus Flux')
     flux_start_time = time.time()
     try:
         images = await client.flux_image("Mucus Balloon",
-                                         batch_size=2)
+                                         batch_size=1)
         await base64_image_to_file(images, "flux")
         logger.success("FLUX SUCCESS")
     except Exception as e:
@@ -189,7 +315,7 @@ async def flux_lora_test():
     flux_start_time = time.time()
     try:
         images = await client.flux_image("man with a tattoo on his forehead",
-                                         batch_size=2,
+                                         batch_size=1,
                                          lora_name="lighty_peft.safetensors")
         await base64_image_to_file(images, "flux_lora")
         logger.success("FLUX LORA SUCCESS")
@@ -208,7 +334,7 @@ async def flux_i2i_test():
         image = image_to_base64(image)
         images = await client.flux_image("basketball",
                                          image=image,
-                                         batch_size=2,
+                                         batch_size=1,
                                          strength=0.7)
         await base64_image_to_file(images, "flux_i2i")
         logger.success("FLUX I2I SUCCESS")
@@ -227,7 +353,7 @@ async def flux_lora_i2i_test():
         image = image_to_base64(image)
         images = await client.flux_image("matlighty man monstrous creature",
                                          image=image,
-                                         batch_size=2,
+                                         batch_size=1,
                                          strength=0.9,
                                          lora_name="lighty_peft.safetensors")
         await base64_image_to_file(images, "flux_lora_i2i")

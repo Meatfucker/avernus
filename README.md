@@ -20,6 +20,7 @@ If you want to use the rag endpoint you need to place urls, one per line in rag/
 - /sdxl_generate - For generating sdxl images
 - /flux_generate - For generating flux images
 - /list_sdxl_loras - Returns a list of available loras from loras/sdxl
+- /list_sdxl_controlnets - Returns a list of available SDXL controlnets
 - /list_flux_loras - Returns a list of available loras from loras/flux
 - /rag_retrieve - Returns relevant rag documents to the query
 
