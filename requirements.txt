@@ -54,3 +54,7 @@ optimum-quanto==0.2.7
 faiss-cpu==1.10.0
 unstructured==0.17.2
 unstructured-client==0.34.0
+sentence-transformers
+opencv-python
+faiss-cpu
+unstructured
