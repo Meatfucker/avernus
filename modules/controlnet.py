@@ -30,3 +30,13 @@ async def get_depth_image(image):
     depth_keys = pipe(image)
     depth_image = depth_keys["depth"]
     return depth_image
+
+async def get_flux_controlnet(controlnet_processor, controlnet_image):
+    if controlnet_processor == "canny":
+        canny_image = await get_canny_image(controlnet_image)
+        model = "black-forest-labs/FLUX.1-Canny-dev"
+        return model, canny_image
+    if controlnet_processor == "depth":
+        depth_image = await get_depth_image(controlnet_image)
+        model = "black-forest-labs/FLUX.1-Depth-dev"
+        return model, depth_image

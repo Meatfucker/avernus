@@ -43,6 +43,8 @@ class FluxRequest(BaseModel):
     controlnet_processor: Optional[str] = Field(None, example="canny")
     controlnet_image: Optional[str] = Field(None, example="a9d8fp0sa9dfpasdfllkajsdflkjadslf...")
     controlnet_conditioning: Optional[float] = Field(None, example=0.5)
+    ip_adapter_image: Optional[str] = Field(None, example="a9d8fp0sa9dfpasdfllkajsdflkjadslf...")
+    ip_adapter_strength: Optional[float] = Field(None, example=0.6)
 
 class FluxResponse(BaseModel):
     images: List[str] = Field(..., example=["kajsdflsadfsadf....", "lkjdsaflkjsadlkfjsa3423....", "lwerewjrlwkejrwewr..."])
@@ -52,6 +54,9 @@ class FluxLoraListResponse(BaseModel):
 
 class SDXLControlnetListResponse(BaseModel):
     sdxl_controlnets: List[str] = Field(..., example=["canny", "depth"])
+
+class FluxControlnetListResponse(BaseModel):
+    flux_controlnets: List[str] = Field(..., example=["canny", "depth"])
 
 class SDXLRequest(BaseModel):
     prompt: str = Field(..., example="A big green monster")

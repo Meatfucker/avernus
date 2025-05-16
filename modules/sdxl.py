@@ -1,6 +1,6 @@
 import gc
 from diffusers import (StableDiffusionXLPipeline, StableDiffusionXLControlNetPipeline, StableDiffusionXLImg2ImgPipeline,
-                       StableDiffusionXLControlNetImg2ImgPipeline, utils)
+                       StableDiffusionXLControlNetImg2ImgPipeline)
 import torch
 from modules.controlnet import get_sdxl_controlnet
 
@@ -77,10 +77,12 @@ async def get_pipeline(model_name, image, controlnet_image, controlnet_processor
                                                                                    torch_dtype=torch.float16,
                                                                                    controlnet=controlnet,
                                                                                    ).to("cuda")
+            generator.enable_vae_slicing()
         else:
             generator = StableDiffusionXLImg2ImgPipeline.from_pretrained(model_name,
                                                                          torch_dtype=torch.float16,
                                                                          use_safetensors=True).to("cuda")
+            generator.enable_vae_slicing()
     else:
         if controlnet_image is not None:
             controlnet, processed_image = await get_sdxl_controlnet(controlnet_processor, controlnet_image)
@@ -89,8 +91,10 @@ async def get_pipeline(model_name, image, controlnet_image, controlnet_processor
                                                                             torch_dtype=torch.float16,
                                                                             controlnet=controlnet,
                                                                             ).to("cuda")
+            generator.enable_vae_slicing()
         else:
             generator = StableDiffusionXLPipeline.from_pretrained(model_name,
                                                                   torch_dtype=torch.float16,
                                                                   use_safetensors=True).to("cuda")
+            generator.enable_vae_slicing()
     return generator, processed_image

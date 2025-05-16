@@ -18,17 +18,18 @@ async def main():
     #await sdxl_i2i_test()
     #await sdxl_i2i_lora_test()
     #await sdxl_lora_list_test()
-    await sdxl_controlnets_list_test()
+    #await sdxl_controlnets_list_test()
     #await sdxl_controlnet_test()
     #await sdxl_controlnet_lora_test()
     #await sdxl_controlnet_i2i_test()
     #await sdxl_controlnet_i2i_lora_test()
-    await sdxl_ipadapter_test()
-    #await flux_test()
+    #await sdxl_ipadapter_test()
+    await flux_test()
     #await flux_lora_test()
-    #await flux_i2i_test()
+    await flux_i2i_test()
     #await flux_lora_i2i_test()
     #await flux_lora_list_test()
+    #await flux_ipadapter_test()
     #await rag_retrieval_test()
     end_time = time.time()
     elapsed_time = end_time - start_time
@@ -295,6 +296,19 @@ async def sdxl_controlnets_list_test():
         sdxl_lora_list_elapsed_time = sdxl_lora_list_end_time - sdxl_lora_list_start_time
         logger.info(f"Total SDXL CONTROLNETS list runtime: {sdxl_lora_list_elapsed_time:.2f} seconds")
 
+async def flux_controlnets_list_test():
+    logger.info('Testing Avernus Flux controlnets list')
+    flux_controlnet_list_start_time = time.time()
+    try:
+        controlnets = await client.list_flux_controlnets()
+        logger.success(controlnets)
+    except Exception as e:
+        logger.error(f"Flux CONTROLNETS LIST FAIL: {e}")
+    finally:
+        flux_controlnet_list_end_time = time.time()
+        flux_controlnet_list_elapsed_time = flux_controlnet_list_end_time - flux_controlnet_list_start_time
+        logger.info(f"Total Flux CONTROLNETS list runtime: {flux_controlnet_list_elapsed_time:.2f} seconds")
+
 async def flux_test():
     logger.info('Testing Avernus Flux')
     flux_start_time = time.time()
@@ -377,6 +391,25 @@ async def flux_lora_list_test():
         flux_lora_list_end_time = time.time()
         flux_lora_list_elapsed_time = flux_lora_list_end_time - flux_lora_list_start_time
         logger.info(f"Total Flux Lora list runtime: {flux_lora_list_elapsed_time:.2f} seconds")
+
+async def flux_ipadapter_test():
+    logger.info('Testing Avernus Flux IPADAPTER')
+    sdxl_start_time = time.time()
+    try:
+        image = Image.open("tests/mushroom.png")
+        image = image_to_base64(image)
+        images = await client.flux_image("marijuana leaf",
+                                         ip_adapter_image=image,
+                                         ip_adapter_strength=0.6,
+                                         batch_size=2)
+        await base64_image_to_file(images, "flux_ipadapter")
+        logger.success("Flux IPADAPTER SUCCESS")
+    except Exception as e:
+        logger.info(f"Flux IPADAPTER FAIL: {e}")
+    finally:
+        sdxl_end_time = time.time()
+        sdxl_elapsed_time = sdxl_end_time - sdxl_start_time
+        logger.info(f"Total Flux IPADAPTER runtime: {sdxl_elapsed_time:.2f} seconds")
 
 async def rag_retrieval_test():
     logger.info('Testing Avernus RAG retrieval')

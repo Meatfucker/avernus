@@ -91,7 +91,9 @@ class AvernusClient:
             return {"ERROR": str(e)}
 
     async def flux_image(self, prompt, image=None, model_name=None, lora_name=None, width=None, height=None, steps=None,
-                         batch_size=None, strength=None):
+                         batch_size=None, strength=None, controlnet_image=None,
+                         controlnet_processor=None, controlnet_conditioning=None, ip_adapter_image=None,
+                         ip_adapter_strength=None):
         """This takes a prompt and optional other variables and returns a list of base64 encoded images"""
         url = f"http://{self.base_url}/flux_generate"
         data = {"prompt": prompt,
@@ -102,7 +104,12 @@ class AvernusClient:
                 "height": height,
                 "steps": steps,
                 "batch_size": batch_size,
-                "strength": strength}
+                "strength": strength,
+                "controlnet_image": controlnet_image,
+                "controlnet_processor": controlnet_processor,
+                "controlnet_conditioning": controlnet_conditioning,
+                "ip_adapter_strength": ip_adapter_strength,
+                "ip_adapter_image": ip_adapter_image}
         try:
             async with httpx.AsyncClient(timeout=3600) as client:
                 response = await client.post(url, json=data)
@@ -160,6 +167,22 @@ class AvernusClient:
                 return {"ERROR": response.text}
         except Exception as e:
             print(f"list_flux_loras ERROR: {e}")
+            return {"ERROR": str(e)}
+
+    async def list_flux_controlnets(self):
+        """Fetches the list of flux controlnets from the server."""
+        url = f"http://{self.base_url}/list_flux_controlnets"
+
+        try:
+            async with httpx.AsyncClient(timeout=30.0) as client:
+                response = await client.get(url)
+            if response.status_code == 200:
+                return response.json().get("flux_controlnets", [])
+            else:
+                print(f"LIST Flux CONTROLNETS ERROR: {response.status_code}, Response: {response.text}")
+                return {"ERROR": response.text}
+        except Exception as e:
+            print(f"list_flux_controlnets ERROR: {e}")
             return {"ERROR": str(e)}
 
     async def check_status(self):
