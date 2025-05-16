@@ -34,7 +34,6 @@ async def generate_sdxl(prompt,
         model_name = "misri/zavychromaxl_v100"
 
     generator, processed_image = await get_pipeline(model_name, image, controlnet_image, controlnet_processor)
-    generator.set_progress_bar_config(disable=True)
 
     if ip_adapter_image is not None:
         try:

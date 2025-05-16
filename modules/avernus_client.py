@@ -92,7 +92,7 @@ class AvernusClient:
 
     async def flux_image(self, prompt, image=None, model_name=None, lora_name=None, width=None, height=None, steps=None,
                          batch_size=None, strength=None, controlnet_image=None,
-                         controlnet_processor=None, controlnet_conditioning=None, ip_adapter_image=None,
+                         controlnet_processor=None, ip_adapter_image=None,
                          ip_adapter_strength=None):
         """This takes a prompt and optional other variables and returns a list of base64 encoded images"""
         url = f"http://{self.base_url}/flux_generate"
@@ -107,7 +107,6 @@ class AvernusClient:
                 "strength": strength,
                 "controlnet_image": controlnet_image,
                 "controlnet_processor": controlnet_processor,
-                "controlnet_conditioning": controlnet_conditioning,
                 "ip_adapter_strength": ip_adapter_strength,
                 "ip_adapter_image": ip_adapter_image}
         try:

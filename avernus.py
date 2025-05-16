@@ -113,11 +113,11 @@ async def flux_generate(data: FluxRequest = Body(...)):
               "model_name": data.model_name}
     if data.lora_name:
         kwargs["lora_name"] = data.lora_name
+    if data.image:
+        kwargs["image"] = base64_to_image(data.image)
     if data.controlnet_processor:
         kwargs["controlnet_processor"] = data.controlnet_processor
         kwargs["controlnet_image"] = base64_to_image(data.controlnet_image)
-    if data.controlnet_conditioning:
-        kwargs["controlnet_conditioning"] = data.controlnet_conditioning
     if data.ip_adapter_image:
         kwargs["ip_adapter_strength"] = data.ip_adapter_strength
         kwargs["ip_adapter_image"] = base64_to_image(data.ip_adapter_image)

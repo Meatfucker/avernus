@@ -42,7 +42,6 @@ class FluxRequest(BaseModel):
     strength: Optional[float] = Field(None, example=0.75)
     controlnet_processor: Optional[str] = Field(None, example="canny")
     controlnet_image: Optional[str] = Field(None, example="a9d8fp0sa9dfpasdfllkajsdflkjadslf...")
-    controlnet_conditioning: Optional[float] = Field(None, example=0.5)
     ip_adapter_image: Optional[str] = Field(None, example="a9d8fp0sa9dfpasdfllkajsdflkjadslf...")
     ip_adapter_strength: Optional[float] = Field(None, example=0.6)
 

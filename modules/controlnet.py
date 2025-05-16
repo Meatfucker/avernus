@@ -16,6 +16,14 @@ async def get_sdxl_controlnet(controlnet_processor, controlnet_image):
         controlnet = ControlNetModel.from_pretrained("diffusers/controlnet-zoe-depth-sdxl-1.0", torch_dtype=torch.float16, use_safetensors=True)
         return controlnet, depth_image
 
+async def process_flux_image(controlnet_processor, controlnet_image):
+    if controlnet_processor == "canny":
+        canny_image = await get_canny_image(controlnet_image)
+        return canny_image
+    if controlnet_processor == "depth":
+        depth_image = await get_depth_image(controlnet_image)
+        return depth_image
+
 async def get_canny_image(image):
     image = numpy.array(image)
     image = cv2.Canny(image, 100, 200)
@@ -30,13 +38,3 @@ async def get_depth_image(image):
     depth_keys = pipe(image)
     depth_image = depth_keys["depth"]
     return depth_image
-
-async def get_flux_controlnet(controlnet_processor, controlnet_image):
-    if controlnet_processor == "canny":
-        canny_image = await get_canny_image(controlnet_image)
-        model = "black-forest-labs/FLUX.1-Canny-dev"
-        return model, canny_image
-    if controlnet_processor == "depth":
-        depth_image = await get_depth_image(controlnet_image)
-        model = "black-forest-labs/FLUX.1-Depth-dev"
-        return model, depth_image
