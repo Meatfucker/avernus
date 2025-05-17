@@ -21,7 +21,7 @@ avernus = FastAPI()
 async def status():
     """ This returns Ok when hit"""
     logger.info("status request received")
-    return {"status": str("Ok!"), "version": str("0.3.0")}
+    return {"status": str("Ok!"), "version": str("0.4.0")}
 
 @avernus.post("/rag_retrieve", response_model=RAGResponse)
 async def rag_retrieve(request: Request, data: RAGRequest = Body(...)):
@@ -172,7 +172,7 @@ async def list_flux_controlnets():
     """Returns a list of available flux controlnets"""
     logger.info("list_flux_controlnets request received")
     try:
-        return {"flux_controlnets": ["depth", "canny"]}
+        return {"flux_controlnets": ["canny"]}
     except Exception as e:
         logger.error(f"list_flux_controlnets ERROR: {e}")
         return {"error": str(e)}

@@ -6,6 +6,13 @@ It is fairly basic with only a few endpoints at moment which can be documented b
 
 There is a basic python client available in modules/client.py
 
+# Features:
+
+- A fairly simple LLM chat endpoint. Supports model switching but not chat templates yet
+- Basic rag support which is detailed in the install instructions.
+- SDXL support for multiple models, image2image, controlnets, and ipadapters.
+- Flux Support. Only dev is currently supported. image2image and controlnets are supported. ipadapters are implemented but waiting on an upstream bugfix to work.
+
 # Install:
 Run the install script for either windows or linux depending on your operating system.
 
@@ -22,6 +29,7 @@ If you want to use the rag endpoint you need to place urls, one per line in rag/
 - /list_sdxl_loras - Returns a list of available loras from loras/sdxl
 - /list_sdxl_controlnets - Returns a list of available SDXL controlnets
 - /list_flux_loras - Returns a list of available loras from loras/flux
+- /list_flux_controlnets - Returns a list of available Flux controlnets (Just canny for now)
 - /rag_retrieve - Returns relevant rag documents to the query
 
 # TODO:
@@ -30,4 +38,5 @@ If you want to use the rag endpoint you need to place urls, one per line in rag/
 - Add audio generation endpoints
 - Add svg model endpoint
 - Return different status codes if a generation ooms
+- Add LLM chat templates
 

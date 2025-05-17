@@ -1,5 +1,3 @@
-import gc
-
 import cv2
 from diffusers import ControlNetModel
 import numpy
