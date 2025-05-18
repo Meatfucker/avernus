@@ -21,7 +21,7 @@ avernus = FastAPI()
 async def status():
     """ This returns Ok when hit"""
     logger.info("status request received")
-    return {"status": str("Ok!"), "version": str("0.4.0")}
+    return {"status": str("Ok!"), "version": str("0.4.1")}
 
 @avernus.post("/rag_retrieve", response_model=RAGResponse)
 async def rag_retrieve(request: Request, data: RAGRequest = Body(...)):

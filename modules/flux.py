@@ -1,4 +1,4 @@
-from diffusers import FlowMatchEulerDiscreteScheduler, AutoencoderKL, FluxTransformer2DModel, FluxPipeline, FluxImg2ImgPipeline, FluxControlPipeline, FluxControlNetImg2ImgPipeline
+from diffusers import FlowMatchEulerDiscreteScheduler, AutoencoderKL, FluxTransformer2DModel, FluxPipeline, FluxImg2ImgPipeline, FluxControlPipeline, FluxControlNetImg2ImgPipeline, FluxControlNetModel
 from transformers import CLIPTextModel, CLIPTokenizer,T5EncoderModel, T5TokenizerFast
 from optimum.quanto import freeze, qfloat8, quantize
 import torch
@@ -81,7 +81,7 @@ async def quantize_components(generator):
     return generator
 
 async def get_pipeline(image, model_name, revision, controlnet_processor):
-    scheduler, text_encoder, tokenizer, text_encoder_2, tokenizer_2, vae, transformer = await get_components(controlnet_processor)
+    scheduler, text_encoder, tokenizer, text_encoder_2, tokenizer_2, vae, transformer, controlnet = await get_components(controlnet_processor, image)
     if image is None:
         if controlnet_processor is None:
             print("loading FluxPipeline")
@@ -120,10 +120,11 @@ async def get_pipeline(image, model_name, revision, controlnet_processor):
                                                       text_encoder_2=text_encoder_2,
                                                       tokenizer_2=tokenizer_2,
                                                       vae=vae,
-                                                      transformer=transformer)
+                                                      transformer=transformer,
+                                                      controlnet=controlnet)
         return generator
 
-async def get_components(controlnet_processor):
+async def get_components(controlnet_processor, image):
     if controlnet_processor is None:
         model_name = "black-forest-labs/FLUX.1-dev"
         revision = "refs/pr/3"
@@ -139,11 +140,17 @@ async def get_components(controlnet_processor):
         vae = AutoencoderKL.from_pretrained(model_name, subfolder="vae", torch_dtype=dtype, revision=revision)
         transformer = FluxTransformer2DModel.from_pretrained(model_name, subfolder="transformer", torch_dtype=dtype,
                                                              revision=revision)
-        return scheduler, text_encoder, tokenizer, text_encoder_2, tokenizer_2, vae, transformer
+        return scheduler, text_encoder, tokenizer, text_encoder_2, tokenizer_2, vae, transformer, None
 
     if controlnet_processor == "depth":
-        model_name = "black-forest-labs/FLUX.1-Depth-dev"
         dtype = torch.bfloat16
+        if image:
+            controlnet = FluxControlNetModel.from_pretrained("InstantX/FLUX.1-dev-Controlnet-Canny-alpha", torch_dtype=dtype)
+            model_name = "black-forest-labs/FLUX.1-dev"
+        else:
+            controlnet = None
+            model_name = "black-forest-labs/FLUX.1-Depth-dev"
+
         scheduler = FlowMatchEulerDiscreteScheduler.from_pretrained(model_name, subfolder="scheduler")
         text_encoder = CLIPTextModel.from_pretrained("openai/clip-vit-large-patch14", torch_dtype=dtype)
         tokenizer = CLIPTokenizer.from_pretrained("openai/clip-vit-large-patch14", torch_dtype=dtype)
@@ -151,11 +158,17 @@ async def get_components(controlnet_processor):
         tokenizer_2 = T5TokenizerFast.from_pretrained(model_name, subfolder="tokenizer_2", torch_dtype=dtype)
         vae = AutoencoderKL.from_pretrained(model_name, subfolder="vae", torch_dtype=dtype)
         transformer = FluxTransformer2DModel.from_pretrained(model_name, subfolder="transformer", torch_dtype=dtype)
-        return scheduler, text_encoder, tokenizer, text_encoder_2, tokenizer_2, vae, transformer
+        return scheduler, text_encoder, tokenizer, text_encoder_2, tokenizer_2, vae, transformer, controlnet
 
     if controlnet_processor == "canny":
-        model_name = "black-forest-labs/FLUX.1-Canny-dev"
         dtype = torch.bfloat16
+        if image:
+            controlnet = FluxControlNetModel.from_pretrained("InstantX/FLUX.1-dev-Controlnet-Canny-alpha", torch_dtype=dtype)
+            model_name = "black-forest-labs/FLUX.1-dev"
+        else:
+            controlnet = None
+            model_name = "black-forest-labs/FLUX.1-Canny-dev"
+
         scheduler = FlowMatchEulerDiscreteScheduler.from_pretrained(model_name, subfolder="scheduler")
         text_encoder = CLIPTextModel.from_pretrained("openai/clip-vit-large-patch14", torch_dtype=dtype)
         tokenizer = CLIPTokenizer.from_pretrained("openai/clip-vit-large-patch14", torch_dtype=dtype)
@@ -163,5 +176,5 @@ async def get_components(controlnet_processor):
         tokenizer_2 = T5TokenizerFast.from_pretrained(model_name, subfolder="tokenizer_2", torch_dtype=dtype)
         vae = AutoencoderKL.from_pretrained(model_name, subfolder="vae", torch_dtype=dtype)
         transformer = FluxTransformer2DModel.from_pretrained(model_name, subfolder="transformer", torch_dtype=dtype)
-        return scheduler, text_encoder, tokenizer, text_encoder_2, tokenizer_2, vae, transformer
+        return scheduler, text_encoder, tokenizer, text_encoder_2, tokenizer_2, vae, transformer, controlnet
 
