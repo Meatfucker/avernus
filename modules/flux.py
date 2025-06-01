@@ -1,9 +1,12 @@
-from diffusers import FlowMatchEulerDiscreteScheduler, AutoencoderKL, FluxTransformer2DModel, FluxPipeline, FluxImg2ImgPipeline, FluxControlPipeline, FluxControlNetImg2ImgPipeline, FluxControlNetModel
+from diffusers import (FlowMatchEulerDiscreteScheduler, AutoencoderKL, FluxTransformer2DModel, FluxPipeline,
+                       FluxControlPipeline, FluxControlNetModel, FluxPriorReduxPipeline)
 from transformers import CLIPTextModel, CLIPTokenizer,T5EncoderModel, T5TokenizerFast
 from optimum.quanto import freeze, qfloat8, quantize
 import torch
 import gc
 from modules.controlnet import process_flux_image
+
+dtype = torch.bfloat16
 
 
 async def generate_flux(prompt,
@@ -21,17 +24,19 @@ async def generate_flux(prompt,
                         ip_adapter_image=None,
                         ip_adapter_strength=None):
     kwargs = {}
-    kwargs["prompt"] = prompt
     kwargs["width"] = width if width is not None else 1024
     kwargs["height"] = height if height is not None else 1024
     kwargs["num_inference_steps"] = steps if steps is not None else 30
     kwargs["num_images_per_prompt"] = batch_size if batch_size is not None else 4
-    strength = strength if strength is not None else 0.7
+    strength = strength if strength is not None else 1.0
     ip_adapter_strength = ip_adapter_strength if ip_adapter_strength is not None else 0.6
 
     if image is not None:
-        kwargs["image"] = image
-        kwargs["strength"] = strength
+        redux_embeds, redux_pooled_embeds = await get_redux_embeds(image, prompt, strength)
+        kwargs["prompt_embeds"] = redux_embeds
+        kwargs["pooled_prompt_embeds"] = redux_pooled_embeds
+    else:
+        kwargs["prompt"] = prompt
 
 
     generator = await get_pipeline(image, model_name, revision, controlnet_processor)
@@ -82,68 +87,41 @@ async def quantize_components(generator):
 
 async def get_pipeline(image, model_name, revision, controlnet_processor):
     scheduler, text_encoder, tokenizer, text_encoder_2, tokenizer_2, vae, transformer, controlnet = await get_components(controlnet_processor, image)
-    if image is None:
-        if controlnet_processor is None:
-            print("loading FluxPipeline")
-            generator = FluxPipeline(scheduler=scheduler,
-                                     text_encoder=text_encoder,
-                                     tokenizer=tokenizer,
-                                     text_encoder_2=text_encoder_2,
-                                     tokenizer_2=tokenizer_2,
-                                     vae=vae,
-                                     transformer=transformer)
-        else:
-            print("loading FluxControlPipeline")
-            generator = FluxControlPipeline(scheduler=scheduler,
-                                            text_encoder=text_encoder,
-                                            tokenizer=tokenizer,
-                                            text_encoder_2=text_encoder_2,
-                                            tokenizer_2=tokenizer_2,
-                                            vae=vae,
-                                            transformer=transformer)
-        return generator
+
+    if controlnet_processor is None:
+        print("loading FluxPipeline")
+        generator = FluxPipeline(scheduler=scheduler,
+                                 text_encoder=text_encoder,
+                                 tokenizer=tokenizer,
+                                 text_encoder_2=text_encoder_2,
+                                 tokenizer_2=tokenizer_2,
+                                 vae=vae,
+                                 transformer=transformer)
     else:
-        if controlnet_processor is None:
-            print("loading FluxImg2ImgPipeline")
-            generator = FluxImg2ImgPipeline(scheduler=scheduler,
-                                            text_encoder=text_encoder,
-                                            tokenizer=tokenizer,
-                                            text_encoder_2=text_encoder_2,
-                                            tokenizer_2=tokenizer_2,
-                                            vae=vae,
-                                            transformer=transformer)
-        else:
-            print("loading FluxControlNetImg2ImgPipeline")
-            generator = FluxControlNetImg2ImgPipeline(scheduler=scheduler,
-                                                      text_encoder=text_encoder,
-                                                      tokenizer=tokenizer,
-                                                      text_encoder_2=text_encoder_2,
-                                                      tokenizer_2=tokenizer_2,
-                                                      vae=vae,
-                                                      transformer=transformer,
-                                                      controlnet=controlnet)
-        return generator
+        print("loading FluxControlPipeline")
+        generator = FluxControlPipeline(scheduler=scheduler,
+                                        text_encoder=text_encoder,
+                                        tokenizer=tokenizer,
+                                        text_encoder_2=text_encoder_2,
+                                        tokenizer_2=tokenizer_2,
+                                        vae=vae,
+                                        transformer=transformer)
+    return generator
+
 
 async def get_components(controlnet_processor, image):
     if controlnet_processor is None:
         model_name = "black-forest-labs/FLUX.1-dev"
         revision = "refs/pr/3"
-        dtype = torch.bfloat16
+        text_encoder, tokenizer, text_encoder_2, tokenizer_2 = await get_text_encoders()
         scheduler = FlowMatchEulerDiscreteScheduler.from_pretrained(model_name, subfolder="scheduler",
                                                                     revision=revision)
-        text_encoder = CLIPTextModel.from_pretrained("openai/clip-vit-large-patch14", torch_dtype=dtype)
-        tokenizer = CLIPTokenizer.from_pretrained("openai/clip-vit-large-patch14", torch_dtype=dtype)
-        text_encoder_2 = T5EncoderModel.from_pretrained(model_name, subfolder="text_encoder_2", torch_dtype=dtype,
-                                                        revision=revision)
-        tokenizer_2 = T5TokenizerFast.from_pretrained(model_name, subfolder="tokenizer_2", torch_dtype=dtype,
-                                                      revision=revision)
         vae = AutoencoderKL.from_pretrained(model_name, subfolder="vae", torch_dtype=dtype, revision=revision)
         transformer = FluxTransformer2DModel.from_pretrained(model_name, subfolder="transformer", torch_dtype=dtype,
                                                              revision=revision)
         return scheduler, text_encoder, tokenizer, text_encoder_2, tokenizer_2, vae, transformer, None
 
     if controlnet_processor == "depth":
-        dtype = torch.bfloat16
         if image:
             controlnet = FluxControlNetModel.from_pretrained("InstantX/FLUX.1-dev-Controlnet-Canny-alpha", torch_dtype=dtype)
             model_name = "black-forest-labs/FLUX.1-dev"
@@ -161,7 +139,6 @@ async def get_components(controlnet_processor, image):
         return scheduler, text_encoder, tokenizer, text_encoder_2, tokenizer_2, vae, transformer, controlnet
 
     if controlnet_processor == "canny":
-        dtype = torch.bfloat16
         if image:
             controlnet = FluxControlNetModel.from_pretrained("InstantX/FLUX.1-dev-Controlnet-Canny-alpha", torch_dtype=dtype)
             model_name = "black-forest-labs/FLUX.1-dev"
@@ -178,3 +155,35 @@ async def get_components(controlnet_processor, image):
         transformer = FluxTransformer2DModel.from_pretrained(model_name, subfolder="transformer", torch_dtype=dtype)
         return scheduler, text_encoder, tokenizer, text_encoder_2, tokenizer_2, vae, transformer, controlnet
 
+async def get_redux_embeds(image, prompt, strength):
+    redux_repo = "black-forest-labs/FLUX.1-Redux-dev"
+    text_encoder, tokenizer, text_encoder_2, tokenizer_2 = await get_text_encoders()
+    redux_pipeline = FluxPriorReduxPipeline.from_pretrained(redux_repo,
+                                                            text_encoder=text_encoder,
+                                                            tokenizer=tokenizer,
+                                                            text_encoder_2=text_encoder_2,
+                                                            tokenizer_2=tokenizer_2,
+                                                            torch_dtype=dtype).to("cuda")
+    redux_embeds, redux_pooled_embeds = redux_pipeline(image=image,
+                                                       prompt=prompt,
+                                                       prompt_2=prompt,
+                                                       prompt_embeds_scale=strength,
+                                                       pooled_prompt_embeds_scale=strength,
+                                                       return_dict=False)
+    redux_pipeline.to("cpu")
+    del redux_pipeline, text_encoder, tokenizer, text_encoder_2, tokenizer_2
+    torch.cuda.empty_cache()
+    gc.collect()
+
+    return redux_embeds, redux_pooled_embeds
+
+async def get_text_encoders():
+    model_name = "black-forest-labs/FLUX.1-dev"
+    revision = "refs/pr/3"
+    text_encoder = CLIPTextModel.from_pretrained("openai/clip-vit-large-patch14", torch_dtype=dtype)
+    tokenizer = CLIPTokenizer.from_pretrained("openai/clip-vit-large-patch14", torch_dtype=dtype)
+    text_encoder_2 = T5EncoderModel.from_pretrained(model_name, subfolder="text_encoder_2", torch_dtype=dtype,
+                                                    revision=revision)
+    tokenizer_2 = T5TokenizerFast.from_pretrained(model_name, subfolder="tokenizer_2", torch_dtype=dtype,
+                                                  revision=revision)
+    return text_encoder, tokenizer, text_encoder_2, tokenizer_2

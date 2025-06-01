@@ -1,6 +1,6 @@
 import gc
 from diffusers import (StableDiffusionXLPipeline, StableDiffusionXLControlNetPipeline, StableDiffusionXLImg2ImgPipeline,
-                       StableDiffusionXLControlNetImg2ImgPipeline)
+                       StableDiffusionXLControlNetImg2ImgPipeline, StableDiffusionXLInpaintPipeline)
 import torch
 from modules.controlnet import get_sdxl_controlnet
 
@@ -97,3 +97,40 @@ async def get_pipeline(model_name, image, controlnet_image, controlnet_processor
                                                                   use_safetensors=True).to("cuda")
             generator.enable_vae_slicing()
     return generator, processed_image
+
+async def generate_sdxl_inpaint(prompt,
+                                negative_prompt,
+                                width,
+                                height,
+                                steps,
+                                batch_size,
+                                image,
+                                mask_image,
+                                model_name,
+                                strength):
+    kwargs = {}
+    kwargs["prompt"] = prompt
+    if negative_prompt is not None:
+        kwargs["negative_prompt"] = negative_prompt
+    kwargs["width"] = width if width is not None else 1024
+    kwargs["height"] = height if height is not None else 1024
+    kwargs["num_inference_steps"] = steps if steps is not None else 30
+    kwargs["num_images_per_prompt"] = batch_size if batch_size is not None else 4
+    kwargs["strength"] = strength if strength is not None else 0.75
+    kwargs["image"] = image
+    kwargs["mask_image"] = mask_image
+    kwargs["padding_mask_crop"] = 32
+    if model_name is None:
+        model_name = "misri/zavychromaxl_v100"
+
+    generator = StableDiffusionXLInpaintPipeline.from_pretrained(model_name,
+                                                                 torch_dtype=torch.float16,
+                                                                 use_safetensors=True).to("cuda")
+    generator.enable_vae_slicing()
+    images = generator(**kwargs).images
+
+    generator.to("cpu")
+    del generator
+    torch.cuda.empty_cache()
+    gc.collect()
+    return images

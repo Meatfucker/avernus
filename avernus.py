@@ -4,12 +4,12 @@ import os
 from fastapi import FastAPI, Request, Body
 from modules.logging_config import setup_logging
 from modules.chat import generate_chat, generate_multimodal_chat
-from modules.sdxl import generate_sdxl
+from modules.sdxl import generate_sdxl, generate_sdxl_inpaint
 from modules.flux import generate_flux
 from modules.rag import retrieve_rag
 from modules.pydantic_models import (FluxControlnetListResponse, FluxRequest, FluxResponse, FluxLoraListResponse,
                                      LLMRequest, LLMResponse, MultiModalLLMRequest, MultiModalLLMResponse, RAGResponse,
-                                     RAGRequest, SDXLRequest, SDXLResponse, SDXLLoraListResponse,
+                                     RAGRequest, SDXLInpaintRequest, SDXLRequest, SDXLResponse, SDXLLoraListResponse,
                                      SDXLControlnetListResponse, StatusResponse)
 from loguru import logger
 from PIL import Image
@@ -98,6 +98,31 @@ async def sdxl_generate(data: SDXLRequest = Body(...)):
         base64_images = [image_to_base64(img) for img in response]
     except Exception as e:
         logger.info(f"sdxl_generate ERROR: {e}")
+        return None
+    return {"images": base64_images}
+
+@avernus.post("/sdxl_inpaint_generate", response_model=SDXLResponse)
+async def sdxl_inpaint_generate(data: SDXLInpaintRequest = Body(...)):
+    """Generates some number of sdxl inpaint images based on user inputs."""
+    logger.info("sdxl_inpaint_generate request received")
+    kwargs = {"prompt": data.prompt,
+              "negative_prompt": data.negative_prompt,
+              "width": data.width,
+              "height": data.height,
+              "steps": data.steps,
+              "batch_size": data.batch_size,
+              "model_name": data.model_name}
+    if data.strength:
+        kwargs["strength"] = data.strength
+    if data.image:
+        kwargs["image"] = base64_to_image(data.image)
+    if data.mask_image:
+        kwargs["mask_image"] = base64_to_image(data.mask_image)
+    try:
+        response = await generate_sdxl_inpaint(**kwargs)
+        base64_images = [image_to_base64(img) for img in response]
+    except Exception as e:
+        logger.info(f"sdxl_inpaint_generate ERROR: {e}")
         return None
     return {"images": base64_images}
 

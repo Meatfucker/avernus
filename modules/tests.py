@@ -40,9 +40,9 @@ class FluxControlnetI2ILoraTest(TimedTest):
     async def run_test(self):
         image = Image.open("tests/sdxl_i2i_image_0.png")
         image = image_to_base64(image)
-        controlnet_image = Image.open("tests/sdxl_image_0.png")
+        controlnet_image = Image.open("tests/mushroom.png")
         controlnet_image = image_to_base64(controlnet_image)
-        images = await self.client.flux_image("jello monster",
+        images = await self.client.flux_image("jello monster man",
                                               batch_size=2,
                                               image=image,
                                               lora_name="lighty_peft.safetensors",
@@ -54,7 +54,7 @@ class FluxControlnetI2ITest(TimedTest):
     async def run_test(self):
         image = Image.open("tests/sdxl_i2i_image_0.png")
         image = image_to_base64(image)
-        controlnet_image = Image.open("tests/sdxl_image_0.png")
+        controlnet_image = Image.open("tests/mushroom.png")
         controlnet_image = image_to_base64(controlnet_image)
         images = await self.client.flux_image("cartoon",
                                               batch_size=2,
@@ -229,6 +229,19 @@ class SDXLI2ITest(TimedTest):
                                               strength=0.3,
                                               batch_size=2)
         await base64_image_to_file(images, "sdxl_i2i")
+
+class SDXLInpaintTest(TimedTest):
+    async def run_test(self):
+        image = Image.open("tests/sdxl_i2i_image_0.png")
+        image = image_to_base64(image)
+        mask_image = Image.open("tests/mask_image.png")
+        mask_image = image_to_base64(mask_image)
+        images = await self.client.sdxl_inpaint_image("cartoon",
+                                                      batch_size=2,
+                                                      image=image,
+                                                      mask_image=mask_image,
+                                                      strength=1)
+        await base64_image_to_file(images, "sdxl_inpaint")
 
 class SDXLIPAdapterTest(TimedTest):
     async def run_test(self):

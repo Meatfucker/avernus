@@ -90,6 +90,31 @@ class AvernusClient:
             print(f"ERROR: {e}")
             return {"ERROR": str(e)}
 
+    async def sdxl_inpaint_image(self, prompt, image=None, negative_prompt=None, model_name=None, width=None,
+                         height=None, steps=None, batch_size=None, mask_image=None, strength=None):
+        """This takes a prompt, and optional other variables and returns a list of base64 encoded images"""
+        url = f"http://{self.base_url}/sdxl_inpaint_generate"
+        data = {"prompt": prompt,
+                "image": image,
+                "negative_prompt": negative_prompt,
+                "model_name": model_name,
+                "width": width,
+                "height": height,
+                "steps": steps,
+                "batch_size": batch_size,
+                "mask_image": mask_image,
+                "strength": strength}
+        try:
+            async with httpx.AsyncClient(timeout=3600) as client:
+                response = await client.post(url, json=data)
+            if response.status_code == 200:
+                return response.json().get("images", [])
+            else:
+                print(f"SDXL INPAINT ERROR: {response.status_code}")
+        except Exception as e:
+            print(f"ERROR: {e}")
+            return {"ERROR": str(e)}
+
     async def flux_image(self, prompt, image=None, model_name=None, lora_name=None, width=None, height=None, steps=None,
                          batch_size=None, strength=None, controlnet_image=None,
                          controlnet_processor=None, ip_adapter_image=None,
