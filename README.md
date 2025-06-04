@@ -23,14 +23,16 @@ If you want to use the rag endpoint you need to place urls, one per line in rag/
 # Endpoints:
 
 - /status - Returns server status
-- /llm_chat - For generating llm responses
-- /sdxl_generate - For generating sdxl images
-- /flux_generate - For generating flux images
+- /llm_chat - For generating LLM responses
+- /sdxl_generate - For generating SDXL images
+- /sdxl_inpaint_generate - For SDXL inpainting
+- /flux_generate - For generating Flux images
+- /flux_inpaint_generate - For Flux inpainting
 - /list_sdxl_loras - Returns a list of available loras from loras/sdxl
 - /list_sdxl_controlnets - Returns a list of available SDXL controlnets
 - /list_flux_loras - Returns a list of available loras from loras/flux
 - /list_flux_controlnets - Returns a list of available Flux controlnets (Just canny for now)
-- /rag_retrieve - Returns relevant rag documents to the query
+- /rag_retrieve - Returns relevant RAG documents to the query
 
 # TODO:
 

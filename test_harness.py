@@ -1,11 +1,11 @@
 import time
 from loguru import logger
 from modules.tests import (CheckStatus, FluxControlnetI2ILoraTest, FluxControlnetI2ITest, FluxControlnetListTest,
-                           FluxControlnetLoraTest, FluxControlnetTest, FluxI2ITest, FluxIPAdapterTest, FluxLoraI2ITest,
-                           FluxLoraListTest, FluxLoraTest, FluxTest, LlmChatTest, LlmRagTest, SDXLControlnetI2ILoraTest,
-                           SDXLControlnetI2ITest, SDXLControlnetListTest, SDXLControlnetLoraTest, SDXLControlnetTest,
-                           SDXLI2ILoraTest, SDXLI2ITest, SDXLInpaintTest, SDXLIPAdapterTest, SDXLLoraListTest,
-                           SDXLLoraTest, SDXLTest)
+                           FluxControlnetLoraTest, FluxControlnetTest, FluxI2ITest, FluxInpaintTest, FluxIPAdapterTest,
+                           FluxLoraI2ITest, FluxLoraListTest, FluxLoraTest, FluxTest, LlmChatTest, LlmRagTest,
+                           SDXLControlnetI2ILoraTest, SDXLControlnetI2ITest, SDXLControlnetListTest,
+                           SDXLControlnetLoraTest, SDXLControlnetTest, SDXLI2ILoraTest, SDXLI2ITest, SDXLInpaintTest,
+                           SDXLIPAdapterTest, SDXLLoraListTest, SDXLLoraTest, SDXLTest)
 start_time = time.time()
 
 check_status = CheckStatus("CHECK STATUS")
@@ -16,7 +16,7 @@ check_status = CheckStatus("CHECK STATUS")
 #sdxl = SDXLTest("SDXL")
 #sdxl_lora = SDXLLoraTest("SDXL LORA")
 #sdxl_i2i = SDXLI2ITest("SDXL I2I")
-sdxl_inpaint = SDXLInpaintTest("SDXL INPAINT")
+#sdxl_inpaint = SDXLInpaintTest("SDXL INPAINT")
 #sdxl_lora_i2i = SDXLI2ILoraTest("SDXL I2I LORA")
 #sdxl_ipadapter = SDXLIPAdapterTest("SDXL IP ADAPTER")
 #sdxl_control = SDXLControlnetTest("SDXL CONTROLNET")
@@ -28,6 +28,7 @@ sdxl_inpaint = SDXLInpaintTest("SDXL INPAINT")
 #flux = FluxTest("FLUX")
 #flux_lora = FluxLoraTest("FLUX LORA")
 #flux_i2i = FluxI2ITest("FLUX I2I")
+flux_inpaint = FluxInpaintTest("FLUX INPAINT")
 #flux_lora_i2i = FluxLoraI2ITest("FLUX I2I LORA")
 #flux_ipadapter = FluxIPAdapterTest("FLUX IP ADAPTER")
 #flux_control = FluxControlnetTest("FLUX CONTROLNET")

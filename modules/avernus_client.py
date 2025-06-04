@@ -147,6 +147,31 @@ class AvernusClient:
             print(f"ERROR: {e}")
             return {"ERROR": str(e)}
 
+    async def flux_inpaint_image(self, prompt, image=None, model_name=None, width=None,
+                         height=None, steps=None, batch_size=None, guidance_scale=None, mask_image=None, strength=None):
+        """This takes a prompt, and optional other variables and returns a list of base64 encoded images"""
+        url = f"http://{self.base_url}/flux_inpaint_generate"
+        data = {"prompt": prompt,
+                "image": image,
+                "model_name": model_name,
+                "width": width,
+                "height": height,
+                "steps": steps,
+                "batch_size": batch_size,
+                "guidance_scale": guidance_scale,
+                "mask_image": mask_image,
+                "strength": strength}
+        try:
+            async with httpx.AsyncClient(timeout=3600) as client:
+                response = await client.post(url, json=data)
+            if response.status_code == 200:
+                return response.json().get("images", [])
+            else:
+                print(f"FLUX INPAINT ERROR: {response.status_code}")
+        except Exception as e:
+            print(f"ERROR: {e}")
+            return {"ERROR": str(e)}
+
     async def list_sdxl_loras(self):
         """Fetches the list of sdxl LoRA filenames from the server."""
         url = f"http://{self.base_url}/list_sdxl_loras"

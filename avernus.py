@@ -5,12 +5,12 @@ from fastapi import FastAPI, Request, Body
 from modules.logging_config import setup_logging
 from modules.chat import generate_chat, generate_multimodal_chat
 from modules.sdxl import generate_sdxl, generate_sdxl_inpaint
-from modules.flux import generate_flux
+from modules.flux import generate_flux, generate_flux_inpaint
 from modules.rag import retrieve_rag
-from modules.pydantic_models import (FluxControlnetListResponse, FluxRequest, FluxResponse, FluxLoraListResponse,
-                                     LLMRequest, LLMResponse, MultiModalLLMRequest, MultiModalLLMResponse, RAGResponse,
-                                     RAGRequest, SDXLInpaintRequest, SDXLRequest, SDXLResponse, SDXLLoraListResponse,
-                                     SDXLControlnetListResponse, StatusResponse)
+from modules.pydantic_models import (FluxControlnetListResponse, FluxInpaintRequest, FluxRequest, FluxResponse,
+                                     FluxLoraListResponse, LLMRequest, LLMResponse, MultiModalLLMRequest,
+                                     MultiModalLLMResponse, RAGResponse, RAGRequest, SDXLInpaintRequest, SDXLRequest,
+                                     SDXLResponse, SDXLLoraListResponse, SDXLControlnetListResponse, StatusResponse)
 from loguru import logger
 from PIL import Image
 
@@ -150,11 +150,39 @@ async def flux_generate(data: FluxRequest = Body(...)):
     if data.ip_adapter_image:
         kwargs["ip_adapter_strength"] = data.ip_adapter_strength
         kwargs["ip_adapter_image"] = base64_to_image(data.ip_adapter_image)
+    if data.guidance_scale:
+        kwargs["guidance_scale"] = data.guidance_scale
     try:
         response = await generate_flux(**kwargs)
         base64_images = [image_to_base64(img) for img in response]
     except Exception as e:
         logger.info(f"flux_generate ERROR: {e}")
+        return None
+    return {"images": base64_images}
+
+@avernus.post("/flux_inpaint_generate", response_model=FluxResponse)
+async def flux_inpaint_generate(data: FluxInpaintRequest = Body(...)):
+    """Generates some number of sdxl inpaint images based on user inputs."""
+    logger.info("sdxl_inpaint_generate request received")
+    kwargs = {"prompt": data.prompt,
+              "width": data.width,
+              "height": data.height,
+              "steps": data.steps,
+              "batch_size": data.batch_size,
+              "model_name": data.model_name}
+    if data.strength:
+        kwargs["strength"] = data.strength
+    if data.image:
+        kwargs["image"] = base64_to_image(data.image)
+    if data.mask_image:
+        kwargs["mask_image"] = base64_to_image(data.mask_image)
+    if data.guidance_scale:
+        kwargs["guidance_scale"] = data.guidance_scale
+    try:
+        response = await generate_flux_inpaint(**kwargs)
+        base64_images = [image_to_base64(img) for img in response]
+    except Exception as e:
+        logger.info(f"sdxl_inpaint_generate ERROR: {e}")
         return None
     return {"images": base64_images}
 

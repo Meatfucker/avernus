@@ -11,8 +11,11 @@ class FluxInpaintRequest(BaseModel):
     height: Optional[int] = Field(None, example=1024)
     steps: Optional[int] = Field(None, example=30)
     batch_size: Optional[int] = Field(None, example=4)
+    lora_name: Optional[str] = Field(None, example="lora_name.safetensors")
     image: Optional[str] = Field(None, example="a9d8fp0sa9dfpasdfllkajsdflkjadslf...")
-    inpaint_mask: Optional[str] = Field(None, example="a9d8fp0sa9dfpasdfllkajsdflkjadslf...")
+    mask_image: Optional[str] = Field(None, example="a9d8fp0sa9dfpasdfllkajsdflkjadslf...")
+    strength: Optional[float] = Field(None, example=0.75)
+    guidance_scale: Optional[float] = Field(None, exaple=5.0)
 
 class FluxLoraListResponse(BaseModel):
     loras: List[str] = Field(..., example=["lora1.safetensors", "lora2.safetensors", "lora3.safetensors"])
@@ -31,6 +34,7 @@ class FluxRequest(BaseModel):
     controlnet_image: Optional[str] = Field(None, example="a9d8fp0sa9dfpasdfllkajsdflkjadslf...")
     ip_adapter_image: Optional[str] = Field(None, example="a9d8fp0sa9dfpasdfllkajsdflkjadslf...")
     ip_adapter_strength: Optional[float] = Field(None, example=0.6)
+    guidance_scale: Optional[float] = Field(None, exaple=5.0)
 
 class FluxResponse(BaseModel):
     images: List[str] = Field(..., example=["kajsdflsadfsadf....", "lkjdsaflkjsadlkfjsa3423....", "lwerewjrlwkejrwewr..."])

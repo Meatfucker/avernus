@@ -120,6 +120,19 @@ class FluxLoraI2ITest(TimedTest):
                                               lora_name="lighty_peft.safetensors")
         await base64_image_to_file(images, "flux_lora_i2i")
 
+class FluxInpaintTest(TimedTest):
+    async def run_test(self):
+        image = Image.open("tests/flux_ipadapter_image_0.png")
+        image = image_to_base64(image)
+        mask_image = Image.open("tests/mask_image.png")
+        mask_image = image_to_base64(mask_image)
+        images = await self.client.flux_inpaint_image("green beans",
+                                                      batch_size=2,
+                                                      image=image,
+                                                      mask_image=mask_image,
+                                                      strength=0.9)
+        await base64_image_to_file(images, "flux_inpaint")
+
 class FluxLoraListTest(TimedTest):
     async def run_test(self):
         loras = await self.client.list_flux_loras()
