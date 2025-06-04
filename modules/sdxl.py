@@ -18,7 +18,8 @@ async def generate_sdxl(prompt,
                         controlnet_image=None,
                         controlnet_conditioning=None,
                         ip_adapter_image=None,
-                        ip_adapter_strength=None):
+                        ip_adapter_strength=None,
+                        guidance_scale=None):
     kwargs = {}
     kwargs["prompt"] = prompt
     if negative_prompt is not None:
@@ -27,6 +28,7 @@ async def generate_sdxl(prompt,
     kwargs["height"] = height if height is not None else 1024
     kwargs["num_inference_steps"] = steps if steps is not None else 30
     kwargs["num_images_per_prompt"] = batch_size if batch_size is not None else 4
+    kwargs["guidance_scale"] = guidance_scale if guidance_scale is not None else 5.0
     strength = strength if strength is not None else 0.7
     controlnet_conditioning = controlnet_conditioning if controlnet_conditioning is not None else 0.5
     ip_adapter_strength = ip_adapter_strength if ip_adapter_strength is not None else 0.6
@@ -107,7 +109,8 @@ async def generate_sdxl_inpaint(prompt,
                                 image,
                                 mask_image,
                                 model_name,
-                                strength):
+                                strength=None,
+                                guidance_scale=None):
     kwargs = {}
     kwargs["prompt"] = prompt
     if negative_prompt is not None:
@@ -117,9 +120,11 @@ async def generate_sdxl_inpaint(prompt,
     kwargs["num_inference_steps"] = steps if steps is not None else 30
     kwargs["num_images_per_prompt"] = batch_size if batch_size is not None else 4
     kwargs["strength"] = strength if strength is not None else 0.75
+    kwargs["guidance_scale"] = guidance_scale if guidance_scale is not None else 5.0
     kwargs["image"] = image
     kwargs["mask_image"] = mask_image
     kwargs["padding_mask_crop"] = 32
+
     if model_name is None:
         model_name = "misri/zavychromaxl_v100"
 

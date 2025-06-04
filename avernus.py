@@ -21,7 +21,7 @@ avernus = FastAPI()
 async def status():
     """ This returns Ok when hit"""
     logger.info("status request received")
-    return {"status": str("Ok!"), "version": str("0.4.2")}
+    return {"status": str("Ok!"), "version": str("0.4.3")}
 
 @avernus.post("/rag_retrieve", response_model=RAGResponse)
 async def rag_retrieve(request: Request, data: RAGRequest = Body(...)):
@@ -93,6 +93,8 @@ async def sdxl_generate(data: SDXLRequest = Body(...)):
         kwargs["image"] = base64_to_image(data.image)
     if data.strength is not None and data.image:
         kwargs["strength"] = data.strength
+    if data.guidance_scale:
+        kwargs["guidance_scale"] = data.guidance_scale
     try:
         response = await generate_sdxl(**kwargs)
         base64_images = [image_to_base64(img) for img in response]
@@ -118,6 +120,8 @@ async def sdxl_inpaint_generate(data: SDXLInpaintRequest = Body(...)):
         kwargs["image"] = base64_to_image(data.image)
     if data.mask_image:
         kwargs["mask_image"] = base64_to_image(data.mask_image)
+    if data.guidance_scale:
+        kwargs["guidance_scale"] = data.guidance_scale
     try:
         response = await generate_sdxl_inpaint(**kwargs)
         base64_images = [image_to_base64(img) for img in response]

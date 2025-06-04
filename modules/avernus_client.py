@@ -59,9 +59,9 @@ class AvernusClient:
             return {"ERROR": str(e)}
 
     async def sdxl_image(self, prompt, image=None, negative_prompt=None, model_name=None, lora_name=None, width=None,
-                         height=None, steps=None, batch_size=None, strength=None, controlnet_image=None,
-                         controlnet_processor=None, controlnet_conditioning=None, ip_adapter_image=None,
-                         ip_adapter_strength=None):
+                         height=None, steps=None, batch_size=None, guidance_scale=None, strength=None,
+                         controlnet_image=None, controlnet_processor=None, controlnet_conditioning=None,
+                         ip_adapter_image=None, ip_adapter_strength=None):
         """This takes a prompt, and optional other variables and returns a list of base64 encoded images"""
         url = f"http://{self.base_url}/sdxl_generate"
         data = {"prompt": prompt,
@@ -73,6 +73,7 @@ class AvernusClient:
                 "height": height,
                 "steps": steps,
                 "batch_size": batch_size,
+                "guidance_scale": guidance_scale,
                 "strength": strength,
                 "controlnet_image": controlnet_image,
                 "controlnet_processor": controlnet_processor,
@@ -91,7 +92,7 @@ class AvernusClient:
             return {"ERROR": str(e)}
 
     async def sdxl_inpaint_image(self, prompt, image=None, negative_prompt=None, model_name=None, width=None,
-                         height=None, steps=None, batch_size=None, mask_image=None, strength=None):
+                         height=None, steps=None, batch_size=None, guidance_scale=None, mask_image=None, strength=None):
         """This takes a prompt, and optional other variables and returns a list of base64 encoded images"""
         url = f"http://{self.base_url}/sdxl_inpaint_generate"
         data = {"prompt": prompt,
@@ -102,6 +103,7 @@ class AvernusClient:
                 "height": height,
                 "steps": steps,
                 "batch_size": batch_size,
+                "guidance_scale": guidance_scale,
                 "mask_image": mask_image,
                 "strength": strength}
         try:
