@@ -163,7 +163,7 @@ async def flux_generate(data: FluxRequest = Body(...)):
 @avernus.post("/flux_inpaint_generate", response_model=FluxResponse)
 async def flux_inpaint_generate(data: FluxInpaintRequest = Body(...)):
     """Generates some number of sdxl inpaint images based on user inputs."""
-    logger.info("sdxl_inpaint_generate request received")
+    logger.info("flux_inpaint_generate request received")
     kwargs = {"prompt": data.prompt,
               "width": data.width,
               "height": data.height,
