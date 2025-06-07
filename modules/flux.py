@@ -1,9 +1,11 @@
 from diffusers import (FlowMatchEulerDiscreteScheduler, AutoencoderKL, FluxTransformer2DModel, FluxPipeline,
-                       FluxControlPipeline, FluxControlNetModel, FluxPriorReduxPipeline, FluxInpaintPipeline)
+                       FluxControlPipeline, FluxControlNetModel, FluxPriorReduxPipeline, FluxInpaintPipeline,
+                       FluxFillPipeline)
 from transformers import CLIPTextModel, CLIPTokenizer,T5EncoderModel, T5TokenizerFast
 from optimum.quanto import freeze, qfloat8, quantize
 import torch
 import gc
+import os
 from modules.controlnet import process_flux_image
 
 dtype = torch.bfloat16
@@ -52,11 +54,20 @@ async def generate_flux(prompt,
             kwargs["ip_adapter_image"] = ip_adapter_image
         except Exception as e:
             print(f"FLUX IP ADAPTER ERROR: {e}")
+
     if lora_name is not None:
-        try:
-            generator.load_lora_weights(f"loras/flux/{lora_name}", weight_name=lora_name)
-        except Exception as e:
-            print(f"FLUX LORA ERROR: {e}")
+        lora_list = []
+        for lora in lora_name:
+            try:
+                lora_name = os.path.splitext(lora)[0]
+                generator.load_lora_weights(f"loras/flux/{lora}", adapter_name=lora_name)
+                lora_list.append(lora_name)
+            except Exception as e:
+                print(f"FLUX LORA ERROR: {e}")
+        generator.set_adapters(lora_list)
+        generator.fuse_lora(adapter_names=lora_list)
+        generator.unload_lora_weights()
+
     if controlnet_processor is not None:
         processed_image = await process_flux_image(controlnet_processor, controlnet_image)
         kwargs["control_image"] = processed_image
@@ -119,8 +130,7 @@ async def get_components(controlnet_processor, image):
         scheduler = FlowMatchEulerDiscreteScheduler.from_pretrained(model_name, subfolder="scheduler",
                                                                     revision=revision)
         vae = AutoencoderKL.from_pretrained(model_name, subfolder="vae", torch_dtype=dtype, revision=revision)
-        transformer = FluxTransformer2DModel.from_pretrained(model_name, subfolder="transformer", torch_dtype=dtype,
-                                                             revision=revision)
+        transformer = FluxTransformer2DModel.from_pretrained(model_name, subfolder="transformer", torch_dtype=dtype, revision=revision)
         return scheduler, text_encoder, tokenizer, text_encoder_2, tokenizer_2, vae, transformer, None
 
     if controlnet_processor == "depth":
@@ -221,8 +231,7 @@ async def generate_flux_inpaint(prompt,
     scheduler = FlowMatchEulerDiscreteScheduler.from_pretrained(model_name, subfolder="scheduler",
                                                                 revision=revision)
     vae = AutoencoderKL.from_pretrained(model_name, subfolder="vae", torch_dtype=dtype, revision=revision)
-    transformer = FluxTransformer2DModel.from_pretrained(model_name, subfolder="transformer", torch_dtype=dtype,
-                                                         revision=revision)
+    transformer = FluxTransformer2DModel.from_pretrained(model_name, subfolder="transformer", torch_dtype=dtype, revision=revision)
 
     print("loading FluxInpaintPipeline")
     generator = FluxInpaintPipeline(scheduler=scheduler,
@@ -234,10 +243,17 @@ async def generate_flux_inpaint(prompt,
                                     transformer=transformer)
 
     if lora_name is not None:
-        try:
-            generator.load_lora_weights(f"loras/flux/{lora_name}", weight_name=lora_name)
-        except Exception as e:
-            print(f"FLUX LORA ERROR: {e}")
+        lora_list = []
+        for lora in lora_name:
+            try:
+                lora_name = os.path.splitext(lora)[0]
+                generator.load_lora_weights(f"loras/flux/{lora}", adapter_name=lora_name)
+                lora_list.append(lora_name)
+            except Exception as e:
+                print(f"FLUX LORA ERROR: {e}")
+        generator.set_adapters(lora_list)
+        generator.fuse_lora(adapter_names=lora_list)
+        generator.unload_lora_weights()
 
     generator = await quantize_components(generator)
     generator.to("cuda")
@@ -254,3 +270,70 @@ async def generate_flux_inpaint(prompt,
     gc.collect()
     return images
 
+async def generate_flux_fill(prompt,
+                             width,
+                             height,
+                             steps,
+                             batch_size,
+                             image=None,
+                             mask_image=None,
+                             strength=None,
+                             model_name=None,
+                             lora_name=None,
+                             revision=None,
+                             guidance_scale=None):
+    kwargs = {}
+    kwargs["prompt"] = prompt
+    kwargs["width"] = width if width is not None else 1024
+    kwargs["height"] = height if height is not None else 1024
+    kwargs["num_inference_steps"] = steps if steps is not None else 30
+    kwargs["num_images_per_prompt"] = batch_size if batch_size is not None else 4
+    kwargs["strength"] = strength if strength is not None else 0.9
+    kwargs["image"] = image
+    kwargs["mask_image"] = mask_image
+    #kwargs["padding_mask_crop"] = 32
+    kwargs["guidance_scale"] = guidance_scale if guidance_scale is not None else 30.0
+
+    model_name = "black-forest-labs/FLUX.1-Fill-dev"
+    #revision = "refs/pr/3"
+    text_encoder, tokenizer, text_encoder_2, tokenizer_2 = await get_text_encoders()
+    scheduler = FlowMatchEulerDiscreteScheduler.from_pretrained(model_name, subfolder="scheduler")
+    vae = AutoencoderKL.from_pretrained(model_name, subfolder="vae", torch_dtype=dtype)
+    transformer = FluxTransformer2DModel.from_pretrained(model_name, subfolder="transformer", torch_dtype=dtype)
+
+    print("loading FluxFillPipeline")
+    generator = FluxFillPipeline(scheduler=scheduler,
+                                    text_encoder=text_encoder,
+                                    tokenizer=tokenizer,
+                                    text_encoder_2=text_encoder_2,
+                                    tokenizer_2=tokenizer_2,
+                                    vae=vae,
+                                    transformer=transformer)
+
+    if lora_name is not None:
+        lora_list = []
+        for lora in lora_name:
+            try:
+                lora_name = os.path.splitext(lora)[0]
+                generator.load_lora_weights(f"loras/flux/{lora}", adapter_name=lora_name)
+                lora_list.append(lora_name)
+            except Exception as e:
+                print(f"FLUX LORA ERROR: {e}")
+        generator.set_adapters(lora_list)
+        generator.fuse_lora(adapter_names=lora_list)
+        generator.unload_lora_weights()
+
+    generator = await quantize_components(generator)
+    generator.to("cuda")
+    generator.enable_model_cpu_offload()
+    try:
+        images = generator(**kwargs).images
+    except Exception as e:
+        print(f"FLUX INPAINT GENERATE ERROR: {e}")
+    generator.to("cpu")
+
+    del text_encoder, tokenizer, text_encoder_2, tokenizer_2, scheduler, vae, transformer
+    del generator.scheduler, generator.text_encoder, generator.text_encoder_2, generator.tokenizer, generator.tokenizer_2, generator.vae, generator.transformer, generator
+    torch.cuda.empty_cache()
+    gc.collect()
+    return images

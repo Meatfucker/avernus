@@ -165,6 +165,10 @@ class LlmRagTest(TimedTest):
         for result in rag_results:
             logger.success(result)
 
+class LTXTest(TimedTest):
+    async def run_test(self):
+        await self.client.ltx_video("frogs hopping")
+
 class SDXLControlnetI2ILoraTest(TimedTest):
     async def run_test(self):
         image = Image.open("tests/sdxl_i2i_image_0.png")
@@ -272,9 +276,17 @@ class SDXLLoraListTest(TimedTest):
         logger.success(loras)
 
 class SDXLLoraTest(TimedTest):
+    def __init__(self, prompt, lora_name, test_name):
+        self.prompt = prompt
+        self.lora_name = lora_name
+        super().__init__(test_name)
+
     async def run_test(self):
-        images = await self.client.sdxl_image("matlighty bald man wearing lingerie casting a chicken spell",
-                                              lora_name="lighty.safetensors",
+        if isinstance(self.lora_name, str):
+            self.lora_name = [self.lora_name]
+
+        images = await self.client.sdxl_image(self.prompt,
+                                              lora_name=self.lora_name,
                                               batch_size=2)
         await base64_image_to_file(images, "sdxl_lora")
 

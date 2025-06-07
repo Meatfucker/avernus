@@ -41,4 +41,5 @@ If you want to use the rag endpoint you need to place urls, one per line in rag/
 - Add svg model endpoint
 - Return different status codes if a generation ooms
 - Add LLM chat templates
+- add button to get current image dimensions
 

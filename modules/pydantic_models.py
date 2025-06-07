@@ -1,4 +1,4 @@
-from typing import Dict, List, Optional
+from typing import Dict, List, Optional, Union
 from pydantic import BaseModel, Field
 
 class FluxControlnetListResponse(BaseModel):
@@ -6,35 +6,35 @@ class FluxControlnetListResponse(BaseModel):
 
 class FluxInpaintRequest(BaseModel):
     prompt: str = Field(..., example="A big green monster")
-    model_name: Optional[str] = Field(None, example="Goekdeniz-Guelmez/Josiefied-Qwen2.5-14B-Instruct-abliterated-v4")
+    model_name: Optional[str] = Field(None, example="some-repo/some-flux-model")
     width: Optional[int] = Field(None, example=1024)
     height: Optional[int] = Field(None, example=1024)
     steps: Optional[int] = Field(None, example=30)
     batch_size: Optional[int] = Field(None, example=4)
-    lora_name: Optional[str] = Field(None, example="lora_name.safetensors")
+    lora_name: Optional[Union[str, List[str]]] = Field(None, example="lora_name.safetensors")
     image: Optional[str] = Field(None, example="a9d8fp0sa9dfpasdfllkajsdflkjadslf...")
     mask_image: Optional[str] = Field(None, example="a9d8fp0sa9dfpasdfllkajsdflkjadslf...")
     strength: Optional[float] = Field(None, example=0.75)
-    guidance_scale: Optional[float] = Field(None, exaple=5.0)
+    guidance_scale: Optional[float] = Field(None, example=5.0)
 
 class FluxLoraListResponse(BaseModel):
     loras: List[str] = Field(..., example=["lora1.safetensors", "lora2.safetensors", "lora3.safetensors"])
 
 class FluxRequest(BaseModel):
     prompt: str = Field(..., example="A big green monster")
-    model_name: Optional[str] = Field(None, example="Goekdeniz-Guelmez/Josiefied-Qwen2.5-14B-Instruct-abliterated-v4")
+    model_name: Optional[str] = Field(None, example="some-repo/some-flux-model")
     width: Optional[int] = Field(None, example=1024)
     height: Optional[int] = Field(None, example=1024)
     steps: Optional[int] = Field(None, example=30)
     batch_size: Optional[int] = Field(None, example=4)
-    lora_name: Optional[str] = Field(None, example="lora_name.safetensors")
+    lora_name: Optional[Union[str, List[str]]] = Field(None, example="lora_name.safetensors")
     image: Optional[str] = Field(None, example="a9d8fp0sa9dfpasdfllkajsdflkjadslf...")
     strength: Optional[float] = Field(None, example=0.75)
     controlnet_processor: Optional[str] = Field(None, example="canny")
     controlnet_image: Optional[str] = Field(None, example="a9d8fp0sa9dfpasdfllkajsdflkjadslf...")
     ip_adapter_image: Optional[str] = Field(None, example="a9d8fp0sa9dfpasdfllkajsdflkjadslf...")
     ip_adapter_strength: Optional[float] = Field(None, example=0.6)
-    guidance_scale: Optional[float] = Field(None, exaple=5.0)
+    guidance_scale: Optional[float] = Field(None, example=5.0)
 
 class FluxResponse(BaseModel):
     images: List[str] = Field(..., example=["kajsdflsadfsadf....", "lkjdsaflkjsadlkfjsa3423....", "lwerewjrlwkejrwewr..."])
@@ -70,15 +70,16 @@ class SDXLControlnetListResponse(BaseModel):
 class SDXLInpaintRequest(BaseModel):
     prompt: str = Field(..., example="A big green monster")
     negative_prompt: Optional[str] = Field(None, example="a blue dog")
-    model_name: Optional[str] = Field(None, example="Goekdeniz-Guelmez/Josiefied-Qwen2.5-14B-Instruct-abliterated-v4")
+    model_name: Optional[str] = Field(None, example="some-repo/some-sdxl-model")
     width: Optional[int] = Field(None, example=1024)
     height: Optional[int] = Field(None, example=1024)
     steps: Optional[int] = Field(None, example=30)
     batch_size: Optional[int] = Field(None, example=4)
+    lora_name: Optional[Union[str, List[str]]] = Field(None, example="lora_name.safetensors")
     image: Optional[str] = Field(None, example="a9d8fp0sa9dfpasdfllkajsdflkjadslf...")
     mask_image: Optional[str] = Field(None, example="a9d8fp0sa9dfpasdfllkajsdflkjadslf...")
     strength: Optional[float] = Field(None, example=0.75)
-    guidance_scale: Optional[float] = Field(None, exaple=5.0)
+    guidance_scale: Optional[float] = Field(None, example=5.0)
 
 class SDXLLoraListResponse(BaseModel):
     loras: List[str] = Field(..., example=["lora1.safetensors", "lora2.safetensors", "lora3.safetensors"])
@@ -86,12 +87,12 @@ class SDXLLoraListResponse(BaseModel):
 class SDXLRequest(BaseModel):
     prompt: str = Field(..., example="A big green monster")
     negative_prompt: Optional[str] = Field(None, example="a blue dog")
-    model_name: Optional[str] = Field(None, example="Goekdeniz-Guelmez/Josiefied-Qwen2.5-14B-Instruct-abliterated-v4")
+    model_name: Optional[str] = Field(None, example="some-repo/some-sdxl-model")
     width: Optional[int] = Field(None, example=1024)
     height: Optional[int] = Field(None, example=1024)
     steps: Optional[int] = Field(None, example=30)
     batch_size: Optional[int] = Field(None, example=4)
-    lora_name: Optional[str] = Field(None, example="lora_name.safetensors")
+    lora_name: Optional[Union[str, List[str]]] = Field(None, example="lora_name.safetensors")
     image: Optional[str] = Field(None, example="a9d8fp0sa9dfpasdfllkajsdflkjadslf...")
     strength: Optional[float] = Field(None, example=0.75)
     controlnet_processor: Optional[str] = Field(None, example="canny")
@@ -99,7 +100,7 @@ class SDXLRequest(BaseModel):
     controlnet_conditioning: Optional[float] = Field(None, example=0.5)
     ip_adapter_image: Optional[str] = Field(None, example="a9d8fp0sa9dfpasdfllkajsdflkjadslf...")
     ip_adapter_strength: Optional[float] = Field(None, example=0.6)
-    guidance_scale: Optional[float] = Field(None, exaple=5.0)
+    guidance_scale: Optional[float] = Field(None, example=5.0)
 
 class SDXLResponse(BaseModel):
     images: List[str] = Field(..., example=["kajsdflsadfsadf....", "lkjdsaflkjsadlkfjsa3423....", "lwerewjrlwkejrwewr..."])

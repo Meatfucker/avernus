@@ -1,4 +1,5 @@
 import gc
+import os
 from diffusers import (StableDiffusionXLPipeline, StableDiffusionXLControlNetPipeline, StableDiffusionXLImg2ImgPipeline,
                        StableDiffusionXLControlNetImg2ImgPipeline, StableDiffusionXLInpaintPipeline)
 import torch
@@ -45,10 +46,17 @@ async def generate_sdxl(prompt,
         except Exception as e:
             print(f"SDXL IP ADAPTER ERROR: {e}")
     if lora_name is not None:
-        try:
-            generator.load_lora_weights(f"loras/sdxl/{lora_name}", weight_name=lora_name)
-        except Exception as e:
-            print(f"SDXL LORA ERROR: {e}")
+        lora_list = []
+        for lora in lora_name:
+            try:
+                lora_name = os.path.splitext(lora)[0]
+                generator.load_lora_weights(f"loras/sdxl/{lora}", adapter_name=lora_name)
+                lora_list.append(lora_name)
+            except Exception as e:
+                print(f"SDXL LORA ERROR: {e}")
+        generator.set_adapters(lora_list)
+        generator.fuse_lora(adapter_names=lora_list)
+        generator.unload_lora_weights()
 
     if image is not None:
         kwargs["image"] = image
@@ -109,6 +117,7 @@ async def generate_sdxl_inpaint(prompt,
                                 image,
                                 mask_image,
                                 model_name,
+                                lora_name=None,
                                 strength=None,
                                 guidance_scale=None):
     kwargs = {}
@@ -127,6 +136,19 @@ async def generate_sdxl_inpaint(prompt,
 
     if model_name is None:
         model_name = "misri/zavychromaxl_v100"
+
+    if lora_name is not None:
+        lora_list = []
+        for lora in lora_name:
+            try:
+                lora_name = os.path.splitext(lora)[0]
+                generator.load_lora_weights(f"loras/sdxl/{lora}", adapter_name=lora_name)
+                lora_list.append(lora_name)
+            except Exception as e:
+                print(f"SDXL LORA ERROR: {e}")
+        generator.set_adapters(lora_list)
+        generator.fuse_lora(adapter_names=lora_list)
+        generator.unload_lora_weights()
 
     generator = StableDiffusionXLInpaintPipeline.from_pretrained(model_name,
                                                                  torch_dtype=torch.float16,
