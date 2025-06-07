@@ -214,7 +214,7 @@ async def multimodal_llm_chat(data: MultiModalLLMRequest = Body(...)):
 async def status():
     """ This returns Ok when hit"""
     logger.info("status request received")
-    return {"status": str("Ok!"), "version": str("0.4.3")}
+    return {"status": str("Ok!"), "version": str("0.5.0")}
 
 @avernus.post("/rag_retrieve", response_model=RAGResponse)
 async def rag_retrieve(request: Request, data: RAGRequest = Body(...)):
