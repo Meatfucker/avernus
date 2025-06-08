@@ -8,7 +8,8 @@ from fastapi.responses import StreamingResponse
 from modules.pydantic_models import (FluxControlnetListResponse, FluxInpaintRequest, FluxRequest, FluxResponse,
                                      FluxLoraListResponse, LLMRequest, LLMResponse, MultiModalLLMRequest,
                                      MultiModalLLMResponse, RAGResponse, RAGRequest, SDXLInpaintRequest, SDXLRequest,
-                                     SDXLResponse, SDXLLoraListResponse, SDXLControlnetListResponse, StatusResponse)
+                                     SDXLResponse, SDXLLoraListResponse, SDXLControlnetListResponse, StatusResponse,
+                                     SDXLSchedulerListResponse)
 
 from modules.chat import generate_chat, generate_multimodal_chat
 from modules.flux import generate_flux, generate_flux_inpaint, generate_flux_fill
@@ -166,6 +167,30 @@ async def list_sdxl_loras():
         logger.error(f"list_sdxl_loras ERROR: {e}")
         return {"error": str(e)}
 
+@avernus.get("/list_sdxl_schedulers", response_model=SDXLSchedulerListResponse)
+async def list_sdxl_schedulers():
+    """Returns a list of sdxl schedulers."""
+    logger.info("list_sdxl_schedulers request received")
+    try:
+        schedulers = {"schedulers": ["DDIMScheduler",
+                                     "DDPMScheduler",
+                                     "PNDMScheduler",
+                                     "LMSDiscreteScheduler",
+                                     "EulerDiscreteScheduler",
+                                     "HeunDiscreteScheduler",
+                                     "EulerAncestralDiscreteScheduler",
+                                     "DPMSolverMultistepScheduler",
+                                     "DPMSolverSinglestepScheduler",
+                                     "KDPM2DiscreteScheduler",
+                                     "KDPM2AncestralDiscreteScheduler",
+                                     "DEISMultistepScheduler",
+                                     "UniPCMultistepScheduler",
+                                     "DPMSolverSDEScheduler"]}
+        return schedulers
+    except Exception as e:
+        logger.error(f"list_sdxl_loras ERROR: {e}")
+        return {"error": str(e)}
+
 @avernus.post("/llm_chat", response_model=LLMResponse)
 async def llm_chat(request: Request, data: LLMRequest = Body(...)):
     """This takes a prompt, and optionally a Huggingface model name, and/or a Huggingface formatted message history.
@@ -251,6 +276,8 @@ async def sdxl_generate(data: SDXLRequest = Body(...)):
     if data.ip_adapter_image:
         kwargs["ip_adapter_strength"] = data.ip_adapter_strength
         kwargs["ip_adapter_image"] = base64_to_image(data.ip_adapter_image)
+    if data.scheduler:
+        kwargs["scheduler"] = data.scheduler
     if isinstance(data.lora_name, str):
         kwargs["lora_name"] = [data.lora_name]
     else:
@@ -280,6 +307,8 @@ async def sdxl_inpaint_generate(data: SDXLInpaintRequest = Body(...)):
               "steps": data.steps,
               "batch_size": data.batch_size,
               "model_name": data.model_name}
+    if data.scheduler:
+        kwargs["scheduler"] = data.scheduler
     if data.strength:
         kwargs["strength"] = data.strength
     if data.image:

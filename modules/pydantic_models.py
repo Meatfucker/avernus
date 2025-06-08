@@ -80,6 +80,7 @@ class SDXLInpaintRequest(BaseModel):
     mask_image: Optional[str] = Field(None, example="a9d8fp0sa9dfpasdfllkajsdflkjadslf...")
     strength: Optional[float] = Field(None, example=0.75)
     guidance_scale: Optional[float] = Field(None, example=5.0)
+    scheduler: Optional[str] = Field(None, example="DPMSolverMultistepScheduler")
 
 class SDXLLoraListResponse(BaseModel):
     loras: List[str] = Field(..., example=["lora1.safetensors", "lora2.safetensors", "lora3.safetensors"])
@@ -101,9 +102,13 @@ class SDXLRequest(BaseModel):
     ip_adapter_image: Optional[str] = Field(None, example="a9d8fp0sa9dfpasdfllkajsdflkjadslf...")
     ip_adapter_strength: Optional[float] = Field(None, example=0.6)
     guidance_scale: Optional[float] = Field(None, example=5.0)
+    scheduler: Optional[str] = Field(None, example="DPMSolverMultistepScheduler")
 
 class SDXLResponse(BaseModel):
     images: List[str] = Field(..., example=["kajsdflsadfsadf....", "lkjdsaflkjsadlkfjsa3423....", "lwerewjrlwkejrwewr..."])
+
+class SDXLSchedulerListResponse(BaseModel):
+    schedulers: List[str] = Field(..., example=["DPMSolverMultistepScheduler", "EulerAncestralDiscreteScheduler", "LMSDiscreteScheduler"])
 
 class StatusResponse(BaseModel):
     status: str = Field(..., example="Ok!")

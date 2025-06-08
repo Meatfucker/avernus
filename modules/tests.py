@@ -290,10 +290,16 @@ class SDXLLoraTest(TimedTest):
                                               batch_size=2)
         await base64_image_to_file(images, "sdxl_lora")
 
+class SDXLSchedulerListTest(TimedTest):
+    async def run_test(self):
+        schedulers = await self.client.list_sdxl_schedulers()
+        logger.success(schedulers)
+
 class SDXLTest(TimedTest):
     async def run_test(self):
         images = await self.client.sdxl_image("wizard",
-                                              batch_size=2)
+                                              batch_size=2,
+                                              scheduler="DPMSolverSDEScheduler")
         await base64_image_to_file(images, "sdxl")
 
 async def base64_image_to_file(base64_images, prefix=""):

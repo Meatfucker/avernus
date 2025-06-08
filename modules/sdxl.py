@@ -1,7 +1,11 @@
 import gc
 import os
 from diffusers import (StableDiffusionXLPipeline, StableDiffusionXLControlNetPipeline, StableDiffusionXLImg2ImgPipeline,
-                       StableDiffusionXLControlNetImg2ImgPipeline, StableDiffusionXLInpaintPipeline)
+                       StableDiffusionXLControlNetImg2ImgPipeline, StableDiffusionXLInpaintPipeline,
+                       DPMSolverMultistepScheduler, DDIMScheduler, DDPMScheduler, LMSDiscreteScheduler,
+                       EulerDiscreteScheduler, HeunDiscreteScheduler, EulerAncestralDiscreteScheduler,
+                       DPMSolverSinglestepScheduler, KDPM2DiscreteScheduler, KDPM2AncestralDiscreteScheduler,
+                       DEISMultistepScheduler, UniPCMultistepScheduler, DPMSolverSDEScheduler, PNDMScheduler)
 import torch
 from modules.controlnet import get_sdxl_controlnet
 
@@ -20,7 +24,8 @@ async def generate_sdxl(prompt,
                         controlnet_conditioning=None,
                         ip_adapter_image=None,
                         ip_adapter_strength=None,
-                        guidance_scale=None):
+                        guidance_scale=None,
+                        scheduler=None):
     kwargs = {}
     kwargs["prompt"] = prompt
     if negative_prompt is not None:
@@ -38,6 +43,37 @@ async def generate_sdxl(prompt,
 
     generator, processed_image = await get_pipeline(model_name, image, controlnet_image, controlnet_processor)
 
+    if scheduler is not None:
+        match scheduler:
+            case "DDIMScheduler":
+                generator.scheduler = DDIMScheduler.from_config(generator.scheduler.config)
+            case "DDPMScheduler":
+                generator.scheduler = DDPMScheduler.from_config(generator.scheduler.config)
+            case "PNDMScheduler":
+                generator.scheduler = PNDMScheduler.from_config(generator.scheduler.config)
+            case "LMSDiscreteScheduler":
+                generator.scheduler = LMSDiscreteScheduler.from_config(generator.scheduler.config)
+            case "EulerDiscreteScheduler":
+                generator.scheduler = EulerDiscreteScheduler.from_config(generator.scheduler.config)
+            case "HeunDiscreteScheduler":
+                generator.scheduler = HeunDiscreteScheduler.from_config(generator.scheduler.config)
+            case "EulerAncestralDiscreteScheduler":
+                generator.scheduler = EulerAncestralDiscreteScheduler.from_config(generator.scheduler.config)
+            case "DPMSolverMultistepScheduler":
+                generator.scheduler = DPMSolverMultistepScheduler.from_config(generator.scheduler.config)
+            case "DPMSolverSinglestepScheduler":
+                generator.scheduler = DPMSolverSinglestepScheduler.from_config(generator.scheduler.config)
+            case "KDPM2DiscreteScheduler":
+                generator.scheduler = KDPM2DiscreteScheduler.from_config(generator.scheduler.config)
+            case "KDPM2AncestralDiscreteScheduler":
+                generator.scheduler = KDPM2AncestralDiscreteScheduler.from_config(generator.scheduler.config)
+            case "DEISMultistepScheduler":
+                generator.scheduler = DEISMultistepScheduler.from_config(generator.scheduler.config)
+            case "UniPCMultistepScheduler":
+                generator.scheduler = UniPCMultistepScheduler.from_config(generator.scheduler.config)
+            case "DPMSolverSDEScheduler":
+                generator.scheduler = DPMSolverSDEScheduler.from_config(generator.scheduler.config)
+    print(generator.scheduler)
     if ip_adapter_image is not None:
         try:
             generator.load_ip_adapter("h94/IP-Adapter", subfolder="sdxl_models", weight_name="ip-adapter_sdxl.bin")
