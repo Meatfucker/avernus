@@ -24,12 +24,14 @@ class AvernusClient:
             return {"ERROR": str(e)}
 
     async def flux_fill_image(self, prompt, image=None, model_name=None, width=None,
-                              height=None, steps=None, batch_size=None, guidance_scale=None, mask_image=None, strength=None):
+                              height=None, steps=None, batch_size=None, guidance_scale=None, mask_image=None,
+                              strength=None, lora_name=None):
         """This takes a prompt, and optional other variables and returns a list of base64 encoded images"""
         url = f"http://{self.base_url}/flux_fill_generate"
         data = {"prompt": prompt,
                 "image": image,
                 "model_name": model_name,
+                "lora_name": lora_name,
                 "width": width,
                 "height": height,
                 "steps": steps,
@@ -49,9 +51,8 @@ class AvernusClient:
             return {"ERROR": str(e)}
 
     async def flux_image(self, prompt, image=None, model_name=None, lora_name=None, width=None, height=None, steps=None,
-                         batch_size=None, strength=None, controlnet_image=None,
-                         controlnet_processor=None, ip_adapter_image=None,
-                         ip_adapter_strength=None):
+                         batch_size=None, strength=None, controlnet_image=None, controlnet_processor=None,
+                         ip_adapter_image=None, ip_adapter_strength=None):
         """This takes a prompt and optional other variables and returns a list of base64 encoded images"""
         url = f"http://{self.base_url}/flux_generate"
         data = {"prompt": prompt,
@@ -79,12 +80,14 @@ class AvernusClient:
             return {"ERROR": str(e)}
 
     async def flux_inpaint_image(self, prompt, image=None, model_name=None, width=None,
-                         height=None, steps=None, batch_size=None, guidance_scale=None, mask_image=None, strength=None):
+                                 height=None, steps=None, batch_size=None, guidance_scale=None, mask_image=None,
+                                 strength=None, lora_name=None):
         """This takes a prompt, and optional other variables and returns a list of base64 encoded images"""
         url = f"http://{self.base_url}/flux_inpaint_generate"
         data = {"prompt": prompt,
                 "image": image,
                 "model_name": model_name,
+                "lora_name": lora_name,
                 "width": width,
                 "height": height,
                 "steps": steps,
@@ -278,13 +281,15 @@ class AvernusClient:
             return {"ERROR": str(e)}
 
     async def sdxl_inpaint_image(self, prompt, image=None, negative_prompt=None, model_name=None, width=None,
-                         height=None, steps=None, batch_size=None, guidance_scale=None, mask_image=None, strength=None):
+                                 height=None, steps=None, batch_size=None, guidance_scale=None, mask_image=None,
+                                 strength=None, lora_name=None):
         """This takes a prompt, and optional other variables and returns a list of base64 encoded images"""
         url = f"http://{self.base_url}/sdxl_inpaint_generate"
         data = {"prompt": prompt,
                 "image": image,
                 "negative_prompt": negative_prompt,
                 "model_name": model_name,
+                "lora_name": lora_name,
                 "width": width,
                 "height": height,
                 "steps": steps,

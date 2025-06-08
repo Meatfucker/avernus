@@ -137,6 +137,11 @@ async def generate_sdxl_inpaint(prompt,
     if model_name is None:
         model_name = "misri/zavychromaxl_v100"
 
+    generator = StableDiffusionXLInpaintPipeline.from_pretrained(model_name,
+                                                                 torch_dtype=torch.float16,
+                                                                 use_safetensors=True).to("cuda")
+    generator.enable_vae_slicing()
+
     if lora_name is not None:
         lora_list = []
         for lora in lora_name:
@@ -150,10 +155,6 @@ async def generate_sdxl_inpaint(prompt,
         generator.fuse_lora(adapter_names=lora_list)
         generator.unload_lora_weights()
 
-    generator = StableDiffusionXLInpaintPipeline.from_pretrained(model_name,
-                                                                 torch_dtype=torch.float16,
-                                                                 use_safetensors=True).to("cuda")
-    generator.enable_vae_slicing()
     images = generator(**kwargs).images
 
     generator.to("cpu")
