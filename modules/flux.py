@@ -25,7 +25,8 @@ async def generate_flux(prompt,
                         controlnet_image=None,
                         ip_adapter_image=None,
                         ip_adapter_strength=None,
-                        guidance_scale=None):
+                        guidance_scale=None,
+                        seed=None):
     kwargs = {}
     kwargs["width"] = width if width is not None else 1024
     kwargs["height"] = height if height is not None else 1024
@@ -34,6 +35,9 @@ async def generate_flux(prompt,
     strength = strength if strength is not None else 1.0
     ip_adapter_strength = ip_adapter_strength if ip_adapter_strength is not None else 0.6
     kwargs["guidance_scale"] = guidance_scale if guidance_scale is not None else 3.5
+    if seed is not None:
+        generator = [torch.Generator(device="cuda").manual_seed(seed + i) for i in range(kwargs["num_images_per_prompt"])]
+        kwargs["generator"] = generator
 
     if image is not None:
         redux_embeds, redux_pooled_embeds = await get_redux_embeds(image, prompt, strength)
@@ -212,7 +216,8 @@ async def generate_flux_inpaint(prompt,
                                 model_name=None,
                                 lora_name=None,
                                 revision=None,
-                                guidance_scale=None):
+                                guidance_scale=None,
+                                seed=None):
     kwargs = {}
     kwargs["prompt"] = prompt
     kwargs["width"] = width if width is not None else 1024
@@ -224,6 +229,9 @@ async def generate_flux_inpaint(prompt,
     kwargs["mask_image"] = mask_image
     kwargs["padding_mask_crop"] = 32
     kwargs["guidance_scale"] = guidance_scale if guidance_scale is not None else 7.0
+    if seed is not None:
+        generator = [torch.Generator(device="cuda").manual_seed(seed + i) for i in range(kwargs["num_images_per_prompt"])]
+        kwargs["generator"] = generator
 
     model_name = "black-forest-labs/FLUX.1-dev"
     revision = "refs/pr/3"
@@ -281,7 +289,8 @@ async def generate_flux_fill(prompt,
                              model_name=None,
                              lora_name=None,
                              revision=None,
-                             guidance_scale=None):
+                             guidance_scale=None,
+                             seed=None):
     kwargs = {}
     kwargs["prompt"] = prompt
     kwargs["width"] = width if width is not None else 1024
@@ -291,8 +300,10 @@ async def generate_flux_fill(prompt,
     kwargs["strength"] = strength if strength is not None else 0.9
     kwargs["image"] = image
     kwargs["mask_image"] = mask_image
-    #kwargs["padding_mask_crop"] = 32
     kwargs["guidance_scale"] = guidance_scale if guidance_scale is not None else 30.0
+    if seed is not None:
+        generator = [torch.Generator(device="cuda").manual_seed(seed + i) for i in range(kwargs["num_images_per_prompt"])]
+        kwargs["generator"] = generator
 
     model_name = "black-forest-labs/FLUX.1-Fill-dev"
     #revision = "refs/pr/3"

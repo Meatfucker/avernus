@@ -25,7 +25,8 @@ async def generate_sdxl(prompt,
                         ip_adapter_image=None,
                         ip_adapter_strength=None,
                         guidance_scale=None,
-                        scheduler=None):
+                        scheduler=None,
+                        seed=None):
     kwargs = {}
     kwargs["prompt"] = prompt
     if negative_prompt is not None:
@@ -40,6 +41,9 @@ async def generate_sdxl(prompt,
     ip_adapter_strength = ip_adapter_strength if ip_adapter_strength is not None else 0.6
     if model_name is None:
         model_name = "misri/zavychromaxl_v100"
+    if seed is not None:
+        generator = [torch.Generator(device="cuda").manual_seed(seed + i) for i in range(kwargs["num_images_per_prompt"])]
+        kwargs["generator"] = generator
 
     generator, processed_image = await get_pipeline(model_name, image, controlnet_image, controlnet_processor)
 
@@ -157,7 +161,8 @@ async def generate_sdxl_inpaint(prompt,
                                 lora_name=None,
                                 strength=None,
                                 guidance_scale=None,
-                                scheduler=None):
+                                scheduler=None,
+                                seed=None):
     kwargs = {}
     kwargs["prompt"] = prompt
     if negative_prompt is not None:
@@ -171,6 +176,9 @@ async def generate_sdxl_inpaint(prompt,
     kwargs["image"] = image
     kwargs["mask_image"] = mask_image
     kwargs["padding_mask_crop"] = 32
+    if seed is not None:
+        generator = [torch.Generator(device="cuda").manual_seed(seed + i) for i in range(kwargs["num_images_per_prompt"])]
+        kwargs["generator"] = generator
 
     if model_name is None:
         model_name = "misri/zavychromaxl_v100"

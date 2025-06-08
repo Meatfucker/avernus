@@ -49,6 +49,9 @@ async def flux_generate(data: FluxRequest = Body(...)):
         kwargs["ip_adapter_image"] = base64_to_image(data.ip_adapter_image)
     if data.guidance_scale:
         kwargs["guidance_scale"] = data.guidance_scale
+    if data.seed:
+        kwargs["seed"] = data.seed
+
     try:
         response = await generate_flux(**kwargs)
         base64_images = [image_to_base64(img) for img in response]
@@ -79,6 +82,8 @@ async def flux_inpaint_generate(data: FluxInpaintRequest = Body(...)):
         kwargs["lora_name"] = [data.lora_name]
     else:
         kwargs["lora_name"] = data.lora_name
+    if data.seed:
+        kwargs["seed"] = data.seed
 
     try:
         response = await generate_flux_inpaint(**kwargs)
@@ -110,6 +115,8 @@ async def flux_fill_generate(data: FluxInpaintRequest = Body(...)):
         kwargs["lora_name"] = [data.lora_name]
     else:
         kwargs["lora_name"] = data.lora_name
+    if data.seed:
+        kwargs["seed"] = data.seed
 
     try:
         response = await generate_flux_fill(**kwargs)
@@ -288,6 +295,8 @@ async def sdxl_generate(data: SDXLRequest = Body(...)):
         kwargs["strength"] = data.strength
     if data.guidance_scale:
         kwargs["guidance_scale"] = data.guidance_scale
+    if data.seed:
+        kwargs["seed"] = data.seed
     try:
         response = await generate_sdxl(**kwargs)
         base64_images = [image_to_base64(img) for img in response]
@@ -321,6 +330,8 @@ async def sdxl_inpaint_generate(data: SDXLInpaintRequest = Body(...)):
         kwargs["lora_name"] = [data.lora_name]
     else:
         kwargs["lora_name"] = data.lora_name
+    if data.seed:
+        kwargs["seed"] = data.seed
 
     try:
         response = await generate_sdxl_inpaint(**kwargs)
