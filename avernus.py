@@ -179,7 +179,8 @@ async def list_sdxl_schedulers():
     """Returns a list of sdxl schedulers."""
     logger.info("list_sdxl_schedulers request received")
     try:
-        schedulers = {"schedulers": ["DDIMScheduler",
+        schedulers = {"schedulers": ["DPMSolverSinglestepScheduler",
+                                     "DDIMScheduler",
                                      "DDPMScheduler",
                                      "PNDMScheduler",
                                      "LMSDiscreteScheduler",
@@ -187,7 +188,6 @@ async def list_sdxl_schedulers():
                                      "HeunDiscreteScheduler",
                                      "EulerAncestralDiscreteScheduler",
                                      "DPMSolverMultistepScheduler",
-                                     "DPMSolverSinglestepScheduler",
                                      "KDPM2DiscreteScheduler",
                                      "KDPM2AncestralDiscreteScheduler",
                                      "DEISMultistepScheduler",
