@@ -23,7 +23,6 @@ class FluxLoraListResponse(BaseModel):
 
 class FluxRequest(BaseModel):
     prompt: str = Field(..., example="A big green monster")
-    model_name: Optional[str] = Field(None, example="some-repo/some-flux-model")
     width: Optional[int] = Field(None, example=1024)
     height: Optional[int] = Field(None, example=1024)
     steps: Optional[int] = Field(None, example=30)
@@ -31,8 +30,6 @@ class FluxRequest(BaseModel):
     lora_name: Optional[Union[str, List[str]]] = Field(None, example="lora_name.safetensors")
     image: Optional[str] = Field(None, example="a9d8fp0sa9dfpasdfllkajsdflkjadslf...")
     strength: Optional[float] = Field(None, example=0.75)
-    controlnet_processor: Optional[str] = Field(None, example="canny")
-    controlnet_image: Optional[str] = Field(None, example="a9d8fp0sa9dfpasdfllkajsdflkjadslf...")
     ip_adapter_image: Optional[str] = Field(None, example="a9d8fp0sa9dfpasdfllkajsdflkjadslf...")
     ip_adapter_strength: Optional[float] = Field(None, example=0.6)
     guidance_scale: Optional[float] = Field(None, example=5.0)

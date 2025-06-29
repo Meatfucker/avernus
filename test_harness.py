@@ -1,11 +1,14 @@
 import time
 from loguru import logger
+
+from avernus import flux_kontext_generate
 from modules.tests import (CheckStatus, FluxControlnetI2ILoraTest, FluxControlnetI2ITest, FluxControlnetListTest,
                            FluxControlnetLoraTest, FluxControlnetTest, FluxI2ITest, FluxInpaintTest, FluxIPAdapterTest,
-                           FluxLoraI2ITest, FluxLoraListTest, FluxLoraTest, FluxTest, LlmChatTest, LlmRagTest, LTXTest,
-                           SDXLControlnetI2ILoraTest, SDXLControlnetI2ITest, SDXLControlnetListTest,
-                           SDXLControlnetLoraTest, SDXLControlnetTest, SDXLI2ILoraTest, SDXLI2ITest, SDXLInpaintTest,
-                           SDXLIPAdapterTest, SDXLLoraListTest, SDXLLoraTest, SDXLTest, SDXLSchedulerListTest)
+                           FluxKontextTest, FluxLoraI2ITest, FluxLoraListTest, FluxLoraTest, FluxTest, LlmChatTest,
+                           LlmRagTest, LTXTest, SDXLControlnetI2ILoraTest, SDXLControlnetI2ITest,
+                           SDXLControlnetListTest, SDXLControlnetLoraTest, SDXLControlnetTest, SDXLI2ILoraTest,
+                           SDXLI2ITest, SDXLInpaintTest, SDXLIPAdapterTest, SDXLLoraListTest, SDXLLoraTest, SDXLTest,
+                           SDXLSchedulerListTest)
 start_time = time.time()
 
 check_status = CheckStatus("CHECK STATUS")
@@ -13,8 +16,8 @@ check_status = CheckStatus("CHECK STATUS")
 #rag = LlmRagTest("LLM RAG")
 #sdxl_lora_list = SDXLLoraListTest("SDXL LORA LIST")
 #sdxl_controlnet_list = SDXLControlnetListTest("SDXL CONTROLNET LIST")
-sdxl_scheduler_list = SDXLSchedulerListTest("SDXL SCHEDULERS LIST")
-sdxl = SDXLTest("SDXL")
+#sdxl_scheduler_list = SDXLSchedulerListTest("SDXL SCHEDULERS LIST")
+#sdxl = SDXLTest("SDXL")
 #sdxl_lora = SDXLLoraTest("matlighty man. Watercolor backgrounds and cel-shaded characters, ethereal lighting,"
 #                         " fantastical natural environments, whimsical yet haunting.",
 #                         ["DarkGhibliMJ7SDXL.safetensors", "lighty.safetensors"], "SDXL LORA")
@@ -38,6 +41,8 @@ sdxl = SDXLTest("SDXL")
 #flux_control_lora = FluxControlnetLoraTest("FLUX CONTROLNET LORA")
 #flux_control_i2i = FluxControlnetI2ITest("FLUX CONTROLNET I2I")
 #flux_control_i2i_lora = FluxControlnetI2ILoraTest("FLUX CONTROLNET I2I LORA")
+flux_kontext_test = FluxKontextTest("FLUX KONTEXT")
+
 #ltx = LTXTest("LTX")
 
 end_time = time.time()

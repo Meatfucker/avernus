@@ -28,18 +28,16 @@ If you want to use the rag endpoint you need to place urls, one per line in rag/
 - /sdxl_inpaint_generate - For SDXL inpainting
 - /flux_generate - For generating Flux images
 - /flux_inpaint_generate - For Flux inpainting
+- /flux_kontext_generate - Flux Kontext
 - /list_sdxl_loras - Returns a list of available loras from loras/sdxl
 - /list_sdxl_controlnets - Returns a list of available SDXL controlnets
 - /list_flux_loras - Returns a list of available loras from loras/flux
-- /list_flux_controlnets - Returns a list of available Flux controlnets (Just canny for now)
 - /rag_retrieve - Returns relevant RAG documents to the query
 
 # TODO:
 
-- Add WAN2.1 support (waiting on me to figure out memory issues)
+- Add WAN2.1 support
 - Add audio generation endpoints
 - Add svg model endpoint
 - Return different status codes if a generation ooms
 - Add LLM chat templates
-- add button to get current image dimensions
-

@@ -99,6 +99,15 @@ class FluxI2ITest(TimedTest):
                                               strength=0.7)
         await base64_image_to_file(images, "flux_i2i")
 
+class FluxKontextTest(TimedTest):
+    async def run_test(self):
+        image = Image.open("tests/flux_image_0.png")
+        image = image_to_base64(image)
+        images = await self.client.flux_kontext("turn the bear into a gigiantic sandworm",
+                                                image=image,
+                                                batch_size=1)
+        await base64_image_to_file(images, "flux_kontext")
+
 class FluxIPAdapterTest(TimedTest):
     async def run_test(self):
         image = Image.open("tests/mushroom.png")

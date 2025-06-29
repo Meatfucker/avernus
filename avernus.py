@@ -5,14 +5,14 @@ from typing import Optional
 from diffusers.utils import export_to_video
 from fastapi import FastAPI, Request, Body, UploadFile, Form, File
 from fastapi.responses import StreamingResponse
-from modules.pydantic_models import (FluxControlnetListResponse, FluxInpaintRequest, FluxRequest, FluxResponse,
+from modules.pydantic_models import (FluxInpaintRequest, FluxRequest, FluxResponse,
                                      FluxLoraListResponse, LLMRequest, LLMResponse, MultiModalLLMRequest,
                                      MultiModalLLMResponse, RAGResponse, RAGRequest, SDXLInpaintRequest, SDXLRequest,
                                      SDXLResponse, SDXLLoraListResponse, SDXLControlnetListResponse, StatusResponse,
                                      SDXLSchedulerListResponse)
 
 from modules.chat import generate_chat, generate_multimodal_chat
-from modules.flux import generate_flux, generate_flux_inpaint, generate_flux_fill
+from modules.flux import generate_flux, generate_flux_inpaint, generate_flux_fill, generate_flux_kontext
 from modules.logging_config import setup_logging
 from modules.ltx import generate_ltx
 from modules.rag import retrieve_rag
@@ -33,17 +33,13 @@ async def flux_generate(data: FluxRequest = Body(...)):
               "width": data.width,
               "height": data.height,
               "steps": data.steps,
-              "batch_size": data.batch_size,
-              "model_name": data.model_name}
+              "batch_size": data.batch_size}
     if isinstance(data.lora_name, str):
         kwargs["lora_name"] = [data.lora_name]
     else:
         kwargs["lora_name"] = data.lora_name
     if data.image:
         kwargs["image"] = base64_to_image(data.image)
-    if data.controlnet_processor:
-        kwargs["controlnet_processor"] = data.controlnet_processor
-        kwargs["controlnet_image"] = base64_to_image(data.controlnet_image)
     if data.ip_adapter_image:
         kwargs["ip_adapter_strength"] = data.ip_adapter_strength
         kwargs["ip_adapter_image"] = base64_to_image(data.ip_adapter_image)
@@ -68,8 +64,7 @@ async def flux_inpaint_generate(data: FluxInpaintRequest = Body(...)):
               "width": data.width,
               "height": data.height,
               "steps": data.steps,
-              "batch_size": data.batch_size,
-              "model_name": data.model_name}
+              "batch_size": data.batch_size}
     if data.strength:
         kwargs["strength"] = data.strength
     if data.image:
@@ -101,8 +96,7 @@ async def flux_fill_generate(data: FluxInpaintRequest = Body(...)):
               "width": data.width,
               "height": data.height,
               "steps": data.steps,
-              "batch_size": data.batch_size,
-              "model_name": data.model_name}
+              "batch_size": data.batch_size}
     if data.strength:
         kwargs["strength"] = data.strength
     if data.image:
@@ -126,15 +120,37 @@ async def flux_fill_generate(data: FluxInpaintRequest = Body(...)):
         return None
     return {"images": base64_images}
 
-@avernus.get("/list_flux_controlnets", response_model=FluxControlnetListResponse)
-async def list_flux_controlnets():
-    """Returns a list of available flux controlnets"""
-    logger.info("list_flux_controlnets request received")
+@avernus.post("/flux_kontext_generate", response_model=FluxResponse)
+async def flux_kontext_generate(data: FluxRequest = Body(...)):
+    """Generates some number of Flux Kontext images based on user inputs"""
+    logger.info("flux_kontext_generate request received")
+    kwargs = {"prompt": data.prompt,
+              "width": data.width,
+              "height": data.height,
+              "steps": data.steps,
+              "batch_size": data.batch_size}
+    if isinstance(data.lora_name, str):
+        kwargs["lora_name"] = [data.lora_name]
+    else:
+        kwargs["lora_name"] = data.lora_name
+    if data.image:
+        kwargs["image"] = base64_to_image(data.image)
+    if data.ip_adapter_image:
+        kwargs["ip_adapter_strength"] = data.ip_adapter_strength
+        kwargs["ip_adapter_image"] = base64_to_image(data.ip_adapter_image)
+    if data.guidance_scale:
+        kwargs["guidance_scale"] = data.guidance_scale
+    if data.seed:
+        kwargs["seed"] = data.seed
+
     try:
-        return {"flux_controlnets": ["canny"]}
+        response = await generate_flux_kontext(**kwargs)
+        base64_images = [image_to_base64(img) for img in response]
     except Exception as e:
-        logger.error(f"list_flux_controlnets ERROR: {e}")
-        return {"error": str(e)}
+        logger.info(f"flux_kontext_generate ERROR: {e}")
+        return None
+    return {"images": base64_images}
+
 
 @avernus.get("/list_flux_loras", response_model=FluxLoraListResponse)
 async def list_flux_loras():
@@ -215,18 +231,33 @@ async def llm_chat(request: Request, data: LLMRequest = Body(...)):
 
 @avernus.post("/ltx_generate")
 async def ltx_generate(prompt: str = Form(...),
-                       video: Optional[UploadFile] = File(None),
+                       input_video: Optional[UploadFile] = File(None),
+                       height: Optional[int] = None,
+                       width: Optional[int] = None,
+                       seed: Optional[int] = None,
+                       guidance_scale: Optional[float] = None,
+                       num_frames: Optional[int] = None
                        ):
     logger.info("ltx_generate request received")
     kwargs = {"prompt": prompt}
-    if video:
-        video_bytes = await video.read()
-        kwargs["video"] = video_bytes
+    if input_video:
+        video_bytes = await input_video.read()
+        kwargs["input_video"] = video_bytes
+    if height:
+        kwargs["height"] = height
+    if width:
+        kwargs["width"] = width
+    if seed:
+        kwargs["seed"] = seed
+    if guidance_scale:
+        kwargs["guidance_scale"] = guidance_scale
+    if num_frames:
+        kwargs["num_frames"] = num_frames
 
     generated_video = await generate_ltx(**kwargs)
     export_to_video(generated_video, "output.mp4", fps=24)
 
-    return StreamingResponse(open("output.mp4", "rb"), media_type="video/mp4")
+    return StreamingResponse(open("output.mp4", "rb"), media_type="input_video/mp4")
 
 @avernus.post("/multimodal_llm_chat", response_model=MultiModalLLMResponse)
 async def multimodal_llm_chat(data: MultiModalLLMRequest = Body(...)):
@@ -246,7 +277,7 @@ async def multimodal_llm_chat(data: MultiModalLLMRequest = Body(...)):
 async def status():
     """ This returns Ok when hit"""
     logger.info("status request received")
-    return {"status": str("Ok!"), "version": str("0.5.0")}
+    return {"status": str("Ok!"), "version": str("0.6.0")}
 
 @avernus.post("/rag_retrieve", response_model=RAGResponse)
 async def rag_retrieve(request: Request, data: RAGRequest = Body(...)):

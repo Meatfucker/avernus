@@ -80,7 +80,7 @@ async def generate_sdxl(prompt,
 
     if ip_adapter_image is not None:
         try:
-            generator.load_ip_adapter("h94/IP-Adapter", subfolder="sdxl_models", weight_name="ip-adapter_sdxl.bin")
+            generator.load_ip_adapter("h94/IP-Adapter", subfolder="sdxl_models", weight_name="ip-adapter_sdxl.bin", device="cuda")
             generator.set_ip_adapter_scale(ip_adapter_strength)
             kwargs["ip_adapter_image"] = ip_adapter_image
         except Exception as e:
@@ -91,13 +91,11 @@ async def generate_sdxl(prompt,
         for lora in lora_name:
             try:
                 lora_name = os.path.splitext(lora)[0]
-                generator.load_lora_weights(f"loras/sdxl/{lora}", adapter_name=lora_name)
+                generator.load_lora_weights(f"loras/sdxl/{lora}", adapter_name=lora_name, device="cuda")
                 lora_list.append(lora_name)
             except Exception as e:
                 print(f"SDXL LORA ERROR: {e}")
         generator.set_adapters(lora_list)
-        generator.fuse_lora(adapter_names=lora_list)
-        generator.unload_lora_weights()
 
     if image is not None:
         kwargs["image"] = image
@@ -111,10 +109,14 @@ async def generate_sdxl(prompt,
             kwargs["image"] = processed_image
             kwargs["controlnet_conditioning_scale"] = controlnet_conditioning
         images = generator(**kwargs).images
-    generator.to("cpu")
+        print("image generated")
+
+
     del generator
     torch.cuda.empty_cache()
     gc.collect()
+    print("returning images")
+
     return images
 
 async def get_pipeline(model_name, image, controlnet_image, controlnet_processor):
@@ -124,29 +126,29 @@ async def get_pipeline(model_name, image, controlnet_image, controlnet_processor
             controlnet, processed_image = await get_sdxl_controlnet(controlnet_processor, controlnet_image)
             generator = StableDiffusionXLControlNetImg2ImgPipeline.from_pretrained(model_name,
                                                                                    use_safetensors=True,
-                                                                                   torch_dtype=torch.float16,
+                                                                                   torch_dtype=torch.bfloat16,
                                                                                    controlnet=controlnet,
                                                                                    ).to("cuda")
-            generator.enable_vae_slicing()
+
         else:
             generator = StableDiffusionXLImg2ImgPipeline.from_pretrained(model_name,
-                                                                         torch_dtype=torch.float16,
+                                                                         torch_dtype=torch.bfloat16,
                                                                          use_safetensors=True).to("cuda")
-            generator.enable_vae_slicing()
+
     else:
         if controlnet_image is not None:
             controlnet, processed_image = await get_sdxl_controlnet(controlnet_processor, controlnet_image)
             generator = StableDiffusionXLControlNetPipeline.from_pretrained(model_name,
                                                                             use_safetensors=True,
-                                                                            torch_dtype=torch.float16,
+                                                                            torch_dtype=torch.bfloat16,
                                                                             controlnet=controlnet,
                                                                             ).to("cuda")
-            generator.enable_vae_slicing()
+
         else:
             generator = StableDiffusionXLPipeline.from_pretrained(model_name,
-                                                                  torch_dtype=torch.float16,
+                                                                  torch_dtype=torch.bfloat16,
                                                                   use_safetensors=True).to("cuda")
-            generator.enable_vae_slicing()
+
     return generator, processed_image
 
 async def generate_sdxl_inpaint(prompt,
@@ -184,40 +186,40 @@ async def generate_sdxl_inpaint(prompt,
         model_name = "misri/zavychromaxl_v100"
 
     generator = StableDiffusionXLInpaintPipeline.from_pretrained(model_name,
-                                                                 torch_dtype=torch.float16,
+                                                                 torch_dtype=torch.bfloat16,
                                                                  use_safetensors=True).to("cuda")
-    generator.enable_vae_slicing()
+
 
     if scheduler is not None:
         match scheduler:
             case "DDIMScheduler":
-                generator.scheduler = DDIMScheduler.from_config(generator.scheduler.config)
+                generator.scheduler = DDIMScheduler.from_config(generator.scheduler.config).to("cuda")
             case "DDPMScheduler":
-                generator.scheduler = DDPMScheduler.from_config(generator.scheduler.config)
+                generator.scheduler = DDPMScheduler.from_config(generator.scheduler.config).to("cuda")
             case "PNDMScheduler":
-                generator.scheduler = PNDMScheduler.from_config(generator.scheduler.config)
+                generator.scheduler = PNDMScheduler.from_config(generator.scheduler.config).to("cuda")
             case "LMSDiscreteScheduler":
-                generator.scheduler = LMSDiscreteScheduler.from_config(generator.scheduler.config)
+                generator.scheduler = LMSDiscreteScheduler.from_config(generator.scheduler.config).to("cuda")
             case "EulerDiscreteScheduler":
-                generator.scheduler = EulerDiscreteScheduler.from_config(generator.scheduler.config)
+                generator.scheduler = EulerDiscreteScheduler.from_config(generator.scheduler.config).to("cuda")
             case "HeunDiscreteScheduler":
-                generator.scheduler = HeunDiscreteScheduler.from_config(generator.scheduler.config)
+                generator.scheduler = HeunDiscreteScheduler.from_config(generator.scheduler.config).to("cuda")
             case "EulerAncestralDiscreteScheduler":
-                generator.scheduler = EulerAncestralDiscreteScheduler.from_config(generator.scheduler.config)
+                generator.scheduler = EulerAncestralDiscreteScheduler.from_config(generator.scheduler.config).to("cuda")
             case "DPMSolverMultistepScheduler":
-                generator.scheduler = DPMSolverMultistepScheduler.from_config(generator.scheduler.config)
+                generator.scheduler = DPMSolverMultistepScheduler.from_config(generator.scheduler.config).to("cuda")
             case "DPMSolverSinglestepScheduler":
-                generator.scheduler = DPMSolverSinglestepScheduler.from_config(generator.scheduler.config)
+                generator.scheduler = DPMSolverSinglestepScheduler.from_config(generator.scheduler.config).to("cuda")
             case "KDPM2DiscreteScheduler":
-                generator.scheduler = KDPM2DiscreteScheduler.from_config(generator.scheduler.config)
+                generator.scheduler = KDPM2DiscreteScheduler.from_config(generator.scheduler.config).to("cuda")
             case "KDPM2AncestralDiscreteScheduler":
-                generator.scheduler = KDPM2AncestralDiscreteScheduler.from_config(generator.scheduler.config)
+                generator.scheduler = KDPM2AncestralDiscreteScheduler.from_config(generator.scheduler.config).to("cuda")
             case "DEISMultistepScheduler":
-                generator.scheduler = DEISMultistepScheduler.from_config(generator.scheduler.config)
+                generator.scheduler = DEISMultistepScheduler.from_config(generator.scheduler.config).to("cuda")
             case "UniPCMultistepScheduler":
-                generator.scheduler = UniPCMultistepScheduler.from_config(generator.scheduler.config)
+                generator.scheduler = UniPCMultistepScheduler.from_config(generator.scheduler.config).to("cuda")
             case "DPMSolverSDEScheduler":
-                generator.scheduler = DPMSolverSDEScheduler.from_config(generator.scheduler.config)
+                generator.scheduler = DPMSolverSDEScheduler.from_config(generator.scheduler.config).to("cuda")
 
     if lora_name is not None:
         lora_list = []
@@ -229,13 +231,14 @@ async def generate_sdxl_inpaint(prompt,
             except Exception as e:
                 print(f"SDXL LORA ERROR: {e}")
         generator.set_adapters(lora_list)
-        generator.fuse_lora(adapter_names=lora_list)
-        generator.unload_lora_weights()
 
     images = generator(**kwargs).images
 
-    generator.to("cpu")
+
+
     del generator
     torch.cuda.empty_cache()
     gc.collect()
     return images
+
+
