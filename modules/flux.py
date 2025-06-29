@@ -206,7 +206,7 @@ async def generate_flux_kontext(prompt,
     kwargs["width"] = width if width is not None else 1024
     kwargs["height"] = height if height is not None else 1024
     kwargs["num_inference_steps"] = steps if steps is not None else 30
-    kwargs["num_images_per_prompt"] = batch_size if batch_size is not None else 4
+    kwargs["num_images_per_prompt"] = batch_size if batch_size is not None else 1
     ip_adapter_strength = ip_adapter_strength if ip_adapter_strength is not None else 0.6
     kwargs["guidance_scale"] = guidance_scale if guidance_scale is not None else 3.5
     kwargs["image"] = image
