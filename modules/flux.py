@@ -1,13 +1,12 @@
-from diffusers import (FluxPriorReduxPipeline, FluxInpaintPipeline, FluxFillPipeline, DiffusionPipeline,
-                       FluxKontextPipeline)
-from diffusers.hooks import apply_group_offloading
+from diffusers import (FluxPriorReduxPipeline, FluxInpaintPipeline, FluxFillPipeline, FluxKontextPipeline,
+                       FluxPipeline)
+from diffusers.quantizers import PipelineQuantizationConfig
 from transformers import CLIPTextModel, CLIPTokenizer, T5EncoderModel, T5TokenizerFast
 import torch
 import gc
 import os
 
 dtype = torch.bfloat16
-directory = "offload"
 
 async def generate_flux(prompt,
                         width,
@@ -42,7 +41,16 @@ async def generate_flux(prompt,
     else:
         kwargs["prompt"] = prompt
 
-    generator = DiffusionPipeline.from_pretrained("black-forest-labs/FLUX.1-dev", torch_dtype=torch.bfloat16)
+    print("loading FluxPipeline")
+    pipeline_quant_config = PipelineQuantizationConfig(
+        quant_backend="bitsandbytes_4bit",
+        quant_kwargs={"load_in_4bit": True, "bnb_4bit_quant_type": "nf4", "bnb_4bit_compute_dtype": torch.bfloat16},
+        components_to_quantize=["transformer", "text_encoder_2"],
+    )
+
+    generator = FluxPipeline.from_pretrained("black-forest-labs/FLUX.1-dev",
+                                             quantization_config=pipeline_quant_config,
+                                             torch_dtype=dtype).to("cuda")
 
     if ip_adapter_image is not None:
         try:
@@ -66,19 +74,15 @@ async def generate_flux(prompt,
         generator.set_adapters(lora_list)
         generator.fuse_lora(adapter_names=lora_list)
         generator.unload_lora_weights()
-        
-    generator = await apply_offloading(generator)
 
     try:
         images = generator(**kwargs).images
     except Exception as e:
         print(f"Flux GENERATE ERROR: {e}")
 
-
     del generator
     torch.cuda.empty_cache()
     gc.collect()
-    await clear_offload_directory()
     return images
 
 
@@ -109,7 +113,15 @@ async def generate_flux_inpaint(prompt,
         kwargs["generator"] = generator
 
     print("loading FluxInpaintPipeline")
-    generator = FluxInpaintPipeline.from_pretrained("black-forest-labs/FLUX.1-dev", torch_dtype=torch.bfloat16)
+    pipeline_quant_config = PipelineQuantizationConfig(
+        quant_backend="bitsandbytes_4bit",
+        quant_kwargs={"load_in_4bit": True, "bnb_4bit_quant_type": "nf4", "bnb_4bit_compute_dtype": torch.bfloat16},
+        components_to_quantize=["transformer", "text_encoder_2"],
+    )
+
+    generator = FluxInpaintPipeline.from_pretrained("black-forest-labs/FLUX.1-dev",
+                                                    quantization_config=pipeline_quant_config,
+                                                    torch_dtype=dtype).to("cuda")
 
     if lora_name is not None:
         lora_list = []
@@ -122,17 +134,14 @@ async def generate_flux_inpaint(prompt,
                 print(f"FLUX LORA ERROR: {e}")
         generator.set_adapters(lora_list)
 
-    generator = await apply_offloading(generator)
-
     try:
         images = generator(**kwargs).images
     except Exception as e:
         print(f"FLUX INPAINT GENERATE ERROR: {e}")
 
-    del generator.scheduler, generator.text_encoder, generator.text_encoder_2, generator.tokenizer, generator.tokenizer_2, generator.vae, generator.transformer, generator
+    del generator
     torch.cuda.empty_cache()
     gc.collect()
-    await clear_offload_directory()
     return images
 
 
@@ -162,7 +171,14 @@ async def generate_flux_fill(prompt,
         kwargs["generator"] = generator
 
     print("loading FluxFillPipeline")
-    generator = FluxFillPipeline.from_pretrained("black-forest-labs/FLUX.1-Fill-dev", torch_dtype=torch.bfloat16)
+    pipeline_quant_config = PipelineQuantizationConfig(
+        quant_backend="bitsandbytes_4bit",
+        quant_kwargs={"load_in_4bit": True, "bnb_4bit_quant_type": "nf4", "bnb_4bit_compute_dtype": torch.bfloat16},
+        components_to_quantize=["transformer", "text_encoder_2"],
+    )
+    generator = FluxFillPipeline.from_pretrained("black-forest-labs/FLUX.1-Fill-dev",
+                                                 quantization_config=pipeline_quant_config,
+                                                 torch_dtype=dtype).to("cuda")
 
     if lora_name is not None:
         lora_list = []
@@ -175,18 +191,14 @@ async def generate_flux_fill(prompt,
                 print(f"FLUX LORA ERROR: {e}")
         generator.set_adapters(lora_list)
 
-    generator = await apply_offloading(generator)
-
     try:
         images = generator(**kwargs).images
     except Exception as e:
         print(f"FLUX INPAINT GENERATE ERROR: {e}")
-    generator.to("cpu")
 
-    del generator.scheduler, generator.text_encoder, generator.text_encoder_2, generator.tokenizer, generator.tokenizer_2, generator.vae, generator.transformer, generator
+    del generator
     torch.cuda.empty_cache()
     gc.collect()
-    await clear_offload_directory()
     return images
 
 
@@ -215,16 +227,22 @@ async def generate_flux_kontext(prompt,
                      range(kwargs["num_images_per_prompt"])]
         kwargs["generator"] = generator
 
-
-
-
-    generator = FluxKontextPipeline.from_pretrained("black-forest-labs/FLUX.1-Kontext-dev", torch_dtype=torch.bfloat16)
+    print("loading FluxKontextPipeline")
+    pipeline_quant_config = PipelineQuantizationConfig(
+        quant_backend="bitsandbytes_4bit",
+        quant_kwargs={"load_in_4bit": True, "bnb_4bit_quant_type": "nf4", "bnb_4bit_compute_dtype": torch.bfloat16},
+        components_to_quantize=["transformer", "text_encoder_2"],
+    )
+    generator = FluxKontextPipeline.from_pretrained("black-forest-labs/FLUX.1-Kontext-dev",
+                                                    quantization_config=pipeline_quant_config,
+                                                    torch_dtype=dtype).to("cuda")
 
     if ip_adapter_image is not None:
         try:
             generator.load_ip_adapter("XLabs-AI/flux-ip-adapter",
                                       weight_name="ip_adapter.safetensors",
-                                      image_encoder_pretrained_model_name_or_path="openai/clip-vit-large-patch14")
+                                      image_encoder_pretrained_model_name_or_path="openai/clip-vit-large-patch14",
+                                      torch_dtype=dtype)
             generator.set_ip_adapter_scale(ip_adapter_strength)
             kwargs["ip_adapter_image"] = ip_adapter_image
         except Exception as e:
@@ -243,8 +261,6 @@ async def generate_flux_kontext(prompt,
         generator.fuse_lora(adapter_names=lora_list)
         generator.unload_lora_weights()
 
-    generator = await apply_offloading(generator)
-
     try:
         images = generator(**kwargs).images
     except Exception as e:
@@ -253,39 +269,7 @@ async def generate_flux_kontext(prompt,
     del generator
     torch.cuda.empty_cache()
     gc.collect()
-    await clear_offload_directory()
     return images
-
-
-async def apply_offloading(generator):
-    generator.transformer.enable_group_offload(onload_device="cuda",
-                                               offload_device="cpu",
-                                               offload_type="block_level",
-                                               num_blocks_per_group=1,
-                                               offload_to_disk_path=directory,
-                                               use_stream=True,
-                                               record_stream=True,
-                                               non_blocking=False)
-    apply_group_offloading(generator.text_encoder_2,
-                           onload_device="cuda",
-                           offload_device="cpu",
-                           offload_type="block_level",
-                           num_blocks_per_group=1,
-                           offload_to_disk_path=directory,
-                           use_stream=True,
-                           record_stream=True,
-                           non_blocking=False)
-    for name, component in generator.components.items():
-        if name not in ["transformer", "text_encoder_2"] and isinstance(component, torch.nn.Module):
-            component.cuda()
-    return generator
-
-
-async def clear_offload_directory():
-    for filename in os.listdir(directory):
-        file_path = os.path.join(directory, filename)
-        if os.path.isfile(file_path):
-            os.remove(file_path)
 
 
 async def get_redux_embeds(image, prompt, strength):
@@ -298,7 +282,7 @@ async def get_redux_embeds(image, prompt, strength):
                                                             text_encoder_2=text_encoder_2,
                                                             tokenizer=tokenizer,
                                                             tokenizer_2=tokenizer_2,
-                                                            torch_dtype=torch.bfloat16).to("cuda")
+                                                            torch_dtype=dtype).to("cuda")
     redux_embeds, redux_pooled_embeds = redux_pipeline(image=image,
                                                        prompt=prompt,
                                                        prompt_2=prompt,
