@@ -12,6 +12,7 @@ There is a basic python client available in modules/client.py
 - Basic rag support which is detailed in the install instructions.
 - SDXL support for multiple models, image2image, controlnets, and ipadapters.
 - Flux Support. Only dev is currently supported. image2image and controlnets are supported. ipadapters are implemented but waiting on an upstream bugfix to work.
+- ACE Step Support
 
 # Install:
 Run the install script for either windows or linux depending on your operating system.
@@ -33,11 +34,11 @@ If you want to use the rag endpoint you need to place urls, one per line in rag/
 - /list_sdxl_controlnets - Returns a list of available SDXL controlnets
 - /list_flux_loras - Returns a list of available loras from loras/flux
 - /rag_retrieve - Returns relevant RAG documents to the query
+- /ace_generate - For Ace-Step generating
 
 # TODO:
 
 - Add WAN2.1 support
-- Add audio generation endpoints
 - Add svg model endpoint
 - Return different status codes if a generation ooms
 - Add LLM chat templates

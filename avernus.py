@@ -5,12 +5,13 @@ from typing import Optional
 from diffusers.utils import export_to_video
 from fastapi import FastAPI, Request, Body, UploadFile, Form, File
 from fastapi.responses import StreamingResponse
-from modules.pydantic_models import (FluxInpaintRequest, FluxRequest, FluxResponse,
+from modules.pydantic_models import (ACEStepRequest, FluxInpaintRequest, FluxRequest, FluxResponse,
                                      FluxLoraListResponse, LLMRequest, LLMResponse, MultiModalLLMRequest,
                                      MultiModalLLMResponse, RAGResponse, RAGRequest, SDXLInpaintRequest, SDXLRequest,
                                      SDXLResponse, SDXLLoraListResponse, SDXLControlnetListResponse, StatusResponse,
                                      SDXLSchedulerListResponse)
 
+from modules.ace import generate_ace
 from modules.chat import generate_chat, generate_multimodal_chat
 from modules.flux import generate_flux, generate_flux_inpaint, generate_flux_fill, generate_flux_kontext
 from modules.logging_config import setup_logging
@@ -24,6 +25,30 @@ from PIL import Image
 
 setup_logging()
 avernus = FastAPI()
+
+@avernus.post("/ace_generate")
+async def ace_generate(data: ACEStepRequest = Body(...)):
+    """Generates audio based on user inputs"""
+    logger.info("ace_generate request received")
+    kwargs = {"prompt": data.prompt,
+              "lyrics": data.lyrics}
+    if data.actual_seeds:
+        kwargs["actual_seeds"] = data.actual_seeds
+    if data.guidance_scale:
+        kwargs["guidance_scale"] = data.guidance_scale
+    if data.audio_duration:
+        kwargs["audio_duration"] = data.audio_duration
+    if data.infer_step:
+        kwargs["infer_step"] = data.infer_step
+    if data.omega_scale:
+        kwargs["omega_scale"] = data.omega_scale
+
+    try:
+        response = await generate_ace(**kwargs)
+    except Exception as e:
+        logger.info(f"ace_generate ERROR: {e}")
+
+    return StreamingResponse(open(response, "rb"), media_type="audio/wav")
 
 @avernus.post("/flux_generate", response_model=FluxResponse)
 async def flux_generate(data: FluxRequest = Body(...)):

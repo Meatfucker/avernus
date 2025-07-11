@@ -74,7 +74,7 @@ async def generate_flux(prompt,
         generator.set_adapters(lora_list)
         generator.fuse_lora(adapter_names=lora_list)
         generator.unload_lora_weights()
-
+    generator.enable_vae_slicing()
     try:
         images = generator(**kwargs).images
     except Exception as e:

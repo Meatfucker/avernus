@@ -193,33 +193,33 @@ async def generate_sdxl_inpaint(prompt,
     if scheduler is not None:
         match scheduler:
             case "DDIMScheduler":
-                generator.scheduler = DDIMScheduler.from_config(generator.scheduler.config).to("cuda")
+                generator.scheduler = DDIMScheduler.from_config(generator.scheduler.config)
             case "DDPMScheduler":
-                generator.scheduler = DDPMScheduler.from_config(generator.scheduler.config).to("cuda")
+                generator.scheduler = DDPMScheduler.from_config(generator.scheduler.config)
             case "PNDMScheduler":
-                generator.scheduler = PNDMScheduler.from_config(generator.scheduler.config).to("cuda")
+                generator.scheduler = PNDMScheduler.from_config(generator.scheduler.config)
             case "LMSDiscreteScheduler":
-                generator.scheduler = LMSDiscreteScheduler.from_config(generator.scheduler.config).to("cuda")
+                generator.scheduler = LMSDiscreteScheduler.from_config(generator.scheduler.config)
             case "EulerDiscreteScheduler":
-                generator.scheduler = EulerDiscreteScheduler.from_config(generator.scheduler.config).to("cuda")
+                generator.scheduler = EulerDiscreteScheduler.from_config(generator.scheduler.config)
             case "HeunDiscreteScheduler":
-                generator.scheduler = HeunDiscreteScheduler.from_config(generator.scheduler.config).to("cuda")
+                generator.scheduler = HeunDiscreteScheduler.from_config(generator.scheduler.config)
             case "EulerAncestralDiscreteScheduler":
-                generator.scheduler = EulerAncestralDiscreteScheduler.from_config(generator.scheduler.config).to("cuda")
+                generator.scheduler = EulerAncestralDiscreteScheduler.from_config(generator.scheduler.config)
             case "DPMSolverMultistepScheduler":
-                generator.scheduler = DPMSolverMultistepScheduler.from_config(generator.scheduler.config).to("cuda")
+                generator.scheduler = DPMSolverMultistepScheduler.from_config(generator.scheduler.config)
             case "DPMSolverSinglestepScheduler":
-                generator.scheduler = DPMSolverSinglestepScheduler.from_config(generator.scheduler.config).to("cuda")
+                generator.scheduler = DPMSolverSinglestepScheduler.from_config(generator.scheduler.config)
             case "KDPM2DiscreteScheduler":
-                generator.scheduler = KDPM2DiscreteScheduler.from_config(generator.scheduler.config).to("cuda")
+                generator.scheduler = KDPM2DiscreteScheduler.from_config(generator.scheduler.config)
             case "KDPM2AncestralDiscreteScheduler":
-                generator.scheduler = KDPM2AncestralDiscreteScheduler.from_config(generator.scheduler.config).to("cuda")
+                generator.scheduler = KDPM2AncestralDiscreteScheduler.from_config(generator.scheduler.config)
             case "DEISMultistepScheduler":
-                generator.scheduler = DEISMultistepScheduler.from_config(generator.scheduler.config).to("cuda")
+                generator.scheduler = DEISMultistepScheduler.from_config(generator.scheduler.config)
             case "UniPCMultistepScheduler":
-                generator.scheduler = UniPCMultistepScheduler.from_config(generator.scheduler.config).to("cuda")
+                generator.scheduler = UniPCMultistepScheduler.from_config(generator.scheduler.config)
             case "DPMSolverSDEScheduler":
-                generator.scheduler = DPMSolverSDEScheduler.from_config(generator.scheduler.config).to("cuda")
+                generator.scheduler = DPMSolverSDEScheduler.from_config(generator.scheduler.config)
 
     if lora_name is not None:
         lora_list = []

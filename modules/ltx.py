@@ -4,7 +4,7 @@ import torch
 from diffusers import LTXPipeline
 from diffusers.hooks import apply_group_offloading
 
-directory = "offload"
+directory = "/mnt/1000gb/ml/offload"
 
 async def generate_ltx(prompt,
                        input_video=None,

@@ -1,14 +1,13 @@
 import time
 from loguru import logger
 
-from avernus import flux_kontext_generate
-from modules.tests import (CheckStatus, FluxControlnetI2ILoraTest, FluxControlnetI2ITest, FluxControlnetListTest,
-                           FluxControlnetLoraTest, FluxControlnetTest, FluxI2ITest, FluxInpaintTest, FluxIPAdapterTest,
-                           FluxKontextTest, FluxLoraI2ITest, FluxLoraListTest, FluxLoraTest, FluxTest, LlmChatTest,
-                           LlmRagTest, LTXTest, SDXLControlnetI2ILoraTest, SDXLControlnetI2ITest,
-                           SDXLControlnetListTest, SDXLControlnetLoraTest, SDXLControlnetTest, SDXLI2ILoraTest,
-                           SDXLI2ITest, SDXLInpaintTest, SDXLIPAdapterTest, SDXLLoraListTest, SDXLLoraTest, SDXLTest,
-                           SDXLSchedulerListTest)
+from modules.tests import (ACETest, CheckStatus, FluxControlnetI2ILoraTest, FluxControlnetI2ITest,
+                           FluxControlnetListTest, FluxControlnetLoraTest, FluxControlnetTest, FluxI2ITest,
+                           FluxInpaintTest, FluxIPAdapterTest, FluxKontextTest, FluxLoraI2ITest, FluxLoraListTest,
+                           FluxLoraTest, FluxTest, LlmChatTest, LlmRagTest, LTXTest, SDXLControlnetI2ILoraTest,
+                           SDXLControlnetI2ITest, SDXLControlnetListTest, SDXLControlnetLoraTest, SDXLControlnetTest,
+                           SDXLI2ILoraTest, SDXLI2ITest, SDXLInpaintTest, SDXLIPAdapterTest, SDXLLoraListTest,
+                           SDXLLoraTest, SDXLTest, SDXLSchedulerListTest)
 start_time = time.time()
 
 check_status = CheckStatus("CHECK STATUS")
@@ -29,6 +28,7 @@ check_status = CheckStatus("CHECK STATUS")
 #sdxl_control_lora = SDXLControlnetLoraTest("SDXL CONTROLNET LORA")
 #sdxl_control_i2i = SDXLControlnetI2ITest("SDXL CONTROLNET I2I")
 #sdxl_control_i2i_lora = SDXLControlnetI2ILoraTest("SDXL CONTROLNET I2I LORA")
+
 #flux_lora_list = FluxLoraListTest("FLUX LORA LIST")
 #flux_control_list = FluxControlnetListTest("FLUX CONTROLNET LIST")
 #flux = FluxTest("FLUX")
@@ -41,10 +41,11 @@ check_status = CheckStatus("CHECK STATUS")
 #flux_control_lora = FluxControlnetLoraTest("FLUX CONTROLNET LORA")
 #flux_control_i2i = FluxControlnetI2ITest("FLUX CONTROLNET I2I")
 #flux_control_i2i_lora = FluxControlnetI2ILoraTest("FLUX CONTROLNET I2I LORA")
-flux_kontext_test = FluxKontextTest("FLUX KONTEXT")
+#flux_kontext_test = FluxKontextTest("FLUX KONTEXT")
 
 #ltx = LTXTest("LTX")
 
+ace = ACETest("ACE STEP")
 end_time = time.time()
 elapsed_time = end_time - start_time
 logger.info(f"Total runtime: {elapsed_time:.2f} seconds")

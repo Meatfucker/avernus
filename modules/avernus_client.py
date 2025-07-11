@@ -7,6 +7,33 @@ class AvernusClient:
         self.port = port
         self.base_url = f"{self.url}:{self.port}"
 
+    async def ace_music(self, prompt, lyrics, audio_duration=None, guidance_scale=None, infer_step=None,
+                        omega_scale=None, actual_seeds=None):
+        """This takes a prompt and lyrics and returns a song"""
+        url = f"http://{self.base_url}/ace_generate"
+        data = {"prompt": prompt,
+                "lyrics": lyrics,
+                "audio_duration": audio_duration,
+                "guidance_scale": guidance_scale,
+                "infer_step": infer_step,
+                "omega_scale": omega_scale,
+                "actual_seeds": actual_seeds}
+
+        try:
+            async with httpx.AsyncClient(timeout=3600) as client:
+                response = await client.post(url, json=data)
+            if response.status_code == 200:
+                # Save the returned binary video content
+                #with open("output.wav", "wb") as f:
+                #    f.write(response.content)
+                return response.content
+            else:
+                print(f"ACE STEP ERROR: {response.status_code} - {response.text}")
+                return None
+        except Exception as e:
+            print(f"ERROR: {e}")
+            return {"ERROR": str(e)}
+
     async def check_status(self):
         """Attempts to contact the avernus server and returns a dict with status information from the server"""
         url = f"http://{self.base_url}/status"

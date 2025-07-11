@@ -1,6 +1,15 @@
 from typing import Dict, List, Optional, Union
 from pydantic import BaseModel, Field
 
+class ACEStepRequest(BaseModel):
+    prompt: str = Field(..., example="Weird jam band music, guitar, bass")
+    lyrics: str = Field(..., example="[chorus] Blah blah blah, [inst]")
+    audio_duration: Optional[float] = Field(None, example=60.0)
+    infer_step: Optional[int] = Field(None, example=60)
+    guidance_scale: Optional[float] = Field(None, example=15.0)
+    omega_scale: Optional[float] = Field(None, example=10.0)
+    actual_seeds: Optional[int] = Field(None, example=42)
+
 class FluxControlnetListResponse(BaseModel):
     flux_controlnets: List[str] = Field(..., example=["canny", "depth"])
 

@@ -31,6 +31,10 @@ class TimedTest:
     async def run_test(self):
         pass
 
+class ACETest(TimedTest):
+    async def run_test(self):
+        await self.client.ace_music(prompt="jazz, bass, techno", lyrics="inst")
+
 class CheckStatus(TimedTest):
     async def run_test(self):
         status = await self.client.check_status()
