@@ -18,6 +18,7 @@ from modules.logging_config import setup_logging
 from modules.ltx import generate_ltx
 from modules.rag import retrieve_rag
 from modules.sdxl import generate_sdxl, generate_sdxl_inpaint
+from modules.wan import generate_wan
 
 
 from loguru import logger
@@ -396,6 +397,39 @@ async def sdxl_inpaint_generate(data: SDXLInpaintRequest = Body(...)):
         logger.info(f"sdxl_inpaint_generate ERROR: {e}")
         return None
     return {"images": base64_images}
+
+@avernus.post("/wan_generate")
+async def wan_generate(prompt: str = Form(...),
+                       negative_prompt: Optional[str] = None,
+                       input_video: Optional[UploadFile] = File(None),
+                       height: Optional[int] = None,
+                       width: Optional[int] = None,
+                       seed: Optional[int] = None,
+                       guidance_scale: Optional[float] = None,
+                       num_frames: Optional[int] = None
+                       ):
+    logger.info("wan_generate request received")
+    kwargs = {"prompt": prompt}
+    if negative_prompt:
+        kwargs["negative_prompt"] = negative_prompt
+    if input_video:
+        video_bytes = await input_video.read()
+        kwargs["input_video"] = video_bytes
+    if height:
+        kwargs["height"] = height
+    if width:
+        kwargs["width"] = width
+    if seed:
+        kwargs["seed"] = seed
+    if guidance_scale:
+        kwargs["guidance_scale"] = guidance_scale
+    if num_frames:
+        kwargs["num_frames"] = num_frames
+
+    generated_video = await generate_wan(**kwargs)
+    export_to_video(generated_video, "wan_output.mp4", fps=24)
+
+    return StreamingResponse(open("wan_output.mp4", "rb"), media_type="input_video/mp4")
 
 def image_to_base64(image):
     """Takes a PIL image and converts it to base64"""

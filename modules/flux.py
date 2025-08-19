@@ -4,6 +4,7 @@ from diffusers.quantizers import PipelineQuantizationConfig
 from transformers import CLIPTextModel, CLIPTokenizer, T5EncoderModel, T5TokenizerFast
 import torch
 import gc
+import math
 import os
 
 dtype = torch.bfloat16
@@ -48,7 +49,7 @@ async def generate_flux(prompt,
         components_to_quantize=["transformer", "text_encoder_2"],
     )
 
-    generator = FluxPipeline.from_pretrained("black-forest-labs/FLUX.1-dev",
+    generator = FluxPipeline.from_pretrained("black-forest-labs/FLUX.1-Krea-dev",
                                              quantization_config=pipeline_quant_config,
                                              torch_dtype=dtype).to("cuda")
 
@@ -213,10 +214,17 @@ async def generate_flux_kontext(prompt,
                                 ip_adapter_strength=None,
                                 guidance_scale=None,
                                 seed=None):
+    kontext_width, kontext_height = resize_by_pixels(image.width, image.height)
     kwargs = {}
     kwargs["prompt"] = prompt
-    kwargs["width"] = width if width is not None else 1024
-    kwargs["height"] = height if height is not None else 1024
+    if width is not None:
+        kwargs["width"] = width
+    else:
+        kwargs["width"] = kontext_width
+    if height is not None:
+        kwargs["height"] = height
+    else:
+        kwargs["height"] = kontext_height
     kwargs["num_inference_steps"] = steps if steps is not None else 30
     kwargs["num_images_per_prompt"] = batch_size if batch_size is not None else 1
     ip_adapter_strength = ip_adapter_strength if ip_adapter_strength is not None else 0.6
@@ -296,3 +304,18 @@ async def get_redux_embeds(image, prompt, strength):
     gc.collect()
 
     return redux_embeds, redux_pooled_embeds
+
+def resize_by_pixels(width, height, target_pixels=1024*1024, keep_if_within=0.0):
+    """
+    Return (new_width, new_height) so total pixels ~= target_pixels,
+    preserving aspect ratio. If current pixels are within ±keep_if_within
+    (e.g. 0.25 for 25%), the original size is returned.
+    """
+    current = width * height
+    if keep_if_within > 0 and abs(current - target_pixels) / target_pixels <= keep_if_within:
+        return width, height
+
+    scale = math.sqrt(target_pixels / current)
+    new_w = max(1, int(round(width * scale)))
+    new_h = max(1, int(round(height * scale)))
+    return new_w, new_h

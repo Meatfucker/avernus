@@ -370,3 +370,35 @@ class AvernusClient:
         except Exception as e:
             print(f"ERROR: {e}")
             return {"ERROR": str(e)}
+
+    async def wan_video(self, prompt, negative_prompt=None, width=None, height=None, num_frames=None,
+                        guidance_scale=None, seed=None, video=None):
+        """This takes a prompt and optiional video and returns a video"""
+        url = f"http://{self.base_url}/wan_generate"
+        files = None
+        if video is not None:
+            files = {"video": ("input.mp4", open(video, "rb"), "video/mp4")}
+        data = {"prompt": prompt,
+                "negative_prompt": negative_prompt,
+                "width": width,
+                "height": height,
+                "num_frames": num_frames,
+                "guidance_scale": guidance_scale,
+                "seed": seed}
+        try:
+            async with httpx.AsyncClient(timeout=3600) as client:
+                if files:
+                    response = await client.post(url, data=data, files=files)
+                else:
+                    response = await client.post(url, data=data)
+            if response.status_code == 200:
+                # Save the returned binary video content
+                with open("wan_client_output.mp4", "wb") as f:
+                    f.write(response.content)
+                return "wan_client_output.mp4"
+            else:
+                print(f"WAN VIDEO ERROR: {response.status_code} - {response.text}")
+                return None
+        except Exception as e:
+            print(f"ERROR: {e}")
+            return {"ERROR": str(e)}

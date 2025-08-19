@@ -315,6 +315,10 @@ class SDXLTest(TimedTest):
                                               scheduler="DPMSolverSDEScheduler")
         await base64_image_to_file(images, "sdxl")
 
+class WANTest(TimedTest):
+    async def run_test(self):
+        await self.client.wan_video("frogs hopping", num_frames=33)
+
 async def base64_image_to_file(base64_images, prefix=""):
     for i, b64_img in enumerate(base64_images):
         img_data = base64.b64decode(b64_img)  # Decode base64 string

@@ -10,3 +10,4 @@
 !/loras/flux/putfluxlorashere.txt
 /rag/rag_index.faiss
 /rag/rag_index.pkl
+/models/
