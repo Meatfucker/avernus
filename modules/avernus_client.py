@@ -402,3 +402,8 @@ class AvernusClient:
         except Exception as e:
             print(f"ERROR: {e}")
             return {"ERROR": str(e)}
+
+    async def update_url(self, url, port=6969):
+        self.url = url
+        self.port = port
+        self.base_url = f"{self.url}:{self.port}"
