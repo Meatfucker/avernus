@@ -1,7 +1,8 @@
 from modules.acestep.pipeline_ace_step import ACEStepPipeline
 
 
-async def generate_ace(prompt,
+async def generate_ace(avernus_pipeline,
+                       prompt,
                        lyrics,
                        actual_seeds=None,
                        guidance_scale=None,
@@ -18,11 +19,19 @@ async def generate_ace(prompt,
     kwargs["save_path"] = "./tests/test.wav"
     kwargs["manual_seeds"] = [str(actual_seeds)]
 
-    try:
-        generator = ACEStepPipeline("models/", dtype="bfloat16")
+    avernus_pipeline = await load_ace_pipeline(avernus_pipeline)
 
-        generator(**kwargs)
+    try:
+        avernus_pipeline.pipeline(**kwargs)
         return "./tests/test.wav"
     except Exception as e:
         print(f"generate_ace ERROR: {e}")
         return None
+
+async def load_ace_pipeline(avernus_pipeline):
+    if avernus_pipeline.model_type != "ace":
+        print("loading AceStepPipeline")
+        await avernus_pipeline.delete_pipeline()
+        generator = ACEStepPipeline("models/", dtype="bfloat16")
+        await avernus_pipeline.set_pipeline(generator, "ace")
+    return avernus_pipeline

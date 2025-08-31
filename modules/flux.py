@@ -9,7 +9,100 @@ import os
 
 dtype = torch.bfloat16
 
-async def generate_flux(prompt,
+
+async def load_flux_pipeline(avernus_pipeline):
+    if avernus_pipeline.model_type != "flux":
+        print("loading FluxPipeline")
+        await avernus_pipeline.delete_pipeline()
+        pipeline_quant_config = PipelineQuantizationConfig(
+            quant_backend="bitsandbytes_4bit",
+            quant_kwargs={"load_in_4bit": True, "bnb_4bit_quant_type": "nf4", "bnb_4bit_compute_dtype": torch.bfloat16},
+            components_to_quantize=["transformer", "text_encoder_2"],
+        )
+        generator = FluxPipeline.from_pretrained("black-forest-labs/FLUX.1-Krea-dev",
+                                                 quantization_config=pipeline_quant_config,
+                                                 torch_dtype=dtype).to("cuda")
+        await avernus_pipeline.set_pipeline(generator, "flux")
+    return avernus_pipeline
+
+async def load_flux_inpaint_pipeline(avernus_pipeline):
+    if avernus_pipeline.model_type != "flux_inpaint":
+        print("loading FluxInpaintPipeline")
+        await avernus_pipeline.delete_pipeline()
+        pipeline_quant_config = PipelineQuantizationConfig(
+            quant_backend="bitsandbytes_4bit",
+            quant_kwargs={"load_in_4bit": True, "bnb_4bit_quant_type": "nf4", "bnb_4bit_compute_dtype": torch.bfloat16},
+            components_to_quantize=["transformer", "text_encoder_2"],
+        )
+
+        generator = FluxInpaintPipeline.from_pretrained("black-forest-labs/FLUX.1-dev",
+                                                        quantization_config=pipeline_quant_config,
+                                                        torch_dtype=dtype).to("cuda")
+        await avernus_pipeline.set_pipeline(generator, "flux_inpaint")
+    return avernus_pipeline
+
+async def load_flux_fill_pipeline(avernus_pipeline):
+    if avernus_pipeline.model_type != "flux_fill":
+        print("loading FluxFillPipeline")
+        await avernus_pipeline.delete_pipeline()
+        pipeline_quant_config = PipelineQuantizationConfig(
+            quant_backend="bitsandbytes_4bit",
+            quant_kwargs={"load_in_4bit": True, "bnb_4bit_quant_type": "nf4", "bnb_4bit_compute_dtype": torch.bfloat16},
+            components_to_quantize=["transformer", "text_encoder_2"],
+        )
+        generator = FluxFillPipeline.from_pretrained("black-forest-labs/FLUX.1-Fill-dev",
+                                                     quantization_config=pipeline_quant_config,
+                                                     torch_dtype=dtype).to("cuda")
+        await avernus_pipeline.set_pipeline(generator, "flux_fill")
+    return avernus_pipeline
+
+async def load_flux_kontext_pipeline(avernus_pipeline):
+    if avernus_pipeline.model_type != "flux_kontext":
+        print("loading FluxKontextPipeline")
+        await avernus_pipeline.delete_pipeline()
+        pipeline_quant_config = PipelineQuantizationConfig(
+            quant_backend="bitsandbytes_4bit",
+            quant_kwargs={"load_in_4bit": True, "bnb_4bit_quant_type": "nf4", "bnb_4bit_compute_dtype": torch.bfloat16},
+            components_to_quantize=["transformer", "text_encoder_2"],
+        )
+        generator = FluxKontextPipeline.from_pretrained("black-forest-labs/FLUX.1-Kontext-dev",
+                                                        quantization_config=pipeline_quant_config,
+                                                        torch_dtype=dtype).to("cuda")
+        await avernus_pipeline.set_pipeline(generator, "flux_kontext")
+    return avernus_pipeline
+
+async def get_seed_generators(amount, seed):
+    generator = [torch.Generator(device="cuda").manual_seed(seed + i) for i in range(amount)]
+    return generator
+
+async def load_ip_adapters(avernus_pipeline, strength):
+    try:
+        avernus_pipeline.pipeline.load_ip_adapter("XLabs-AI/flux-ip-adapter",
+                                                  weight_name="ip_adapter.safetensors",
+                                                  image_encoder_pretrained_model_name_or_path="openai/clip-vit-large-patch14")
+        avernus_pipeline.pipeline.set_ip_adapter_scale(strength)
+        return avernus_pipeline
+    except Exception as e:
+        print(f"FLUX IP ADAPTER ERROR: {e}")
+
+async def load_flux_loras(avernus_pipeline, lora_name):
+    try:
+        lora_list = []
+        for lora in lora_name:
+            try:
+                lora_name = os.path.splitext(lora)[0]
+                avernus_pipeline.pipeline.load_lora_weights(f"loras/flux/{lora}", adapter_name=lora_name)
+                lora_list.append(lora_name)
+            except Exception as e:
+                print(f"FLUX LORA ERROR: {e}")
+        avernus_pipeline.pipeline.set_adapters(lora_list)
+        return avernus_pipeline
+    except Exception as e:
+        print(f"FLUX LORA ERROR: {e}")
+
+
+async def generate_flux(avernus_pipeline,
+                        prompt,
                         width,
                         height,
                         steps,
@@ -30,64 +123,48 @@ async def generate_flux(prompt,
     strength = strength if strength is not None else 1.0
     ip_adapter_strength = ip_adapter_strength if ip_adapter_strength is not None else 0.6
     kwargs["guidance_scale"] = guidance_scale if guidance_scale is not None else 3.5
-
     if seed is not None:
-        generator = [torch.Generator(device="cuda").manual_seed(seed + i) for i in range(kwargs["num_images_per_prompt"])]
-        kwargs["generator"] = generator
+        kwargs["generator"] = get_seed_generators(kwargs["num_images_per_prompt"], seed)
 
     if image is not None:
-        redux_embeds, redux_pooled_embeds = await get_redux_embeds(image, prompt, strength)
-        kwargs["prompt_embeds"] = redux_embeds
-        kwargs["pooled_prompt_embeds"] = redux_pooled_embeds
+        if avernus_pipeline.model_type == "flux":
+            avernus_pipeline.pipeline.to("cpu")
+            kwargs["prompt_embeds"], kwargs["pooled_prompt_embeds"] = await get_redux_embeds(image, prompt, strength)
+            avernus_pipeline.pipeline.to("cuda")
+        else:
+            await avernus_pipeline.delete_pipeline()
+            kwargs["prompt_embeds"], kwargs["pooled_prompt_embeds"] = await get_redux_embeds(image, prompt, strength)
     else:
         kwargs["prompt"] = prompt
 
-    print("loading FluxPipeline")
-    pipeline_quant_config = PipelineQuantizationConfig(
-        quant_backend="bitsandbytes_4bit",
-        quant_kwargs={"load_in_4bit": True, "bnb_4bit_quant_type": "nf4", "bnb_4bit_compute_dtype": torch.bfloat16},
-        components_to_quantize=["transformer", "text_encoder_2"],
-    )
-
-    generator = FluxPipeline.from_pretrained("black-forest-labs/FLUX.1-Krea-dev",
-                                             quantization_config=pipeline_quant_config,
-                                             torch_dtype=dtype).to("cuda")
+    avernus_pipeline = await load_flux_pipeline(avernus_pipeline)
 
     if ip_adapter_image is not None:
         try:
-            generator.load_ip_adapter("XLabs-AI/flux-ip-adapter",
-                                      weight_name="ip_adapter.safetensors",
-                                      image_encoder_pretrained_model_name_or_path="openai/clip-vit-large-patch14")
-            generator.set_ip_adapter_scale(ip_adapter_strength)
+            avernus_pipeline = await load_ip_adapters(avernus_pipeline, ip_adapter_strength)
             kwargs["ip_adapter_image"] = ip_adapter_image
         except Exception as e:
             print(f"FLUX IP ADAPTER ERROR: {e}")
 
     if lora_name is not None:
-        lora_list = []
-        for lora in lora_name:
-            try:
-                lora_name = os.path.splitext(lora)[0]
-                generator.load_lora_weights(f"loras/flux/{lora}", adapter_name=lora_name)
-                lora_list.append(lora_name)
-            except Exception as e:
-                print(f"FLUX LORA ERROR: {e}")
-        generator.set_adapters(lora_list)
-        generator.fuse_lora(adapter_names=lora_list)
-        generator.unload_lora_weights()
-    generator.enable_vae_slicing()
+        avernus_pipeline = await load_flux_loras(avernus_pipeline, lora_name)
+
+    avernus_pipeline.pipeline.enable_vae_slicing()
+
     try:
-        images = generator(**kwargs).images
+        images = avernus_pipeline.pipeline(**kwargs).images
+        if lora_name is not None:
+            avernus_pipeline.pipeline.unload_lora_weights()
+        if ip_adapter_image is not None:
+            avernus_pipeline.pipeline.unload_ip_adapter()
     except Exception as e:
         print(f"Flux GENERATE ERROR: {e}")
 
-    del generator
-    torch.cuda.empty_cache()
-    gc.collect()
     return images
 
 
-async def generate_flux_inpaint(prompt,
+async def generate_flux_inpaint(avernus_pipeline,
+                                prompt,
                                 width,
                                 height,
                                 steps,
@@ -109,44 +186,27 @@ async def generate_flux_inpaint(prompt,
     kwargs["mask_image"] = mask_image
     kwargs["padding_mask_crop"] = 32
     kwargs["guidance_scale"] = guidance_scale if guidance_scale is not None else 7.0
+
     if seed is not None:
-        generator = [torch.Generator(device="cuda").manual_seed(seed + i) for i in range(kwargs["num_images_per_prompt"])]
-        kwargs["generator"] = generator
+        kwargs["generator"] = get_seed_generators(kwargs["num_images_per_prompt"], seed)
 
-    print("loading FluxInpaintPipeline")
-    pipeline_quant_config = PipelineQuantizationConfig(
-        quant_backend="bitsandbytes_4bit",
-        quant_kwargs={"load_in_4bit": True, "bnb_4bit_quant_type": "nf4", "bnb_4bit_compute_dtype": torch.bfloat16},
-        components_to_quantize=["transformer", "text_encoder_2"],
-    )
-
-    generator = FluxInpaintPipeline.from_pretrained("black-forest-labs/FLUX.1-dev",
-                                                    quantization_config=pipeline_quant_config,
-                                                    torch_dtype=dtype).to("cuda")
+    avernus_pipeline = await load_flux_inpaint_pipeline(avernus_pipeline)
 
     if lora_name is not None:
-        lora_list = []
-        for lora in lora_name:
-            try:
-                lora_name = os.path.splitext(lora)[0]
-                generator.load_lora_weights(f"loras/flux/{lora}", adapter_name=lora_name)
-                lora_list.append(lora_name)
-            except Exception as e:
-                print(f"FLUX LORA ERROR: {e}")
-        generator.set_adapters(lora_list)
+        avernus_pipeline = await load_flux_loras(avernus_pipeline, lora_name)
 
     try:
-        images = generator(**kwargs).images
+        images = avernus_pipeline.pipeline(**kwargs).images
+        if lora_name is not None:
+            avernus_pipeline.pipeline.unload_lora_weights()
     except Exception as e:
         print(f"FLUX INPAINT GENERATE ERROR: {e}")
 
-    del generator
-    torch.cuda.empty_cache()
-    gc.collect()
     return images
 
 
-async def generate_flux_fill(prompt,
+async def generate_flux_fill(avernus_pipeline,
+                             prompt,
                              width,
                              height,
                              steps,
@@ -167,43 +227,27 @@ async def generate_flux_fill(prompt,
     kwargs["image"] = image
     kwargs["mask_image"] = mask_image
     kwargs["guidance_scale"] = guidance_scale if guidance_scale is not None else 30.0
-    if seed is not None:
-        generator = [torch.Generator(device="cuda").manual_seed(seed + i) for i in range(kwargs["num_images_per_prompt"])]
-        kwargs["generator"] = generator
 
-    print("loading FluxFillPipeline")
-    pipeline_quant_config = PipelineQuantizationConfig(
-        quant_backend="bitsandbytes_4bit",
-        quant_kwargs={"load_in_4bit": True, "bnb_4bit_quant_type": "nf4", "bnb_4bit_compute_dtype": torch.bfloat16},
-        components_to_quantize=["transformer", "text_encoder_2"],
-    )
-    generator = FluxFillPipeline.from_pretrained("black-forest-labs/FLUX.1-Fill-dev",
-                                                 quantization_config=pipeline_quant_config,
-                                                 torch_dtype=dtype).to("cuda")
+    if seed is not None:
+        kwargs["generator"] = get_seed_generators(kwargs["num_images_per_prompt"], seed)
+
+    avernus_pipeline = await load_flux_fill_pipeline(avernus_pipeline)
 
     if lora_name is not None:
-        lora_list = []
-        for lora in lora_name:
-            try:
-                lora_name = os.path.splitext(lora)[0]
-                generator.load_lora_weights(f"loras/flux/{lora}", adapter_name=lora_name)
-                lora_list.append(lora_name)
-            except Exception as e:
-                print(f"FLUX LORA ERROR: {e}")
-        generator.set_adapters(lora_list)
+        avernus_pipeline = await load_flux_loras(avernus_pipeline, lora_name)
 
     try:
-        images = generator(**kwargs).images
+        images = avernus_pipeline.pipeline(**kwargs).images
+        if lora_name is not None:
+            avernus_pipeline.pipeline.unload_lora_weights()
     except Exception as e:
-        print(f"FLUX INPAINT GENERATE ERROR: {e}")
+        print(f"FLUX FILL GENERATE ERROR: {e}")
 
-    del generator
-    torch.cuda.empty_cache()
-    gc.collect()
     return images
 
 
-async def generate_flux_kontext(prompt,
+async def generate_flux_kontext(avernus_pipeline,
+                                prompt,
                                 width,
                                 height,
                                 steps,
@@ -231,52 +275,27 @@ async def generate_flux_kontext(prompt,
     kwargs["guidance_scale"] = guidance_scale if guidance_scale is not None else 3.5
     kwargs["image"] = image
     if seed is not None:
-        generator = [torch.Generator(device="cuda").manual_seed(seed + i) for i in
-                     range(kwargs["num_images_per_prompt"])]
-        kwargs["generator"] = generator
+        kwargs["generator"] = get_seed_generators(kwargs["num_images_per_prompt"], seed)
 
-    print("loading FluxKontextPipeline")
-    pipeline_quant_config = PipelineQuantizationConfig(
-        quant_backend="bitsandbytes_4bit",
-        quant_kwargs={"load_in_4bit": True, "bnb_4bit_quant_type": "nf4", "bnb_4bit_compute_dtype": torch.bfloat16},
-        components_to_quantize=["transformer", "text_encoder_2"],
-    )
-    generator = FluxKontextPipeline.from_pretrained("black-forest-labs/FLUX.1-Kontext-dev",
-                                                    quantization_config=pipeline_quant_config,
-                                                    torch_dtype=dtype).to("cuda")
+    avernus_pipeline = await load_flux_kontext_pipeline(avernus_pipeline)
 
     if ip_adapter_image is not None:
         try:
-            generator.load_ip_adapter("XLabs-AI/flux-ip-adapter",
-                                      weight_name="ip_adapter.safetensors",
-                                      image_encoder_pretrained_model_name_or_path="openai/clip-vit-large-patch14",
-                                      torch_dtype=dtype)
-            generator.set_ip_adapter_scale(ip_adapter_strength)
+            avernus_pipeline = await load_ip_adapters(avernus_pipeline, ip_adapter_strength)
             kwargs["ip_adapter_image"] = ip_adapter_image
         except Exception as e:
             print(f"FLUX KONTEXT IP ADAPTER ERROR: {e}")
 
     if lora_name is not None:
-        lora_list = []
-        for lora in lora_name:
-            try:
-                lora_name = os.path.splitext(lora)[0]
-                generator.load_lora_weights(f"loras/flux/{lora}", adapter_name=lora_name)
-                lora_list.append(lora_name)
-            except Exception as e:
-                print(f"FLUX KONTEXT LORA ERROR: {e}")
-        generator.set_adapters(lora_list)
-        generator.fuse_lora(adapter_names=lora_list)
-        generator.unload_lora_weights()
+        avernus_pipeline = await load_flux_loras(avernus_pipeline, lora_name)
 
     try:
-        images = generator(**kwargs).images
+        images = avernus_pipeline.pipeline(**kwargs).images
+        if lora_name is not None:
+            avernus_pipeline.pipeline.unload_lora_weights()
     except Exception as e:
         print(f"FLUX KONTEXT GENERATE ERROR: {e}")
 
-    del generator
-    torch.cuda.empty_cache()
-    gc.collect()
     return images
 
 

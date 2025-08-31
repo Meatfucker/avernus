@@ -8,6 +8,7 @@ librosa
 loguru
 num2words
 opencv-python
+peft
 protobuf
 py3langid
 pypinyin

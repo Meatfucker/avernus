@@ -4,15 +4,23 @@ import numpy
 from PIL import Image
 import torch
 from transformers import pipeline
-async def get_sdxl_controlnet(controlnet_processor, controlnet_image):
+
+
+async def get_sdxl_controlnet(controlnet_processor):
+    if controlnet_processor == "canny":
+        controlnet = ControlNetModel.from_pretrained("diffusers/controlnet-canny-sdxl-1.0", torch_dtype=torch.bfloat16)
+        return controlnet
+    if controlnet_processor == "depth":
+        controlnet = ControlNetModel.from_pretrained("diffusers/controlnet-zoe-depth-sdxl-1.0", torch_dtype=torch.bfloat16, use_safetensors=True)
+        return controlnet
+
+async def get_controlnet_image(controlnet_processor, controlnet_image):
     if controlnet_processor == "canny":
         canny_image = await get_canny_image(controlnet_image)
-        controlnet = ControlNetModel.from_pretrained("diffusers/controlnet-canny-sdxl-1.0", torch_dtype=torch.bfloat16)
-        return controlnet, canny_image
+        return canny_image
     if controlnet_processor == "depth":
         depth_image = await get_depth_image(controlnet_image)
-        controlnet = ControlNetModel.from_pretrained("diffusers/controlnet-zoe-depth-sdxl-1.0", torch_dtype=torch.bfloat16, use_safetensors=True)
-        return controlnet, depth_image
+        return depth_image
 
 async def get_canny_image(image):
     image = numpy.array(image)

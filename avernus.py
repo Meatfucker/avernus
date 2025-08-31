@@ -1,4 +1,5 @@
 import base64
+import gc
 from io import BytesIO
 import os
 from typing import Optional
@@ -23,9 +24,35 @@ from modules.wan import generate_wan
 
 from loguru import logger
 from PIL import Image
+import torch
 
 setup_logging()
 avernus = FastAPI()
+
+
+class CurrentPipeline:
+    def __init__(self,
+                 pipeline=None,
+                 model_type=None,
+                 model_name=None):
+        self.pipeline = pipeline
+        self.model_type = model_type
+        self.model_name = model_name
+
+    async def delete_pipeline(self):
+        self.pipeline = None
+        self.model_type = None
+        self.model_name = None
+        torch.cuda.empty_cache()
+        gc.collect()
+
+    async def set_pipeline(self, pipeline=None, model_type=None, model_name=None):
+        self.pipeline = pipeline
+        self.model_type = model_type
+        self.model_name = model_name
+
+PIPELINE = CurrentPipeline()
+
 
 @avernus.post("/ace_generate")
 async def ace_generate(data: ACEStepRequest = Body(...)):
@@ -45,7 +72,7 @@ async def ace_generate(data: ACEStepRequest = Body(...)):
         kwargs["omega_scale"] = data.omega_scale
 
     try:
-        response = await generate_ace(**kwargs)
+        response = await generate_ace(PIPELINE, **kwargs)
     except Exception as e:
         logger.info(f"ace_generate ERROR: {e}")
 
@@ -75,7 +102,7 @@ async def flux_generate(data: FluxRequest = Body(...)):
         kwargs["seed"] = data.seed
 
     try:
-        response = await generate_flux(**kwargs)
+        response = await generate_flux(PIPELINE, **kwargs)
         base64_images = [image_to_base64(img) for img in response]
     except Exception as e:
         logger.info(f"flux_generate ERROR: {e}")
@@ -107,7 +134,7 @@ async def flux_inpaint_generate(data: FluxInpaintRequest = Body(...)):
         kwargs["seed"] = data.seed
 
     try:
-        response = await generate_flux_inpaint(**kwargs)
+        response = await generate_flux_inpaint(PIPELINE, **kwargs)
         base64_images = [image_to_base64(img) for img in response]
     except Exception as e:
         logger.info(f"flux_inpaint_generate ERROR: {e}")
@@ -139,7 +166,7 @@ async def flux_fill_generate(data: FluxInpaintRequest = Body(...)):
         kwargs["seed"] = data.seed
 
     try:
-        response = await generate_flux_fill(**kwargs)
+        response = await generate_flux_fill(PIPELINE, **kwargs)
         base64_images = [image_to_base64(img) for img in response]
     except Exception as e:
         logger.info(f"flux_fill_generate ERROR: {e}")
@@ -170,7 +197,7 @@ async def flux_kontext_generate(data: FluxRequest = Body(...)):
         kwargs["seed"] = data.seed
 
     try:
-        response = await generate_flux_kontext(**kwargs)
+        response = await generate_flux_kontext(PIPELINE, **kwargs)
         base64_images = [image_to_base64(img) for img in response]
     except Exception as e:
         logger.info(f"flux_kontext_generate ERROR: {e}")
@@ -249,7 +276,7 @@ async def llm_chat(request: Request, data: LLMRequest = Body(...)):
               "model_name": data.model_name,
               "messages": data.messages}
     try:
-        response = await generate_chat(**kwargs)
+        response = await generate_chat(PIPELINE, **kwargs)
     except Exception as e:
         logger.error(f"llm_chat ERROR: {e}")
         return {"error": str(e)}
@@ -355,7 +382,7 @@ async def sdxl_generate(data: SDXLRequest = Body(...)):
     if data.seed:
         kwargs["seed"] = data.seed
     try:
-        response = await generate_sdxl(**kwargs)
+        response = await generate_sdxl(PIPELINE, **kwargs)
         base64_images = [image_to_base64(img) for img in response]
     except Exception as e:
         logger.info(f"sdxl_generate ERROR: {e}")
