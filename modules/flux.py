@@ -195,6 +195,7 @@ async def generate_flux_inpaint(avernus_pipeline,
     if lora_name is not None:
         avernus_pipeline = await load_flux_loras(avernus_pipeline, lora_name)
 
+    avernus_pipeline.pipeline.enable_vae_slicing()
     try:
         images = avernus_pipeline.pipeline(**kwargs).images
         if lora_name is not None:
@@ -236,6 +237,7 @@ async def generate_flux_fill(avernus_pipeline,
     if lora_name is not None:
         avernus_pipeline = await load_flux_loras(avernus_pipeline, lora_name)
 
+    avernus_pipeline.pipeline.enable_vae_slicing()
     try:
         images = avernus_pipeline.pipeline(**kwargs).images
         if lora_name is not None:
