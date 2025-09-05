@@ -181,6 +181,22 @@ class AvernusClient:
             print(f"list_flux_loras ERROR: {e}")
             return {"ERROR": str(e)}
 
+    async def list_qwen_image_loras(self):
+        """Fetches the list of qwen_image LoRA filenames from the server."""
+        url = f"http://{self.base_url}/list_qwen_image_loras"
+
+        try:
+            async with httpx.AsyncClient(timeout=30.0) as client:
+                response = await client.get(url)
+            if response.status_code == 200:
+                return response.json().get("loras", [])
+            else:
+                print(f"LIST QWEN IMAGE LORAS ERROR: {response.status_code}, Response: {response.text}")
+                return {"ERROR": response.text}
+        except Exception as e:
+            print(f"list_qwen_image_loras ERROR: {e}")
+            return {"ERROR": str(e)}
+
     async def list_sdxl_controlnets(self):
         """Fetches the list of sdxl controlnets from the server."""
         url = f"http://{self.base_url}/list_sdxl_controlnets"
@@ -287,6 +303,89 @@ class AvernusClient:
                 return {"MULTIMODAL LLM ERROR": response.text}
         except Exception as e:
             print(f"EXCEPTION ERROR: {e}")
+            return {"ERROR": str(e)}
+
+    async def qwen_image_image(self, prompt, negative_prompt=None, image=None, model_name=None, lora_name=None,
+                               width=None, height=None, steps=None, batch_size=None, strength=None, seed=None,
+                               true_cfg_scale=None):
+        """This takes a prompt and optional other variables and returns a list of base64 encoded images"""
+        url = f"http://{self.base_url}/qwen_image_generate"
+        data = {"prompt": prompt,
+                "negative_prompt": negative_prompt,
+                "image": image,
+                "model_name": model_name,
+                "lora_name": lora_name,
+                "width": width,
+                "height": height,
+                "steps": steps,
+                "batch_size": batch_size,
+                "strength": strength,
+                "seed": seed,
+                "true_cfg_scale": true_cfg_scale}
+        try:
+            async with httpx.AsyncClient(timeout=3600) as client:
+                response = await client.post(url, json=data)
+            if response.status_code == 200:
+                return response.json().get("images", [])
+            else:
+                print(f"FLUX ERROR: {response.status_code}")
+        except Exception as e:
+            print(f"ERROR: {e}")
+            return {"ERROR": str(e)}
+
+    async def qwen_image_inpaint_image(self, prompt, negative_prompt=None, image=None, model_name=None, width=None,
+                                       height=None, steps=None, batch_size=None, true_cfg_scale=None, mask_image=None,
+                                       strength=None, lora_name=None, seed=None):
+        """This takes a prompt, and optional other variables and returns a list of base64 encoded images"""
+        url = f"http://{self.base_url}/qwen_image_inpaint_generate"
+        data = {"prompt": prompt,
+                "negative_prompt": negative_prompt,
+                "image": image,
+                "model_name": model_name,
+                "lora_name": lora_name,
+                "width": width,
+                "height": height,
+                "steps": steps,
+                "batch_size": batch_size,
+                "true_cfg_scale": true_cfg_scale,
+                "mask_image": mask_image,
+                "strength": strength,
+                "seed": seed}
+        try:
+            async with httpx.AsyncClient(timeout=3600) as client:
+                response = await client.post(url, json=data)
+            if response.status_code == 200:
+                return response.json().get("images", [])
+            else:
+                print(f"QWEN IMAGE INPAINT ERROR: {response.status_code}")
+        except Exception as e:
+            print(f"ERROR: {e}")
+            return {"ERROR": str(e)}
+
+    async def qwen_image_edit(self, prompt, negative_prompt=None, image=None, model_name=None, lora_name=None,
+                              width=None, height=None, steps=None, batch_size=None, seed=None, true_cfg_scale=None):
+        """This takes a prompt and optional other variables and returns a list of base64 encoded images"""
+        url = f"http://{self.base_url}/qwen_image_edit_generate"
+        data = {"prompt": prompt,
+                "negative_prompt":  negative_prompt,
+                "image": image,
+                "model_name": model_name,
+                "lora_name": lora_name,
+                "width": width,
+                "height": height,
+                "steps": steps,
+                "batch_size": batch_size,
+                "seed": seed,
+                "true_cfg_scale": true_cfg_scale}
+        try:
+            async with httpx.AsyncClient(timeout=3600) as client:
+                response = await client.post(url, json=data)
+            if response.status_code == 200:
+                return response.json().get("images", [])
+            else:
+                print(f"QWEN IMAGE EDIT ERROR: {response.status_code}")
+        except Exception as e:
+            print(f"ERROR: {e}")
             return {"ERROR": str(e)}
 
     async def rag_retrieve(self, prompt, max_candidates=20, similarity_threshold=0.6):

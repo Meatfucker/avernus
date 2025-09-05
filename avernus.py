@@ -8,15 +8,17 @@ from fastapi import FastAPI, Request, Body, UploadFile, Form, File
 from fastapi.responses import StreamingResponse
 from modules.pydantic_models import (ACEStepRequest, FluxInpaintRequest, FluxRequest, FluxResponse,
                                      FluxLoraListResponse, LLMRequest, LLMResponse, MultiModalLLMRequest,
-                                     MultiModalLLMResponse, RAGResponse, RAGRequest, SDXLInpaintRequest, SDXLRequest,
-                                     SDXLResponse, SDXLLoraListResponse, SDXLControlnetListResponse, StatusResponse,
-                                     SDXLSchedulerListResponse)
+                                     MultiModalLLMResponse, QwenImageRequest, QwenImageInpaintRequest,
+                                     QwenImageLoraListResponse, QwenImageResponse, RAGResponse, RAGRequest,
+                                     SDXLInpaintRequest, SDXLRequest, SDXLResponse, SDXLLoraListResponse,
+                                     SDXLControlnetListResponse, StatusResponse, SDXLSchedulerListResponse)
 
 from modules.ace import generate_ace
 from modules.chat import generate_chat, generate_multimodal_chat
 from modules.flux import generate_flux, generate_flux_inpaint, generate_flux_fill, generate_flux_kontext
 from modules.logging_config import setup_logging
 from modules.ltx import generate_ltx
+from modules.qwen_image import generate_qwen_image, generate_qwen_image_inpaint, generate_qwen_image_edit
 from modules.rag import retrieve_rag
 from modules.sdxl import generate_sdxl, generate_sdxl_inpaint
 from modules.wan import generate_wan
@@ -219,6 +221,20 @@ async def list_flux_loras():
         logger.error(f"list_flux_loras ERROR: {e}")
         return {"error": str(e)}
 
+@avernus.get("/list_qwen_image_loras", response_model=QwenImageLoraListResponse)
+async def list_qwen_image_loras():
+    """Returns a list of the files located in the qwen_image loras directory"""
+    logger.info("list_qwen_image_loras request received")
+    try:
+        loras_dir = "loras/qwen_image"
+        if not os.path.exists(loras_dir):
+            return {"error": "Directory not found"}
+        filenames = [f for f in os.listdir(loras_dir) if os.path.isfile(os.path.join(loras_dir, f))]
+        return {"loras": filenames}
+    except Exception as e:
+        logger.error(f"list_qwen_image_loras ERROR: {e}")
+        return {"error": str(e)}
+
 @avernus.get("/list_sdxl_controlnets", response_model=SDXLControlnetListResponse)
 async def list_sdxl_controlnets():
     """Returns a list of available sdxl controlnets"""
@@ -325,6 +341,103 @@ async def multimodal_llm_chat(data: MultiModalLLMRequest = Body(...)):
         logger.error(f"multimodal_llm_chat ERROR: {e}")
         return {"error": str(e)}
     return response
+
+@avernus.post("/qwen_image_generate", response_model=QwenImageResponse)
+async def qwen_image_generate(data: QwenImageRequest = Body(...)):
+    """Generates some number of Qwen Image images based on user inputs"""
+    logger.info("qwen_image_generate request received")
+    kwargs = {"prompt": data.prompt,
+              "width": data.width,
+              "height": data.height,
+              "steps": data.steps,
+              "batch_size": data.batch_size}
+    if isinstance(data.lora_name, str):
+        kwargs["lora_name"] = [data.lora_name]
+    else:
+        kwargs["lora_name"] = data.lora_name
+    if data.negative_prompt:
+        kwargs["negative_prompt"] = data.negative_prompt
+    if data.image:
+        kwargs["image"] = base64_to_image(data.image)
+        kwargs["strength"] = data.strength
+    if data.true_cfg_scale:
+        kwargs["true_cfg_scale"] = data.true_cfg_scale
+    if data.seed:
+        kwargs["seed"] = data.seed
+
+    try:
+        response = await generate_qwen_image(PIPELINE, **kwargs)
+        base64_images = [image_to_base64(img) for img in response]
+    except Exception as e:
+        logger.info(f"qwen_image_generate ERROR: {e}")
+        return None
+    return {"images": base64_images}
+
+@avernus.post("/qwen_image_inpaint_generate", response_model=QwenImageResponse)
+async def qwen_image_inpaint_generate(data: QwenImageInpaintRequest = Body(...)):
+    """Generates some number of qwen image inpaint images based on user inputs."""
+    logger.info("qwen_image_inpaint_generate request received")
+    kwargs = {"prompt": data.prompt,
+              "width": data.width,
+              "height": data.height,
+              "steps": data.steps,
+              "batch_size": data.batch_size}
+    if data.negative_prompt:
+        kwargs["negative_prompt"] = data.negative_prompt
+    if data.strength:
+        kwargs["strength"] = data.strength
+    if data.image:
+        kwargs["image"] = base64_to_image(data.image)
+    if data.mask_image:
+        kwargs["mask_image"] = base64_to_image(data.mask_image)
+    if data.true_cfg_scale:
+        kwargs["true_cfg_scale"] = data.true_cfg_scale
+    if isinstance(data.lora_name, str):
+        kwargs["lora_name"] = [data.lora_name]
+    else:
+        kwargs["lora_name"] = data.lora_name
+    if data.seed:
+        kwargs["seed"] = data.seed
+
+    try:
+        response = await generate_qwen_image_inpaint(PIPELINE, **kwargs)
+        base64_images = [image_to_base64(img) for img in response]
+    except Exception as e:
+        logger.info(f"qwen_image_inpaint_generate ERROR: {e}")
+        return None
+    return {"images": base64_images}
+
+
+@avernus.post("/qwen_image_edit_generate", response_model=QwenImageResponse)
+async def qwen_image_edit_generate(data: QwenImageRequest = Body(...)):
+    """Generates some number of Qwen Image Edit images based on user inputs"""
+    logger.info("qwen_image_edit_generate request received")
+    kwargs = {"prompt": data.prompt,
+              "width": data.width,
+              "height": data.height,
+              "steps": data.steps,
+              "batch_size": data.batch_size}
+    if data.negative_prompt:
+        kwargs["negative_prompt"] = data.negative_prompt
+    if isinstance(data.lora_name, str):
+        kwargs["lora_name"] = [data.lora_name]
+    else:
+        kwargs["lora_name"] = data.lora_name
+    if data.image:
+        kwargs["image"] = base64_to_image(data.image)
+    if data.true_cfg_scale:
+        kwargs["true_cfg_scale"] = data.true_cfg_scale
+    if data.seed:
+        kwargs["seed"] = data.seed
+
+    try:
+        response = await generate_qwen_image_edit(PIPELINE, **kwargs)
+        base64_images = [image_to_base64(img) for img in response]
+    except Exception as e:
+        logger.info(f"qwen_image_edit_generate ERROR: {e}")
+        return None
+    return {"images": base64_images}
+
 
 @avernus.get("/status", response_model=StatusResponse)
 async def status():

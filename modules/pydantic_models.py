@@ -64,6 +64,41 @@ class MultiModalLLMRequest(BaseModel):
 class MultiModalLLMResponse(BaseModel):
     response: str = Field(..., example="Hi Im online and how can I help you?")
 
+class QwenImageInpaintRequest(BaseModel):
+    prompt: str = Field(..., example="A big green monster")
+    negative_prompt: Optional[str] = Field(None, example="a red dog")
+    model_name: Optional[str] = Field(None, example="some-repo/some-qwen-image-model")
+    width: Optional[int] = Field(None, example=1024)
+    height: Optional[int] = Field(None, example=1024)
+    steps: Optional[int] = Field(None, example=50)
+    batch_size: Optional[int] = Field(None, example=4)
+    lora_name: Optional[Union[str, List[str]]] = Field(None, example="lora_name.safetensors")
+    image: Optional[str] = Field(None, example="a9d8fp0sa9dfpasdfllkajsdflkjadslf...")
+    mask_image: Optional[str] = Field(None, example="a9d8fp0sa9dfpasdfllkajsdflkjadslf...")
+    strength: Optional[float] = Field(None, example=0.75)
+    true_cfg_scale: Optional[float] = Field(None, example=4.0)
+    seed: Optional[int] = Field(None, example=42)
+
+class QwenImageLoraListResponse(BaseModel):
+    loras: List[str] = Field(..., example=["lora1.safetensors", "lora2.safetensors", "lora3.safetensors"])
+
+class QwenImageRequest(BaseModel):
+    prompt: str = Field(..., example="A big green monster")
+    negative_prompt: Optional[str] = Field(None, example="a red dog")
+    model_name: Optional[str] = Field(None, example="some-repo/some-qwen-image-model")
+    width: Optional[int] = Field(None, example=1024)
+    height: Optional[int] = Field(None, example=1024)
+    steps: Optional[int] = Field(None, example=50)
+    batch_size: Optional[int] = Field(None, example=4)
+    lora_name: Optional[Union[str, List[str]]] = Field(None, example="lora_name.safetensors")
+    image: Optional[str] = Field(None, example="a9d8fp0sa9dfpasdfllkajsdflkjadslf...")
+    strength: Optional[float] = Field(None, example=0.75)
+    true_cfg_scale: Optional[float] = Field(None, example=1.0)
+    seed: Optional[int] = Field(None, example=42)
+
+class QwenImageResponse(BaseModel):
+    images: List[str] = Field(..., example=["kajsdflsadfsadf....", "lkjdsaflkjsadlkfjsa3423....", "lwerewjrlwkejrwewr..."])
+
 class RAGRequest(BaseModel):
     prompt: str = Field(..., example="What is answer to life, the universe, and everything")
     max_candidates: Optional[int] = Field(..., example=20)

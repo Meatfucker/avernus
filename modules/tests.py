@@ -182,6 +182,11 @@ class LTXTest(TimedTest):
     async def run_test(self):
         await self.client.ltx_video("frogs hopping")
 
+class QwenImageTest(TimedTest):
+    async def run_test(self):
+        images = await self.client.qwen_image_image("redheaded woman wearing green dress", batch_size=1)
+        await base64_image_to_file(images, "qwen_image")
+
 class SDXLControlnetI2ILoraTest(TimedTest):
     async def run_test(self):
         image = Image.open("tests/sdxl_i2i_image_0.png")

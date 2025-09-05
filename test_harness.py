@@ -4,10 +4,10 @@ from loguru import logger
 from modules.tests import (ACETest, CheckStatus, FluxControlnetI2ILoraTest, FluxControlnetI2ITest,
                            FluxControlnetListTest, FluxControlnetLoraTest, FluxControlnetTest, FluxI2ITest,
                            FluxInpaintTest, FluxIPAdapterTest, FluxKontextTest, FluxLoraI2ITest, FluxLoraListTest,
-                           FluxLoraTest, FluxTest, LlmChatTest, LlmRagTest, LTXTest, SDXLControlnetI2ILoraTest,
-                           SDXLControlnetI2ITest, SDXLControlnetListTest, SDXLControlnetLoraTest, SDXLControlnetTest,
-                           SDXLI2ILoraTest, SDXLI2ITest, SDXLInpaintTest, SDXLIPAdapterTest, SDXLLoraListTest,
-                           SDXLLoraTest, SDXLTest, SDXLSchedulerListTest, WANTest)
+                           FluxLoraTest, FluxTest, LlmChatTest, LlmRagTest, LTXTest, QwenImageTest,
+                           SDXLControlnetI2ILoraTest, SDXLControlnetI2ITest, SDXLControlnetListTest,
+                           SDXLControlnetLoraTest, SDXLControlnetTest, SDXLI2ILoraTest, SDXLI2ITest, SDXLInpaintTest,
+                           SDXLIPAdapterTest, SDXLLoraListTest, SDXLLoraTest, SDXLTest, SDXLSchedulerListTest, WANTest)
 start_time = time.time()
 
 check_status = CheckStatus("CHECK STATUS")
@@ -44,8 +44,8 @@ check_status = CheckStatus("CHECK STATUS")
 #flux_kontext_test = FluxKontextTest("FLUX KONTEXT")
 
 #ltx = LTXTest("LTX")
-wan = WANTest("WAN")
-
+#wan = WANTest("WAN")
+qwen = QwenImageTest("QWEN_IMAGE")
 #ace = ACETest("ACE STEP")
 end_time = time.time()
 elapsed_time = end_time - start_time
