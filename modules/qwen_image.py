@@ -1,7 +1,5 @@
 from diffusers import QwenImagePipeline, QwenImageEditPipeline, QwenImageInpaintPipeline, QwenImageImg2ImgPipeline, QwenImageTransformer2DModel
-from diffusers.quantizers import PipelineQuantizationConfig
 from diffusers import BitsAndBytesConfig as DiffusersBitsAndBytesConfig
-from diffusers import TorchAoConfig
 from transformers import BitsAndBytesConfig as TransformersBitsAndBytesConfig
 from transformers import Qwen2_5_VLForConditionalGeneration
 import torch
@@ -18,8 +16,7 @@ async def load_qwen_image_pipeline(avernus_pipeline):
             load_in_4bit=True,
             bnb_4bit_quant_type="nf4",
             bnb_4bit_compute_dtype=torch.bfloat16,
-            llm_int8_skip_modules=["transformer_blocks.0.img_mod",
-                                   "time_text_embed",
+            llm_int8_skip_modules=["time_text_embed",
                                    "img_in",
                                    "norm_out",
                                    "proj_out",
@@ -65,8 +62,7 @@ async def load_qwen_image_inpaint_pipeline(avernus_pipeline):
             load_in_4bit=True,
             bnb_4bit_quant_type="nf4",
             bnb_4bit_compute_dtype=torch.bfloat16,
-            llm_int8_skip_modules=["transformer_blocks.0.img_mod",
-                                   "time_text_embed",
+            llm_int8_skip_modules=["time_text_embed",
                                    "img_in",
                                    "norm_out",
                                    "proj_out",
@@ -113,8 +109,7 @@ async def load_qwen_image2image_pipeline(avernus_pipeline):
             load_in_4bit=True,
             bnb_4bit_quant_type="nf4",
             bnb_4bit_compute_dtype=torch.bfloat16,
-            llm_int8_skip_modules=["transformer_blocks.0.img_mod",
-                                   "time_text_embed",
+            llm_int8_skip_modules=["time_text_embed",
                                    "img_in",
                                    "norm_out",
                                    "proj_out",
@@ -160,8 +155,7 @@ async def load_qwen_image_edit_pipeline(avernus_pipeline):
             load_in_4bit=True,
             bnb_4bit_quant_type="nf4",
             bnb_4bit_compute_dtype=torch.bfloat16,
-            llm_int8_skip_modules=["transformer_blocks.0.img_mod",
-                                   "time_text_embed",
+            llm_int8_skip_modules=["time_text_embed",
                                    "img_in",
                                    "norm_out",
                                    "proj_out",
