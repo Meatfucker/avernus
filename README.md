@@ -38,7 +38,11 @@ If you want to use the rag endpoint you need to place urls, one per line in rag/
 
 # TODO:
 
-- Add WAN2.1 support
+- Add WAN support
+- add hidream support
 - Add svg model endpoint
 - Return different status codes if a generation ooms
 - Add LLM chat templates
+- Make api responsive while processing gen
+- add model picker to flux
+- add qwen image inpaint

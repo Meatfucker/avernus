@@ -18,7 +18,14 @@ async def load_qwen_image_pipeline(avernus_pipeline):
             load_in_4bit=True,
             bnb_4bit_quant_type="nf4",
             bnb_4bit_compute_dtype=torch.bfloat16,
-            llm_int8_skip_modules=["transformer_blocks.0.img_mod"],
+            llm_int8_skip_modules=["transformer_blocks.0.img_mod",
+                                   "time_text_embed",
+                                   "img_in",
+                                   "norm_out",
+                                   "proj_out",
+                                   "img_mod",
+                                   "txt_mod",
+                                   ],
         )
         transformer = QwenImageTransformer2DModel.from_pretrained(
             "Qwen/Qwen-Image",
@@ -58,7 +65,14 @@ async def load_qwen_image_inpaint_pipeline(avernus_pipeline):
             load_in_4bit=True,
             bnb_4bit_quant_type="nf4",
             bnb_4bit_compute_dtype=torch.bfloat16,
-            llm_int8_skip_modules=["transformer_blocks.0.img_mod"],
+            llm_int8_skip_modules=["transformer_blocks.0.img_mod",
+                                   "time_text_embed",
+                                   "img_in",
+                                   "norm_out",
+                                   "proj_out",
+                                   "img_mod",
+                                   "txt_mod",
+                                   ],
         )
         transformer = QwenImageTransformer2DModel.from_pretrained(
             "Qwen/Qwen-Image",
@@ -99,7 +113,14 @@ async def load_qwen_image2image_pipeline(avernus_pipeline):
             load_in_4bit=True,
             bnb_4bit_quant_type="nf4",
             bnb_4bit_compute_dtype=torch.bfloat16,
-            llm_int8_skip_modules=["transformer_blocks.0.img_mod"],
+            llm_int8_skip_modules=["transformer_blocks.0.img_mod",
+                                   "time_text_embed",
+                                   "img_in",
+                                   "norm_out",
+                                   "proj_out",
+                                   "img_mod",
+                                   "txt_mod",
+                                   ],
         )
         transformer = QwenImageTransformer2DModel.from_pretrained(
             "Qwen/Qwen-Image",
@@ -139,7 +160,14 @@ async def load_qwen_image_edit_pipeline(avernus_pipeline):
             load_in_4bit=True,
             bnb_4bit_quant_type="nf4",
             bnb_4bit_compute_dtype=torch.bfloat16,
-            llm_int8_skip_modules=["transformer_blocks.0.img_mod"],
+            llm_int8_skip_modules=["transformer_blocks.0.img_mod",
+                                   "time_text_embed",
+                                   "img_in",
+                                   "norm_out",
+                                   "proj_out",
+                                   "img_mod",
+                                   "txt_mod",
+                                   ],
         )
         transformer = QwenImageTransformer2DModel.from_pretrained(
             "Qwen/Qwen-Image-Edit",
@@ -290,14 +318,16 @@ async def generate_qwen_image_edit(avernus_pipeline,
                                    image,
                                    negative_prompt=None,
                                    lora_name=None,
-                                   ip_adapter_image=None,
-                                   ip_adapter_strength=None,
                                    true_cfg_scale=None,
                                    seed=None):
     qwen_image_width, qwen_image_height = resize_by_pixels(image.width, image.height)
     kwargs = {}
     kwargs["prompt"] = prompt
     kwargs["negative_prompt"] = negative_prompt if negative_prompt is not None else ""
+    kwargs["num_inference_steps"] = steps if steps is not None else 30
+    kwargs["num_images_per_prompt"] = batch_size if batch_size is not None else 1
+    kwargs["true_cfg_scale"] = true_cfg_scale if true_cfg_scale is not None else 4.0
+    kwargs["image"] = image
     if width is not None:
         kwargs["width"] = width
     else:
@@ -306,10 +336,6 @@ async def generate_qwen_image_edit(avernus_pipeline,
         kwargs["height"] = height
     else:
         kwargs["height"] = qwen_image_height
-    kwargs["num_inference_steps"] = steps if steps is not None else 30
-    kwargs["num_images_per_prompt"] = batch_size if batch_size is not None else 1
-    kwargs["true_cfg_scale"] = true_cfg_scale if true_cfg_scale is not None else 4
-    kwargs["image"] = image
     if seed is not None:
         kwargs["generator"] = await get_seed_generators(kwargs["num_images_per_prompt"], seed)
 
