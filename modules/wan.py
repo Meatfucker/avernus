@@ -134,5 +134,5 @@ def resize_by_pixels(width, height, target_pixels=832*480, keep_if_within=0.0):
     scale = math.sqrt(target_pixels / current)
     new_w = round_to_multiple(width * scale)
     new_h = round_to_multiple(height * scale)
-
+    print(f"W: {new_w} H:{new_h}")
     return new_w, new_h
