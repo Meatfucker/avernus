@@ -73,8 +73,8 @@ async def generate_wan_ti2v(avernus_pipeline,
                             negative_prompt: str = None,
                             num_frames: int = 81,
                             guidance_scale: float = 5.0,
-                            height: int = 480,
-                            width: int = 832,
+                            height: int = None,
+                            width: int = None,
                             seed: int = None,
                             model_name: str = None):
     kwargs = {}
@@ -90,10 +90,12 @@ async def generate_wan_ti2v(avernus_pipeline,
         kwargs["generator"] = await get_seed_generators(1, seed)
     if image is not None:
         image_width, image_height = resize_by_pixels(image.width, image.height)
+
         if width is not None:
             kwargs["width"] = width
         else:
             kwargs["width"] = image_width
+
         if height is not None:
             kwargs["height"] = height
         else:
@@ -101,6 +103,15 @@ async def generate_wan_ti2v(avernus_pipeline,
         kwargs["image"] = image
         avernus_pipeline = await load_wan_i2v_pipeline(avernus_pipeline, model_name)
     else:
+        if width is not None:
+            kwargs["width"] = width
+        else:
+            kwargs["width"] = 832
+
+        if height is not None:
+            kwargs["height"] = height
+        else:
+            kwargs["height"] = 480
         avernus_pipeline = await load_wan_t2v_pipeline(avernus_pipeline, model_name)
     output = avernus_pipeline.pipeline(**kwargs).frames[0]
 
