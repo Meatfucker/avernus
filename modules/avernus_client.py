@@ -472,7 +472,7 @@ class AvernusClient:
             return {"ERROR": str(e)}
 
     async def wan_ti2v(self, prompt, negative_prompt=None, width=None, height=None, steps=None, num_frames=None,
-                       guidance_scale=None, image=None,  seed=None):
+                       guidance_scale=None, image=None,  seed=None, model_name=None):
         """This takes a prompt and returns a video"""
         url = f"http://{self.base_url}/wan_ti2v_generate"
         data = {"prompt": prompt,
@@ -483,7 +483,8 @@ class AvernusClient:
                 "guidance_scale": guidance_scale,
                 "seed": seed,
                 "steps": steps,
-                "image": image}
+                "image": image,
+                "model_name": model_name}
         try:
             async with httpx.AsyncClient(timeout=3600) as client:
                 response = await client.post(url, json=data)

@@ -169,3 +169,4 @@ class WanTI2VRequest(BaseModel):
     image: Optional[str] = Field(None, example="a9d8fp0sa9dfpasdfllkajsdflkjadslf...")
     guidance_scale: Optional[float] = Field(None, example=5.0)
     seed: Optional[int] = Field(None, example=42)
+    model_name: Optional[str] = Field(None, example="Wan-AI/Wan2.2-TI2V-5B-Diffusers")

@@ -592,6 +592,8 @@ async def wan_ti2v_generate(data: WanTI2VRequest = Body(...)):
         kwargs["seed"] = data.seed
     if data.image:
         kwargs["image"] = base64_to_image(data.image)
+    if data.model_name:
+        kwargs["model_name"] = data.model_name
 
     generated_video = await generate_wan_ti2v(PIPELINE, **kwargs)
     export_to_video(generated_video, "wan_output.mp4", fps=24)
