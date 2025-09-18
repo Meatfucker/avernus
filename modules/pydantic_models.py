@@ -158,3 +158,14 @@ class SDXLSchedulerListResponse(BaseModel):
 class StatusResponse(BaseModel):
     status: str = Field(..., example="Ok!")
     version: str = Field(..., example="0.2.0")
+
+class WanTI2VRequest(BaseModel):
+    prompt: str = Field(..., example="A big green monster")
+    negative_prompt: Optional[str] = Field(None, example="a blue dog")
+    width: Optional[int] = Field(None, example=832)
+    height: Optional[int] = Field(None, example=480)
+    steps: Optional[int] = Field(None, example=50)
+    num_frames: Optional[int] = Field(None, example=81)
+    image: Optional[str] = Field(None, example="a9d8fp0sa9dfpasdfllkajsdflkjadslf...")
+    guidance_scale: Optional[float] = Field(None, example=5.0)
+    seed: Optional[int] = Field(None, example=42)

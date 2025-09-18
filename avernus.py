@@ -11,7 +11,8 @@ from modules.pydantic_models import (ACEStepRequest, FluxInpaintRequest, FluxReq
                                      MultiModalLLMResponse, QwenImageRequest, QwenImageInpaintRequest,
                                      QwenImageLoraListResponse, QwenImageResponse, RAGResponse, RAGRequest,
                                      SDXLInpaintRequest, SDXLRequest, SDXLResponse, SDXLLoraListResponse,
-                                     SDXLControlnetListResponse, StatusResponse, SDXLSchedulerListResponse)
+                                     SDXLControlnetListResponse, StatusResponse, SDXLSchedulerListResponse,
+                                     WanTI2VRequest)
 
 from modules.ace import generate_ace
 from modules.chat import generate_chat, generate_multimodal_chat
@@ -21,7 +22,7 @@ from modules.ltx import generate_ltx
 from modules.qwen_image import generate_qwen_image, generate_qwen_image_inpaint, generate_qwen_image_edit
 from modules.rag import retrieve_rag
 from modules.sdxl import generate_sdxl, generate_sdxl_inpaint
-from modules.wan import generate_wan
+from modules.wan import generate_wan_ti2v
 
 
 from loguru import logger
@@ -538,35 +539,61 @@ async def sdxl_inpaint_generate(data: SDXLInpaintRequest = Body(...)):
         return None
     return {"images": base64_images}
 
-@avernus.post("/wan_generate")
-async def wan_generate(prompt: str = Form(...),
-                       negative_prompt: Optional[str] = None,
-                       input_video: Optional[UploadFile] = File(None),
-                       height: Optional[int] = None,
-                       width: Optional[int] = None,
-                       seed: Optional[int] = None,
-                       guidance_scale: Optional[float] = None,
-                       num_frames: Optional[int] = None
-                       ):
-    logger.info("wan_generate request received")
-    kwargs = {"prompt": prompt}
-    if negative_prompt:
-        kwargs["negative_prompt"] = negative_prompt
-    if input_video:
-        video_bytes = await input_video.read()
-        kwargs["input_video"] = video_bytes
-    if height:
-        kwargs["height"] = height
-    if width:
-        kwargs["width"] = width
-    if seed:
-        kwargs["seed"] = seed
-    if guidance_scale:
-        kwargs["guidance_scale"] = guidance_scale
-    if num_frames:
-        kwargs["num_frames"] = num_frames
+#@avernus.post("/wan_generate")
+#async def wan_generate(prompt: str = Form(...),
+#                       negative_prompt: Optional[str] = None,
+#                       input_video: Optional[UploadFile] = File(None),
+#                       height: Optional[int] = None,
+#                       width: Optional[int] = None,
+#                       seed: Optional[int] = None,
+#                       guidance_scale: Optional[float] = None,
+#                       num_frames: Optional[int] = None
+#                       ):
+#    logger.info("wan_generate request received")
+#    kwargs = {"prompt": prompt}
+#    if negative_prompt:
+#        kwargs["negative_prompt"] = negative_prompt
+#    if input_video:
+#        video_bytes = await input_video.read()
+#        kwargs["input_video"] = video_bytes
+#    if height:
+#       kwargs["height"] = height
+#    if width:
+#        kwargs["width"] = width
+#    if seed:
+#        kwargs["seed"] = seed
+#    if guidance_scale:
+#        kwargs["guidance_scale"] = guidance_scale
+#    if num_frames:
+#        kwargs["num_frames"] = num_frames
 
-    generated_video = await generate_wan(**kwargs)
+#    generated_video = await generate_wan(**kwargs)
+#    export_to_video(generated_video, "wan_output.mp4", fps=24)
+#    return StreamingResponse(open("wan_output.mp4", "rb"), media_type="input_video/mp4")
+#    return None
+
+@avernus.post("/wan_ti2v_generate")
+async def wan_ti2v_generate(data: WanTI2VRequest = Body(...)):
+    logger.info("wan_ti2v_generate request received")
+    kwargs = {"prompt": data.prompt}
+    if data.negative_prompt:
+        kwargs["negative_prompt"] = data.negative_prompt
+    if data.width:
+        kwargs["width"] = data.width
+    if data.height:
+        kwargs["height"] = data.height
+    if data.steps:
+        kwargs["steps"] = data.steps
+    if data.num_frames:
+        kwargs["num_frames"] = data.num_frames
+    if data.guidance_scale:
+        kwargs["guidance_scale"] = data.guidance_scale
+    if data.seed:
+        kwargs["seed"] = data.seed
+    if data.image:
+        kwargs["image"] = base64_to_image(data.image)
+
+    generated_video = await generate_wan_ti2v(PIPELINE, **kwargs)
     export_to_video(generated_video, "wan_output.mp4", fps=24)
 
     return StreamingResponse(open("wan_output.mp4", "rb"), media_type="input_video/mp4")

@@ -1,4 +1,5 @@
 import httpx
+import tempfile
 
 class AvernusClient:
     """This is the client for the avernus API server"""
@@ -470,37 +471,66 @@ class AvernusClient:
             print(f"ERROR: {e}")
             return {"ERROR": str(e)}
 
-    async def wan_video(self, prompt, negative_prompt=None, width=None, height=None, num_frames=None,
-                        guidance_scale=None, seed=None, video=None):
-        """This takes a prompt and optiional video and returns a video"""
-        url = f"http://{self.base_url}/wan_generate"
-        files = None
-        if video is not None:
-            files = {"video": ("input.mp4", open(video, "rb"), "video/mp4")}
+    async def wan_ti2v(self, prompt, negative_prompt=None, width=None, height=None, steps=None, num_frames=None,
+                       guidance_scale=None, image=None,  seed=None):
+        """This takes a prompt and returns a video"""
+        url = f"http://{self.base_url}/wan_ti2v_generate"
         data = {"prompt": prompt,
                 "negative_prompt": negative_prompt,
                 "width": width,
                 "height": height,
                 "num_frames": num_frames,
                 "guidance_scale": guidance_scale,
-                "seed": seed}
+                "seed": seed,
+                "steps": steps,
+                "image": image}
         try:
             async with httpx.AsyncClient(timeout=3600) as client:
-                if files:
-                    response = await client.post(url, data=data, files=files)
-                else:
-                    response = await client.post(url, data=data)
+                response = await client.post(url, json=data)
             if response.status_code == 200:
                 # Save the returned binary video content
-                with open("wan_client_output.mp4", "wb") as f:
-                    f.write(response.content)
-                return "wan_client_output.mp4"
+                temp_file = tempfile.NamedTemporaryFile(delete=False, suffix=".mp4")
+                temp_file.write(response.content)
+                temp_file.close()  # Close the file so it can be used elsewhere
+                return temp_file.name
             else:
-                print(f"WAN VIDEO ERROR: {response.status_code} - {response.text}")
+                print(f"WAN TI2V ERROR: {response.status_code} - {response.text}")
                 return None
         except Exception as e:
             print(f"ERROR: {e}")
             return {"ERROR": str(e)}
+
+#    async def wan_video(self, prompt, negative_prompt=None, width=None, height=None, num_frames=None,
+#                        guidance_scale=None, seed=None, video=None):
+#        """This takes a prompt and optiional video and returns a video"""
+#        url = f"http://{self.base_url}/wan_generate"
+#        files = None
+#        if video is not None:
+#            files = {"video": ("input.mp4", open(video, "rb"), "video/mp4")}
+#        data = {"prompt": prompt,
+#                "negative_prompt": negative_prompt,
+#                "width": width,
+#                "height": height,
+#                "num_frames": num_frames,
+#                "guidance_scale": guidance_scale,
+#                "seed": seed}
+#        try:
+#            async with httpx.AsyncClient(timeout=3600) as client:
+#                if files:
+#                    response = await client.post(url, data=data, files=files)
+#                else:
+#                    response = await client.post(url, data=data)
+#            if response.status_code == 200:
+#                # Save the returned binary video content
+#                with open("wan_client_output.mp4", "wb") as f:
+#                    f.write(response.content)
+#                return "wan_client_output.mp4"
+#            else:
+#               print(f"WAN VIDEO ERROR: {response.status_code} - {response.text}")
+#                return None
+#        except Exception as e:
+#            print(f"ERROR: {e}")
+#            return {"ERROR": str(e)}
 
     async def update_url(self, url, port=6969):
         self.url = url

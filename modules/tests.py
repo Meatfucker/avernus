@@ -322,7 +322,18 @@ class SDXLTest(TimedTest):
 
 class WANTest(TimedTest):
     async def run_test(self):
-        await self.client.wan_video("frogs hopping", num_frames=33)
+        await self.client.wan_ti2v("An overhead tracking shot of frogs hopping from lilypad to lilypad, the water splashing as they land",
+                                   num_frames=33,
+                                   seed=42)
+
+class WANI2VTest(TimedTest):
+    async def run_test(self):
+        image = Image.open("tests/mushroom.png")
+        image = image_to_base64(image)
+        await self.client.wan_ti2v("A colorful psychedelic scene of a mushroom with demons crawling on it",
+                                   num_frames=81,
+                                   seed=42,
+                                   image=image)
 
 async def base64_image_to_file(base64_images, prefix=""):
     for i, b64_img in enumerate(base64_images):

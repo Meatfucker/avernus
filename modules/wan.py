@@ -1,64 +1,97 @@
-import gc
-import os
 import torch
-import numpy as np
-from diffusers import AutoModel, WanPipeline
-from diffusers.quantizers import PipelineQuantizationConfig
-from diffusers.quantizers.quantization_config import QuantoConfig
-from diffusers.hooks.group_offloading import apply_group_offloading
-from diffusers.utils import export_to_video, load_image
-from transformers import UMT5EncoderModel, BitsAndBytesConfig as TransformersBitsAndBytesConfig
+from diffusers import AutoModel, WanPipeline, WanImageToVideoPipeline
+from transformers import BitsAndBytesConfig as TransformersBitsAndBytesConfig
+from transformers import UMT5EncoderModel
+import bitsandbytes as bnb
 
-async def generate_wan(prompt: str,
-                       negative_prompt: str = None,
-                       num_frames: int = 81,
-                       guidance_scale: float = 5.0,
-                       height: int = 480,
-                       width: int = 832,
-                       seed: int = None,
-                       input_video = None):
-#    pipeline_quant_config = PipelineQuantizationConfig(
-#        quant_backend="bitsandbytes_4bit",
-#        quant_kwargs={"load_in_4bit": True, "bnb_4bit_quant_type": "nf4", "bnb_4bit_compute_dtype": torch.bfloat16},
-#        components_to_quantize=["transformer", "text_encoder", "vae"],
-#    )
-    pipeline_quant_config = PipelineQuantizationConfig(
-        quant_mapping={
-            "transformer": QuantoConfig(weights_dtype="float8"),
-            "text_encoder": TransformersBitsAndBytesConfig(load_in_4bit=True,
-                                                           bnb_4bit_quant_type="nf4",
-                                                           bnb_4bit_compute_dtype=torch.bfloat16),
-        }
+async def load_wan_components(model_name="Wan-AI/Wan2.2-TI2V-5B-Diffusers"):
+    transformer_quantization_config = TransformersBitsAndBytesConfig(
+        load_in_8bit=True,
+        llm_int8_skip_modules=["time_embedder", "timesteps_proj", "time_proj", "norm_out", "proj_out"],
     )
+    text_encoder_quantization_config = TransformersBitsAndBytesConfig(
+        load_in_4bit=True,
+        bnb_4bit_quant_type="nf4",
+        bnb_4bit_compute_dtype=torch.bfloat16,
+    )
+    text_encoder = UMT5EncoderModel.from_pretrained(model_name,
+                                                    subfolder="text_encoder",
+                                                    torch_dtype=torch.bfloat16,
+                                                    quantization_config=text_encoder_quantization_config
+                                                    )
 
-    pipeline = WanPipeline.from_pretrained(
-        "Wan-AI/Wan2.1-T2V-14B-Diffusers",
-        torch_dtype=torch.bfloat16,
-        quantization_config=pipeline_quant_config
-    ).to("cuda")
-    # group-offloading
-    #onload_device = torch.device("cuda")
-    #offload_device = torch.device("cpu")
-    #apply_group_offloading(pipeline.text_encoder,
-    #                       onload_device=onload_device,
-    #                       offload_device=offload_device,
-    #                       offload_type="block_level",
-    #                       num_blocks_per_group=4
-    #                       )
-    #pipeline.transformer.enable_group_offload(
-    #    onload_device=onload_device,
-    #    offload_device=offload_device,
-    #    offload_type="leaf_level",
-    #    use_stream=True
-    #)
-    pipeline.enable_model_cpu_offload()
+    vae = AutoModel.from_pretrained(model_name, subfolder="vae", torch_dtype=torch.float32)
+    transformer = AutoModel.from_pretrained(model_name,
+                                            subfolder="transformer",
+                                            torch_dtype=torch.bfloat16,
+                                            quantization_config=transformer_quantization_config
+                                            )
 
-    output = pipeline(
-        prompt=prompt,
-        negative_prompt=negative_prompt,
-        num_frames=num_frames,
-        guidance_scale=guidance_scale,
-        height=height,
-        width=width
-    ).frames[0]
+    return text_encoder, vae, transformer
+
+async def load_wan_t2v_pipeline(avernus_pipeline, model_name="Wan-AI/Wan2.2-TI2V-5B-Diffusers"):
+    if avernus_pipeline.model_type != "wan-t2v":
+        print("loading WanT2VPipeline")
+        await avernus_pipeline.delete_pipeline()
+        text_encoder, vae, transformer = await load_wan_components()
+
+        pipeline = WanPipeline.from_pretrained(
+            model_name,
+            vae=vae,
+            transformer=transformer,
+            text_encoder=text_encoder,
+            torch_dtype=torch.bfloat16
+        )
+        pipeline.enable_model_cpu_offload()
+        await avernus_pipeline.set_pipeline(pipeline, "wan-t2v")
+    return avernus_pipeline
+
+async def load_wan_i2v_pipeline(avernus_pipeline, model_name="Wan-AI/Wan2.2-TI2V-5B-Diffusers"):
+    if avernus_pipeline.model_type != "wan-i2v":
+        print("loading WanI2VPipeline")
+        await avernus_pipeline.delete_pipeline()
+        text_encoder, vae, transformer = await load_wan_components()
+        pipeline = WanImageToVideoPipeline.from_pretrained(
+            model_name,
+            vae=vae,
+            transformer=transformer,
+            text_encoder=text_encoder,
+            torch_dtype=torch.bfloat16
+        )
+        pipeline.enable_model_cpu_offload()
+        await avernus_pipeline.set_pipeline(pipeline, "wan-i2v")
+    return avernus_pipeline
+
+async def get_seed_generators(amount, seed):
+    generator = [torch.Generator(device="cuda").manual_seed(seed + i) for i in range(amount)]
+    return generator
+
+async def generate_wan_ti2v(avernus_pipeline,
+                            prompt: str,
+                            image: str = None,
+                            negative_prompt: str = None,
+                            num_frames: int = 81,
+                            guidance_scale: float = 5.0,
+                            height: int = 480,
+                            width: int = 832,
+                            seed: int = None,
+                            model_name: str = None):
+    kwargs = {}
+    kwargs["prompt"] = prompt
+    kwargs["negative_prompt"] = negative_prompt if negative_prompt is not None else ""
+    kwargs["num_frames"] = num_frames
+    kwargs["guidance_scale"] = guidance_scale
+    kwargs["height"] = height
+    kwargs["width"] = width
+    if model_name is None:
+        model_name = "Wan-AI/Wan2.2-TI2V-5B-Diffusers"
+    if seed is not None:
+        kwargs["generator"] = await get_seed_generators(1, seed)
+    if image is not None:
+        kwargs["image"] = image
+        avernus_pipeline = await load_wan_i2v_pipeline(avernus_pipeline, model_name)
+    else:
+        avernus_pipeline = await load_wan_t2v_pipeline(avernus_pipeline, model_name)
+    output = avernus_pipeline.pipeline(**kwargs).frames[0]
+
     return output
