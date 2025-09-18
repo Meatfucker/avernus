@@ -120,14 +120,19 @@ async def generate_wan_ti2v(avernus_pipeline,
 def resize_by_pixels(width, height, target_pixels=832*480, keep_if_within=0.0):
     """
     Return (new_width, new_height) so total pixels ~= target_pixels,
-    preserving aspect ratio. If current pixels are within ±keep_if_within
-    (e.g. 0.25 for 25%), the original size is returned.
+    preserving aspect ratio. Ensures both dimensions are divisible by 16.
+    If current pixels are within ±keep_if_within (e.g. 0.25 for 25%),
+    the original size is returned (but adjusted to multiple of 16).
     """
+    def round_to_multiple(value, base=16):
+        return max(base, int(round(value / base) * base))
+
     current = width * height
     if keep_if_within > 0 and abs(current - target_pixels) / target_pixels <= keep_if_within:
-        return width, height
+        return round_to_multiple(width), round_to_multiple(height)
 
     scale = math.sqrt(target_pixels / current)
-    new_w = max(1, int(round(width * scale)))
-    new_h = max(1, int(round(height * scale)))
+    new_w = round_to_multiple(width * scale)
+    new_h = round_to_multiple(height * scale)
+
     return new_w, new_h
