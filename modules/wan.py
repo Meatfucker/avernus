@@ -100,7 +100,8 @@ async def generate_wan_ti2v(avernus_pipeline,
         else:
             kwargs["height"] = image_height
         kwargs["image"] = image
-
+        kwargs["width"] = 832
+        kwargs["height"] = 480
         print(f"W: {kwargs['width']} H:{kwargs['height']}")
         avernus_pipeline = await load_wan_i2v_pipeline(avernus_pipeline, model_name)
     else:
