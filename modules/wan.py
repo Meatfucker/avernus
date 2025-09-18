@@ -1,8 +1,9 @@
+import math
 import torch
 from diffusers import AutoModel, WanPipeline, WanImageToVideoPipeline
 from transformers import BitsAndBytesConfig as TransformersBitsAndBytesConfig
 from transformers import UMT5EncoderModel
-import bitsandbytes as bnb
+
 
 async def load_wan_components(model_name="Wan-AI/Wan2.2-TI2V-5B-Diffusers"):
     transformer_quantization_config = TransformersBitsAndBytesConfig(
@@ -88,6 +89,15 @@ async def generate_wan_ti2v(avernus_pipeline,
     if seed is not None:
         kwargs["generator"] = await get_seed_generators(1, seed)
     if image is not None:
+        image_width, image_height = resize_by_pixels(image.width, image.height)
+        if width is not None:
+            kwargs["width"] = width
+        else:
+            kwargs["width"] = image_width
+        if height is not None:
+            kwargs["height"] = height
+        else:
+            kwargs["height"] = image_height
         kwargs["image"] = image
         avernus_pipeline = await load_wan_i2v_pipeline(avernus_pipeline, model_name)
     else:
@@ -95,3 +105,18 @@ async def generate_wan_ti2v(avernus_pipeline,
     output = avernus_pipeline.pipeline(**kwargs).frames[0]
 
     return output
+
+def resize_by_pixels(width, height, target_pixels=1024*1024, keep_if_within=0.0):
+    """
+    Return (new_width, new_height) so total pixels ~= target_pixels,
+    preserving aspect ratio. If current pixels are within ±keep_if_within
+    (e.g. 0.25 for 25%), the original size is returned.
+    """
+    current = width * height
+    if keep_if_within > 0 and abs(current - target_pixels) / target_pixels <= keep_if_within:
+        return width, height
+
+    scale = math.sqrt(target_pixels / current)
+    new_w = max(1, int(round(width * scale)))
+    new_h = max(1, int(round(height * scale)))
+    return new_w, new_h

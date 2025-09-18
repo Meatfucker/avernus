@@ -3,6 +3,7 @@ bitsandbytes
 diffusers
 faiss-cpu
 fastapi
+ftfy
 hangul_romanize
 librosa
 loguru
