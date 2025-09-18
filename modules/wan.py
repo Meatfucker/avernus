@@ -106,7 +106,7 @@ async def generate_wan_ti2v(avernus_pipeline,
 
     return output
 
-def resize_by_pixels(width, height, target_pixels=1024*1024, keep_if_within=0.0):
+def resize_by_pixels(width, height, target_pixels=832*480, keep_if_within=0.0):
     """
     Return (new_width, new_height) so total pixels ~= target_pixels,
     preserving aspect ratio. If current pixels are within ±keep_if_within
