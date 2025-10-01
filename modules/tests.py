@@ -294,7 +294,9 @@ class WANTest(TimedTest):
     async def run_test(self):
         await self.client.wan_ti2v("An overhead tracking shot of frogs hopping from lilypad to lilypad, the water splashing as they land",
                                    num_frames=33,
-                                   seed=42)
+                                   seed=42,
+                                   width=832,
+                                   height=480)
 
 class WANI2VTest(TimedTest):
     async def run_test(self):
@@ -303,6 +305,8 @@ class WANI2VTest(TimedTest):
         await self.client.wan_ti2v("A colorful psychedelic scene of a mushroom with demons crawling on it",
                                    num_frames=81,
                                    seed=42,
+                                   width=832,
+                                   height=480,
                                    image=image)
 
 async def base64_image_to_file(base64_images, prefix=""):
