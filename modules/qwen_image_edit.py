@@ -1,0 +1,121 @@
+import os
+from typing import Any
+
+from diffusers import QwenImageEditPipeline
+from fastapi import FastAPI, Body
+import torch
+
+from pydantic_models import QwenImageRequest, QwenImageResponse
+from utils import base64_to_image, image_to_base64, resize_by_pixels
+
+PIPELINE: QwenImageEditPipeline
+LOADED: bool = False
+dtype = torch.bfloat16
+avernus_qwen_image = FastAPI()
+
+def load_qwen_image_pipeline():
+    global PIPELINE
+    PIPELINE = QwenImageEditPipeline.from_pretrained("Meatfucker/Qwen-Image-Edit-bnb-nf4", torch_dtype=dtype)
+    PIPELINE.enable_model_cpu_offload()
+    PIPELINE.enable_vae_slicing()
+
+def get_seed_generators(amount, seed):
+    generator = [torch.Generator(device="cuda").manual_seed(seed + i) for i in range(amount)]
+    return generator
+
+def load_qwen_loras(lora_name):
+    global PIPELINE
+    try:
+        lora_list = []
+        for lora in lora_name:
+            try:
+                lora_name = os.path.splitext(lora)[0]
+                PIPELINE.load_lora_weights(f"loras/qwen/{lora}", adapter_name=lora_name)
+                lora_list.append(lora_name)
+            except Exception:
+                pass
+        PIPELINE.set_adapters(lora_list)
+    except Exception:
+        pass
+
+def generate_qwen_image(prompt,
+                        width,
+                        height,
+                        steps,
+                        batch_size,
+                        negative_prompt=None,
+                        image=None,
+                        lora_name=None,
+                        true_cfg_scale=None,
+                        seed=None):
+    global PIPELINE
+    global LOADED
+    if not LOADED:
+        load_qwen_image_pipeline()
+        LOADED = True
+    qwen_image_width, qwen_image_height = resize_by_pixels(image.width, image.height)
+    kwargs = {}
+    kwargs["prompt"] = prompt
+    kwargs["negative_prompt"] = negative_prompt if negative_prompt is not None else ""
+    kwargs["num_inference_steps"] = steps if steps is not None else 30
+    kwargs["num_images_per_prompt"] = batch_size if batch_size is not None else 1
+    kwargs["true_cfg_scale"] = true_cfg_scale if true_cfg_scale is not None else 4.0
+    if seed is not None:
+        kwargs["generator"] = get_seed_generators(kwargs["num_images_per_prompt"], seed)
+    kwargs["image"] = image
+    if width is not None:
+        kwargs["width"] = width
+    else:
+        kwargs["width"] = qwen_image_width
+    if height is not None:
+        kwargs["height"] = height
+    else:
+        kwargs["height"] = qwen_image_height
+    if lora_name is not None:
+        load_qwen_loras(lora_name)
+    try:
+        images = PIPELINE(**kwargs).images
+        if lora_name is not None:
+            PIPELINE.unload_lora_weights()
+        return images
+    except Exception:
+        pass
+        return None
+
+@avernus_qwen_image.post("/qwen_image_edit_generate", response_model=QwenImageResponse)
+def qwen_image_edit_generate(data: QwenImageRequest = Body(...)):
+    """Generates some number of Qwen Image Edit images based on user inputs"""
+    kwargs: dict[str, Any] = {"prompt": data.prompt,
+                              "width": data.width,
+                              "height": data.height,
+                              "steps": data.steps,
+                              "batch_size": data.batch_size}
+    if isinstance(data.lora_name, str):
+        kwargs["lora_name"] = [data.lora_name]
+    else:
+        kwargs["lora_name"] = data.lora_name
+    if data.negative_prompt:
+        kwargs["negative_prompt"] = data.negative_prompt
+    if data.image:
+        kwargs["image"] = base64_to_image(data.image)
+    if data.true_cfg_scale:
+        kwargs["true_cfg_scale"] = data.true_cfg_scale
+    if data.seed:
+        kwargs["seed"] = data.seed
+    try:
+        response = generate_qwen_image(**kwargs)
+        base64_images = [image_to_base64(img) for img in response]
+        response = None
+        del response
+    except Exception:
+        return None
+    return {"images": base64_images}
+
+@avernus_qwen_image.get("/online")
+async def status():
+    """ This returns True when hit"""
+    return True
+
+if __name__ == "__main__":
+    import uvicorn
+    uvicorn.run(avernus_qwen_image, host="0.0.0.0", port=6970, log_level="critical")
