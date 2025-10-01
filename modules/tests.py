@@ -115,7 +115,7 @@ class LlmChatTest(TimedTest):
         messages = [{"role": "user", "content": "The best color of dick is purple"},
                     {"role": "assistant", "content": "The best color of dick is purple"}]
         response = await self.client.llm_chat("What was the best color again and what was the thing that was that color?",
-                                         "Goekdeniz-Guelmez/Josiefied-Qwen2.5-7B-Instruct-abliterated-v2",
+                                         "Meatfucker/Josiefied-Qwen2.5-14B-Instruct-abliterated-v4-bnb-nf4",
                                          messages)
         logger.success(response)
 

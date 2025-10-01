@@ -141,10 +141,10 @@ async def forward_post_request(url: str, data) -> dict:
             return response.json()
         except httpx.RequestError as exc:
             logger.error(f"Error while forwarding request: {exc}")
-            return {"error": "Failed to reach image generation server"}
+            return {"error": "Failed to reach generation server"}
         except httpx.HTTPStatusError as exc:
             logger.error(f"Bad response from image generation server: {exc}")
-            return {"error": f"Image generation failed with status {exc.response.status_code}"}
+            return {"error": f"generation failed with status {exc.response.status_code}"}
 
 async def forward_stream_request(url: str, data) -> StreamingResponse:
     """

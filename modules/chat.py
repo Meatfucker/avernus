@@ -12,8 +12,11 @@ avernus_llm = FastAPI()
 def load_pipeline(model_name=None):
     global PIPELINE
     if model_name is None:
-        model_name = "Meatfucker/Josiefied-Qwen2.5-14B-Instruct-abliterated-v4-bnb-nf4"
-    PIPELINE = pipeline("text-generation", model=model_name, model_kwargs={"torch_dtype": torch.bfloat16, "quantization_config": {"load_in_4bit": True}})
+        model_name = "Goekdeniz-Guelmez/Josiefied-Qwen2.5-14B-Instruct-abliterated-v4"
+    PIPELINE = pipeline(task="text-generation",
+                        model=model_name,
+                        model_kwargs={"torch_dtype": torch.bfloat16, "quantization_config": {"load_in_4bit": True}}
+                        )
 
 def generate_chat(prompt, model_name, messages=None):
     global PIPELINE
@@ -25,9 +28,12 @@ def generate_chat(prompt, model_name, messages=None):
         messages.append({"role": "user", "content": prompt})
     else:
         messages = [{"role": "user", "content": prompt}]
-    outputs = PIPELINE(messages, max_new_tokens=2048, do_sample=True)
-    response = outputs[0]["generated_text"][-1]["content"]
-    return response
+    try:
+        outputs = PIPELINE(messages, max_new_tokens=2048, do_sample=True)
+        response = outputs[0]["generated_text"][-1]["content"]
+        return response
+    except Exception as e:
+        return e
 
 @avernus_llm.post("/llm_chat", response_model=LLMResponse)
 def llm_chat(data: LLMRequest = Body(...)):
