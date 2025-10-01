@@ -251,7 +251,7 @@ def quantize_qwen_image_edit():
                                                       torch_dtype=dtype)
     generator.save_pretrained("../models/Qwen-Image-Edit")
 
-def quantize_wan_t2v():
+def quantize_wan21_t2v_14b():
     model_name="Wan-AI/Wan2.1-T2V-14B-Diffusers"
     transformer_quantization_config = TransformersBitsAndBytesConfig(
         load_in_4bit=True,
@@ -320,7 +320,7 @@ def quantize_wan_t2v():
                                                        )
     generator.save_pretrained("../models/Wan2.1-T2V-14B")
 
-def quantize_wan_ti2v():
+def quantize_wan22_ti2v_5b():
     model_name="Wan-AI/Wan2.2-TI2V-5B-Diffusers"
     transformer_quantization_config = TransformersBitsAndBytesConfig(
         load_in_4bit=True,

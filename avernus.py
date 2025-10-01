@@ -6,8 +6,7 @@ from modules.pydantic_models import (ACEStepRequest, FluxInpaintRequest, FluxReq
                                      QwenImageLoraListResponse, QwenImageResponse, SDXLInpaintRequest, SDXLRequest,
                                      SDXLResponse, SDXLLoraListResponse, SDXLControlnetListResponse, StatusResponse,
                                      SDXLSchedulerListResponse, WanTI2VRequest)
-from modules.logging_config import setup_logging
-from modules.utils import ServerManager, return_loras, forward_post_request, forward_stream_request
+from modules.utils import ServerManager, return_loras, forward_post_request, forward_stream_request, setup_logging
 
 setup_logging()
 avernus = FastAPI()
