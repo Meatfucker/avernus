@@ -1,7 +1,6 @@
 import os
 from typing import Any
-
-from diffusers import (StableDiffusionXLPipeline, DPMSolverMultistepScheduler, DDIMScheduler, DDPMScheduler,
+from diffusers import (StableDiffusionXLImg2ImgPipeline, DPMSolverMultistepScheduler, DDIMScheduler, DDPMScheduler,
                        LMSDiscreteScheduler, EulerDiscreteScheduler, HeunDiscreteScheduler,
                        EulerAncestralDiscreteScheduler, DPMSolverSinglestepScheduler, KDPM2DiscreteScheduler,
                        KDPM2AncestralDiscreteScheduler, DEISMultistepScheduler, UniPCMultistepScheduler,
@@ -12,14 +11,14 @@ import torch
 from pydantic_models import SDXLRequest, SDXLResponse
 from utils import base64_to_image, image_to_base64
 
-PIPELINE: StableDiffusionXLPipeline
+PIPELINE: StableDiffusionXLImg2ImgPipeline
 LOADED: bool = False
 dtype = torch.bfloat16
-avernus_sdxl = FastAPI()
+avernus_sdxl_i2i = FastAPI()
 
 def load_sdxl_pipeline(model_name):
     global PIPELINE
-    PIPELINE = StableDiffusionXLPipeline.from_pretrained(model_name,
+    PIPELINE = StableDiffusionXLImg2ImgPipeline.from_pretrained(model_name,
                                                          torch_dtype=dtype,
                                                          use_safetensors=True).to("cuda")
     PIPELINE.enable_vae_slicing()
@@ -103,6 +102,8 @@ def generate_sdxl(prompt,
             pass
     if lora_name is not None:
         load_sdxl_loras(lora_name)
+    kwargs["image"] = image
+    kwargs["strength"] = strength
     images = PIPELINE(**kwargs).images
     if lora_name is not None:
         PIPELINE.unload_lora_weights()
@@ -145,16 +146,16 @@ def set_scheduler(scheduler):
     except Exception:
         pass
 
-@avernus_sdxl.post("/sdxl_generate", response_model=SDXLResponse)
+@avernus_sdxl_i2i.post("/sdxl_generate", response_model=SDXLResponse)
 def sdxl_generate(data: SDXLRequest = Body(...)):
     """Generates some number of sdxl images based on user inputs."""
     kwargs: dict[str, Any] = {"prompt": data.prompt,
-                              "negative_prompt": data.negative_prompt,
-                              "width": data.width,
-                              "height": data.height,
-                              "steps": data.steps,
-                              "batch_size": data.batch_size,
-                              "model_name": data.model_name}
+              "negative_prompt": data.negative_prompt,
+              "width": data.width,
+              "height": data.height,
+              "steps": data.steps,
+              "batch_size": data.batch_size,
+              "model_name": data.model_name}
     if data.ip_adapter_image:
         kwargs["ip_adapter_strength"] = data.ip_adapter_strength
         kwargs["ip_adapter_image"] = base64_to_image(data.ip_adapter_image)
@@ -164,6 +165,10 @@ def sdxl_generate(data: SDXLRequest = Body(...)):
         kwargs["lora_name"] = [data.lora_name]
     else:
         kwargs["lora_name"] = data.lora_name
+    if data.image:
+        kwargs["image"] = base64_to_image(data.image)
+    if data.strength is not None and data.image:
+        kwargs["strength"] = data.strength
     if data.guidance_scale:
         kwargs["guidance_scale"] = data.guidance_scale
     if data.seed:
@@ -175,11 +180,11 @@ def sdxl_generate(data: SDXLRequest = Body(...)):
         return e
     return {"images": base64_images}
 
-@avernus_sdxl.get("/online")
+@avernus_sdxl_i2i.get("/online")
 async def status():
     """ This returns True when hit"""
     return True
 
 if __name__ == "__main__":
     import uvicorn
-    uvicorn.run(avernus_sdxl, host="0.0.0.0", port=6970, log_level="critical")
+    uvicorn.run(avernus_sdxl_i2i, host="0.0.0.0", port=6970, log_level="critical")

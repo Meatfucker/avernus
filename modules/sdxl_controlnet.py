@@ -1,28 +1,46 @@
 import os
 from typing import Any
 
-from diffusers import (StableDiffusionXLPipeline, DPMSolverMultistepScheduler, DDIMScheduler, DDPMScheduler,
+import cv2
+from diffusers import (StableDiffusionXLControlNetPipeline, DPMSolverMultistepScheduler, DDIMScheduler, DDPMScheduler,
                        LMSDiscreteScheduler, EulerDiscreteScheduler, HeunDiscreteScheduler,
                        EulerAncestralDiscreteScheduler, DPMSolverSinglestepScheduler, KDPM2DiscreteScheduler,
                        KDPM2AncestralDiscreteScheduler, DEISMultistepScheduler, UniPCMultistepScheduler,
-                       DPMSolverSDEScheduler, PNDMScheduler)
+                       DPMSolverSDEScheduler, PNDMScheduler, ControlNetModel)
 from fastapi import FastAPI, Body
+import numpy
+from PIL import Image
 import torch
+from transformers import pipeline as transformers_pipeline
 
-from pydantic_models import SDXLRequest, SDXLResponse
+from pydantic_models import SDXLResponse, SDXLRequest
 from utils import base64_to_image, image_to_base64
 
-PIPELINE: StableDiffusionXLPipeline
+PIPELINE: StableDiffusionXLControlNetPipeline
 LOADED: bool = False
 dtype = torch.bfloat16
-avernus_sdxl = FastAPI()
+avernus_sdxl_controlnet = FastAPI()
 
-def load_sdxl_pipeline(model_name):
+
+def load_sdxl_controlnet_pipeline(model_name, controlnet_processor):
     global PIPELINE
-    PIPELINE = StableDiffusionXLPipeline.from_pretrained(model_name,
-                                                         torch_dtype=dtype,
-                                                         use_safetensors=True).to("cuda")
+    controlnet = get_sdxl_controlnet(controlnet_processor)
+    PIPELINE = StableDiffusionXLControlNetPipeline.from_pretrained(model_name,
+                                                                        use_safetensors=True,
+                                                                        torch_dtype=torch.bfloat16,
+                                                                        controlnet=controlnet,
+                                                                        ).to("cuda")
     PIPELINE.enable_vae_slicing()
+
+def get_sdxl_controlnet(controlnet_processor):
+    if controlnet_processor == "canny":
+        controlnet = ControlNetModel.from_pretrained("diffusers/controlnet-canny-sdxl-1.0", torch_dtype=torch.bfloat16)
+        return controlnet
+    if controlnet_processor == "depth":
+        controlnet = ControlNetModel.from_pretrained("diffusers/controlnet-zoe-depth-sdxl-1.0",
+                                                     torch_dtype=torch.bfloat16, use_safetensors=True)
+        return controlnet
+    return None
 
 def get_seed_generators(amount, seed):
     generator = [torch.Generator(device="cuda").manual_seed(seed + i) for i in range(amount)]
@@ -77,8 +95,9 @@ def generate_sdxl(prompt,
         model_name = "misri/zavychromaxl_v100"
     global LOADED
     if not LOADED:
-        load_sdxl_pipeline(model_name)
+        load_sdxl_controlnet_pipeline(model_name, controlnet_processor)
         LOADED = True
+    processed_image = get_controlnet_image(controlnet_processor, controlnet_image)
     kwargs = {}
     kwargs["prompt"] = prompt
     if negative_prompt is not None:
@@ -103,6 +122,8 @@ def generate_sdxl(prompt,
             pass
     if lora_name is not None:
         load_sdxl_loras(lora_name)
+    kwargs["image"] = processed_image
+    kwargs["controlnet_conditioning_scale"] = controlnet_conditioning
     images = PIPELINE(**kwargs).images
     if lora_name is not None:
         PIPELINE.unload_lora_weights()
@@ -145,7 +166,32 @@ def set_scheduler(scheduler):
     except Exception:
         pass
 
-@avernus_sdxl.post("/sdxl_generate", response_model=SDXLResponse)
+def get_controlnet_image(controlnet_processor, controlnet_image):
+    if controlnet_processor == "canny":
+        canny_image = get_canny_image(controlnet_image)
+        return canny_image
+    if controlnet_processor == "depth":
+        depth_image = get_depth_image(controlnet_image)
+        return depth_image
+    return None
+
+def get_canny_image(image):
+    image = numpy.array(image)
+    image = cv2.Canny(image, 100, 200)
+    image = image[:, :, None]
+    image = numpy.concatenate([image, image, image], axis=2)
+    canny_image = Image.fromarray(image)
+    return canny_image
+
+def get_depth_image(image):
+    model = "depth-anything/Depth-Anything-V2-base-hf"
+    pipe = transformers_pipeline("depth-estimation", model=model, device=torch.device("cuda"))
+    depth_keys = pipe(image)
+    depth_image = depth_keys["depth"]
+    del pipe
+    return depth_image
+
+@avernus_sdxl_controlnet.post("/sdxl_generate", response_model=SDXLResponse)
 def sdxl_generate(data: SDXLRequest = Body(...)):
     """Generates some number of sdxl images based on user inputs."""
     kwargs: dict[str, Any] = {"prompt": data.prompt,
@@ -155,6 +201,11 @@ def sdxl_generate(data: SDXLRequest = Body(...)):
                               "steps": data.steps,
                               "batch_size": data.batch_size,
                               "model_name": data.model_name}
+    if data.controlnet_processor:
+        kwargs["controlnet_processor"] = data.controlnet_processor
+        kwargs["controlnet_image"] = base64_to_image(data.controlnet_image)
+    if data.controlnet_conditioning:
+        kwargs["controlnet_conditioning"] = data.controlnet_conditioning
     if data.ip_adapter_image:
         kwargs["ip_adapter_strength"] = data.ip_adapter_strength
         kwargs["ip_adapter_image"] = base64_to_image(data.ip_adapter_image)
@@ -175,11 +226,11 @@ def sdxl_generate(data: SDXLRequest = Body(...)):
         return e
     return {"images": base64_images}
 
-@avernus_sdxl.get("/online")
+@avernus_sdxl_controlnet.get("/online")
 async def status():
     """ This returns True when hit"""
     return True
 
 if __name__ == "__main__":
     import uvicorn
-    uvicorn.run(avernus_sdxl, host="0.0.0.0", port=6970, log_level="critical")
+    uvicorn.run(avernus_sdxl_controlnet, host="0.0.0.0", port=6970, log_level="critical")

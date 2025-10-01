@@ -97,7 +97,7 @@ class QwenImageRequest(BaseModel):
     seed: Optional[int] = Field(None, example=42)
 
 class QwenImageResponse(BaseModel):
-    images: List[str] = Field(..., example=["kajsdflsadfsadf....", "lkjdsaflkjsadlkfjsa3423....", "lwerewjrlwkejrwewr..."])
+    images: Optional[List[str]] = Field(None, example=["kajsdflsadfsadf....", "lkjdsaflkjsadlkfjsa3423....", "lwerewjrlwkejrwewr..."])
 
 class RAGRequest(BaseModel):
     prompt: str = Field(..., example="What is answer to life, the universe, and everything")

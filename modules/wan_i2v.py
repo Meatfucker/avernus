@@ -1,24 +1,25 @@
 import os
-from typing import Any
 import tempfile
+from typing import Any
 
-from diffusers import WanPipeline
+from diffusers import WanImageToVideoPipeline
 from diffusers.utils import export_to_video
 from fastapi import FastAPI, Body
 from fastapi.responses import StreamingResponse
 import torch
 
 from pydantic_models import WanTI2VRequest
+from utils import base64_to_image, resize_by_pixels
 
-PIPELINE: WanPipeline
+PIPELINE: WanImageToVideoPipeline
 LOADED: bool = False
 dtype = torch.bfloat16
-avernus_wan = FastAPI()
+avernus_wan_i2v = FastAPI()
 
 
 def load_wan_pipeline(model_name="Meatfucker/Wan2.2-TI2V-5B-bnb-nf4"):
     global PIPELINE
-    PIPELINE = WanPipeline.from_pretrained(model_name, torch_dtype=torch.bfloat16)
+    PIPELINE = WanImageToVideoPipeline.from_pretrained(model_name, torch_dtype=torch.bfloat16)
     PIPELINE.enable_model_cpu_offload()
 
 def get_seed_generators(amount, seed):
@@ -26,14 +27,14 @@ def get_seed_generators(amount, seed):
     return generator
 
 def generate_wan_ti2v(prompt: str,
-                      image = None,
-                      negative_prompt: str = None,
-                      num_frames: int = 81,
-                      guidance_scale: float = 5.0,
-                      height: int = None,
-                      width: int = None,
-                      seed: int = None,
-                      model_name: str = None):
+                     image = None,
+                     negative_prompt: str = None,
+                     num_frames: int = 81,
+                     guidance_scale: float = 5.0,
+                     height: int = None,
+                     width: int = None,
+                     seed: int = None,
+                     model_name: str = None):
     global PIPELINE
     global LOADED
     if model_name is None:
@@ -41,27 +42,29 @@ def generate_wan_ti2v(prompt: str,
     if not LOADED:
         load_wan_pipeline(model_name)
         LOADED = True
-    kwargs:dict[str, Any] = {"prompt": prompt,
-                             "negative_prompt": negative_prompt if negative_prompt is not None else "",
-                             "num_frames": num_frames,
-                             "guidance_scale": guidance_scale,
-                             "height": height,
-                             "width": width}
+    kwargs = {}
+    kwargs["prompt"] = prompt
+    kwargs["negative_prompt"] = negative_prompt if negative_prompt is not None else ""
+    kwargs["num_frames"] = num_frames
+    kwargs["guidance_scale"] = guidance_scale
+    kwargs["height"] = height
+    kwargs["width"] = width
     if seed is not None:
         kwargs["generator"] = get_seed_generators(1, seed)
+    image_width, image_height = resize_by_pixels(image.width, image.height)
     if width is not None:
         kwargs["width"] = width
     else:
-        kwargs["width"] = 832
-
+        kwargs["width"] = image_width
     if height is not None:
         kwargs["height"] = height
     else:
-        kwargs["height"] = 480
+        kwargs["height"] = image_height
+    kwargs["image"] = image
     output = PIPELINE(**kwargs).frames[0]
     return output
 
-@avernus_wan.post("/wan_ti2v_generate")
+@avernus_wan_i2v.post("/wan_ti2v_generate")
 def wan_ti2v_generate(data: WanTI2VRequest = Body(...)):
     kwargs: dict[str, Any] = {"prompt": data.prompt}
     if data.negative_prompt:
@@ -78,6 +81,8 @@ def wan_ti2v_generate(data: WanTI2VRequest = Body(...)):
         kwargs["guidance_scale"] = data.guidance_scale
     if data.seed:
         kwargs["seed"] = data.seed
+    if data.image:
+        kwargs["image"] = base64_to_image(data.image)
     if data.model_name:
         kwargs["model_name"] = data.model_name
     generated_video = generate_wan_ti2v(**kwargs)
@@ -91,11 +96,11 @@ def wan_ti2v_generate(data: WanTI2VRequest = Body(...)):
         os.remove(tmp_path)  # Remove temp file after streaming
     return StreamingResponse(cleanup_and_stream(), media_type="video/mp4")
 
-@avernus_wan.get("/online")
+@avernus_wan_i2v.get("/online")
 async def status():
     """ This returns True when hit"""
     return True
 
 if __name__ == "__main__":
     import uvicorn
-    uvicorn.run(avernus_wan, host="0.0.0.0", port=6970, log_level="critical")
+    uvicorn.run(avernus_wan_i2v, host="0.0.0.0", port=6970)

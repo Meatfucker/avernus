@@ -1,7 +1,7 @@
 import os
 from typing import Any
 
-from diffusers import (StableDiffusionXLPipeline, DPMSolverMultistepScheduler, DDIMScheduler, DDPMScheduler,
+from diffusers import (StableDiffusionXLInpaintPipeline, DPMSolverMultistepScheduler, DDIMScheduler, DDPMScheduler,
                        LMSDiscreteScheduler, EulerDiscreteScheduler, HeunDiscreteScheduler,
                        EulerAncestralDiscreteScheduler, DPMSolverSinglestepScheduler, KDPM2DiscreteScheduler,
                        KDPM2AncestralDiscreteScheduler, DEISMultistepScheduler, UniPCMultistepScheduler,
@@ -9,17 +9,17 @@ from diffusers import (StableDiffusionXLPipeline, DPMSolverMultistepScheduler, D
 from fastapi import FastAPI, Body
 import torch
 
-from pydantic_models import SDXLRequest, SDXLResponse
+from pydantic_models import SDXLInpaintRequest, SDXLResponse
 from utils import base64_to_image, image_to_base64
 
-PIPELINE: StableDiffusionXLPipeline
+PIPELINE: StableDiffusionXLInpaintPipeline
 LOADED: bool = False
 dtype = torch.bfloat16
-avernus_sdxl = FastAPI()
+avernus_sdxl_inpaint = FastAPI()
 
-def load_sdxl_pipeline(model_name):
+def load_sdxl_inpaint_pipeline(model_name):
     global PIPELINE
-    PIPELINE = StableDiffusionXLPipeline.from_pretrained(model_name,
+    PIPELINE = StableDiffusionXLInpaintPipeline.from_pretrained(model_name,
                                                          torch_dtype=dtype,
                                                          use_safetensors=True).to("cuda")
     PIPELINE.enable_vae_slicing()
@@ -27,17 +27,6 @@ def load_sdxl_pipeline(model_name):
 def get_seed_generators(amount, seed):
     generator = [torch.Generator(device="cuda").manual_seed(seed + i) for i in range(amount)]
     return generator
-
-def load_ip_adapters(strength):
-    global PIPELINE
-    try:
-        PIPELINE.load_ip_adapter("h94/IP-Adapter",
-                                 subfolder="sdxl_models",
-                                 weight_name="ip-adapter_sdxl.bin",
-                                 device="cuda")
-        PIPELINE.set_ip_adapter_scale(strength)
-    except Exception:
-        pass
 
 def load_sdxl_loras(lora_name):
     global PIPELINE
@@ -54,30 +43,26 @@ def load_sdxl_loras(lora_name):
     except Exception:
         pass
 
-def generate_sdxl(prompt,
-                  width,
-                  height,
-                  steps,
-                  batch_size,
-                  image=None,
-                  strength=None,
-                  negative_prompt=None,
-                  model_name=None,
-                  lora_name=None,
-                  controlnet_processor=None,
-                  controlnet_image=None,
-                  controlnet_conditioning=None,
-                  ip_adapter_image=None,
-                  ip_adapter_strength=None,
-                  guidance_scale=None,
-                  scheduler=None,
-                  seed=None):
+def generate_sdxl_inpaint(prompt,
+                          negative_prompt,
+                          width,
+                          height,
+                          steps,
+                          batch_size,
+                          image,
+                          mask_image,
+                          model_name,
+                          lora_name=None,
+                          strength=None,
+                          guidance_scale=None,
+                          scheduler=None,
+                          seed=None):
     global PIPELINE
     if model_name is None:
         model_name = "misri/zavychromaxl_v100"
     global LOADED
     if not LOADED:
-        load_sdxl_pipeline(model_name)
+        load_sdxl_inpaint_pipeline(model_name)
         LOADED = True
     kwargs = {}
     kwargs["prompt"] = prompt
@@ -87,27 +72,18 @@ def generate_sdxl(prompt,
     kwargs["height"] = height if height is not None else 1024
     kwargs["num_inference_steps"] = steps if steps is not None else 30
     kwargs["num_images_per_prompt"] = batch_size if batch_size is not None else 4
+    kwargs["strength"] = strength if strength is not None else 0.75
     kwargs["guidance_scale"] = guidance_scale if guidance_scale is not None else 5.0
-    strength = strength if strength is not None else 0.7
-    controlnet_conditioning = controlnet_conditioning if controlnet_conditioning is not None else 0.5
-    ip_adapter_strength = ip_adapter_strength if ip_adapter_strength is not None else 0.6
+    kwargs["image"] = image
+    kwargs["mask_image"] = mask_image
+    kwargs["padding_mask_crop"] = 32
     if seed is not None:
         kwargs["generator"] = get_seed_generators(kwargs["num_images_per_prompt"], seed)
     if scheduler is not None:
         set_scheduler(scheduler)
-    if ip_adapter_image is not None:
-        try:
-            load_ip_adapters(ip_adapter_strength)
-            kwargs["ip_adapter_image"] = ip_adapter_image
-        except Exception:
-            pass
     if lora_name is not None:
         load_sdxl_loras(lora_name)
     images = PIPELINE(**kwargs).images
-    if lora_name is not None:
-        PIPELINE.unload_lora_weights()
-    if ip_adapter_image is not None:
-        PIPELINE.unload_ip_adapter()
     return images
 
 def set_scheduler(scheduler):
@@ -145,41 +121,46 @@ def set_scheduler(scheduler):
     except Exception:
         pass
 
-@avernus_sdxl.post("/sdxl_generate", response_model=SDXLResponse)
-def sdxl_generate(data: SDXLRequest = Body(...)):
-    """Generates some number of sdxl images based on user inputs."""
+@avernus_sdxl_inpaint.post("/sdxl_inpaint_generate", response_model=SDXLResponse)
+def sdxl_inpaint_generate(data: SDXLInpaintRequest = Body(...)):
+    """Generates some number of sdxl inpaint images based on user inputs."""
     kwargs: dict[str, Any] = {"prompt": data.prompt,
-                              "negative_prompt": data.negative_prompt,
-                              "width": data.width,
-                              "height": data.height,
-                              "steps": data.steps,
-                              "batch_size": data.batch_size,
-                              "model_name": data.model_name}
-    if data.ip_adapter_image:
-        kwargs["ip_adapter_strength"] = data.ip_adapter_strength
-        kwargs["ip_adapter_image"] = base64_to_image(data.ip_adapter_image)
+              "negative_prompt": data.negative_prompt,
+              "width": data.width,
+              "height": data.height,
+              "steps": data.steps,
+              "batch_size": data.batch_size,
+              "model_name": data.model_name}
     if data.scheduler:
         kwargs["scheduler"] = data.scheduler
+    if data.strength:
+        kwargs["strength"] = data.strength
+    if data.image:
+        kwargs["image"] = base64_to_image(data.image)
+    if data.mask_image:
+        kwargs["mask_image"] = base64_to_image(data.mask_image)
+    if data.guidance_scale:
+        kwargs["guidance_scale"] = data.guidance_scale
     if isinstance(data.lora_name, str):
         kwargs["lora_name"] = [data.lora_name]
     else:
         kwargs["lora_name"] = data.lora_name
-    if data.guidance_scale:
-        kwargs["guidance_scale"] = data.guidance_scale
     if data.seed:
         kwargs["seed"] = data.seed
+
     try:
-        response = generate_sdxl(**kwargs)
+        response = generate_sdxl_inpaint(**kwargs)
         base64_images = [image_to_base64(img) for img in response]
     except Exception as e:
         return e
     return {"images": base64_images}
 
-@avernus_sdxl.get("/online")
+
+@avernus_sdxl_inpaint.get("/online")
 async def status():
     """ This returns True when hit"""
     return True
 
 if __name__ == "__main__":
     import uvicorn
-    uvicorn.run(avernus_sdxl, host="0.0.0.0", port=6970, log_level="critical")
+    uvicorn.run(avernus_sdxl_inpaint, host="0.0.0.0", port=6970, log_level="critical")

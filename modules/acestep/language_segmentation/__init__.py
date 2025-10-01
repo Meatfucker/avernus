@@ -1,4 +1,4 @@
-from modules.acestep.language_segmentation.LangSegment import LangSegment
+from acestep.language_segmentation.LangSegment import LangSegment
 
 
 # release

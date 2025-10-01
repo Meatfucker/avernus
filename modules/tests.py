@@ -40,59 +40,6 @@ class CheckStatus(TimedTest):
         status = await self.client.check_status()
         logger.success(status)
 
-class FluxControlnetI2ILoraTest(TimedTest):
-    async def run_test(self):
-        image = Image.open("tests/sdxl_i2i_image_0.png")
-        image = image_to_base64(image)
-        controlnet_image = Image.open("tests/mushroom.png")
-        controlnet_image = image_to_base64(controlnet_image)
-        images = await self.client.flux_image("jello monster man",
-                                              batch_size=2,
-                                              image=image,
-                                              lora_name="lighty_peft.safetensors",
-                                              controlnet_image=controlnet_image,
-                                              controlnet_processor="canny")
-        await base64_image_to_file(images, "flux_controlnet_i2i_lora")
-
-class FluxControlnetI2ITest(TimedTest):
-    async def run_test(self):
-        image = Image.open("tests/sdxl_i2i_image_0.png")
-        image = image_to_base64(image)
-        controlnet_image = Image.open("tests/mushroom.png")
-        controlnet_image = image_to_base64(controlnet_image)
-        images = await self.client.flux_image("cartoon",
-                                              batch_size=2,
-                                              image=image,
-                                              controlnet_image=controlnet_image,
-                                              controlnet_processor="canny")
-        await base64_image_to_file(images, "flux_controlnet_i2i")
-
-class FluxControlnetListTest(TimedTest):
-    async def run_test(self):
-        controlnets = await self.client.list_flux_controlnets()
-        logger.success(controlnets)
-
-class FluxControlnetLoraTest(TimedTest):
-    async def run_test(self):
-        image = Image.open("tests/sdxl_image_0.png")
-        image = image_to_base64(image)
-        images = await self.client.flux_image("wood statue",
-                                              batch_size=2,
-                                              lora_name="lighty_peft.safetensors",
-                                              controlnet_image=image,
-                                              controlnet_processor="canny")
-        await base64_image_to_file(images, "flux_controlnet_lora")
-
-class FluxControlnetTest(TimedTest):
-    async def run_test(self):
-        image = Image.open("tests/sdxl_image_0.png")
-        image = image_to_base64(image)
-        images = await self.client.flux_image("statue",
-                                              batch_size=2,
-                                              controlnet_image=image,
-                                              controlnet_processor="canny")
-        await base64_image_to_file(images, "flux_controlnet")
-
 class FluxI2ITest(TimedTest):
     async def run_test(self):
         image = Image.open("tests/flux_image_0.png")
@@ -119,7 +66,7 @@ class FluxIPAdapterTest(TimedTest):
         images = await self.client.flux_image("marijuana leaf",
                                               ip_adapter_image=image,
                                               ip_adapter_strength=0.6,
-                                              batch_size=2)
+                                              batch_size=1)
         await base64_image_to_file(images, "flux_ipadapter")
 
 class FluxLoraI2ITest(TimedTest):
@@ -172,20 +119,43 @@ class LlmChatTest(TimedTest):
                                          messages)
         logger.success(response)
 
-class LlmRagTest(TimedTest):
-    async def run_test(self):
-        rag_results = await self.client.rag_retrieve("What is the Atlas of Worlds")
-        for result in rag_results:
-            logger.success(result)
-
-class LTXTest(TimedTest):
-    async def run_test(self):
-        await self.client.ltx_video("frogs hopping")
-
 class QwenImageTest(TimedTest):
     async def run_test(self):
         images = await self.client.qwen_image_image("redheaded woman wearing green dress", batch_size=1)
         await base64_image_to_file(images, "qwen_image")
+
+class QwenImageEditTest(TimedTest):
+    async def run_test(self):
+        image = Image.open("tests/flux_image_0.png")
+        image = image_to_base64(image)
+        images = await self.client.qwen_image_edit("turn the bear into a gigiantic sandworm",
+                                                image=image,
+                                                batch_size=1)
+        await base64_image_to_file(images, "qwen_image_edit")
+
+class QwenImageI2ITest(TimedTest):
+    async def run_test(self):
+        image = Image.open("tests/flux_image_0.png")
+        image = image_to_base64(image)
+        images = await self.client.qwen_image_image("basketball",
+                                              image=image,
+                                              batch_size=1,
+                                              strength=0.7)
+        await base64_image_to_file(images, "qwen_image_i2i")
+
+class QwenImageInpaintTest(TimedTest):
+    async def run_test(self):
+        image = Image.open("tests/flux_ipadapter_image_0.png")
+        image = image_to_base64(image)
+        mask_image = Image.open("tests/mask_image.png")
+        mask_image = image_to_base64(mask_image)
+        images = await self.client.flux_inpaint_image("green beans",
+                                                      batch_size=2,
+                                                      image=image,
+                                                      mask_image=mask_image,
+                                                      strength=0.9)
+        await base64_image_to_file(images, "qwen_image_inpaint")
+
 
 class SDXLControlnetI2ILoraTest(TimedTest):
     async def run_test(self):

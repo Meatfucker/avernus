@@ -8,6 +8,7 @@ hangul_romanize
 librosa
 loguru
 num2words
+nvidia-ml-py
 opencv-python
 peft
 protobuf

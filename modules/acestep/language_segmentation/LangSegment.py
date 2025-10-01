@@ -64,7 +64,7 @@ from collections import defaultdict
 # For probability normalization in library use, the user must instantiate their own . An example of such usage is as follows:
 from py3langid.langid import LanguageIdentifier, MODEL_FILE
 
-from modules.acestep.language_segmentation.utils.num import num2str
+from acestep.language_segmentation.utils.num import num2str
 
 # -----------------------------------
 # 更新日志：新版本分词更加精准。

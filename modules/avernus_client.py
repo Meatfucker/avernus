@@ -263,49 +263,6 @@ class AvernusClient:
             print(f"EXCEPTION ERROR: {e}")
             return {"ERROR": str(e)}
 
-    async def ltx_video(self, prompt, video=None):
-        """This takes a prompt and optiional video and returns a video"""
-        url = f"http://{self.base_url}/ltx_generate"
-        files = None
-        if video is not None:
-            files = {"video": ("input.mp4", open(video, "rb"), "video/mp4")}
-        data = {"prompt": prompt}
-
-        try:
-            async with httpx.AsyncClient(timeout=3600) as client:
-                if files:
-                    response = await client.post(url, data=data, files=files)
-                else:
-                    response = await client.post(url, data=data)
-            if response.status_code == 200:
-                # Save the returned binary video content
-                with open("output.mp4", "wb") as f:
-                    f.write(response.content)
-                return "output.mp4"
-            else:
-                print(f"LTX VIDEO ERROR: {response.status_code} - {response.text}")
-                return None
-        except Exception as e:
-            print(f"ERROR: {e}")
-            return {"ERROR": str(e)}
-
-    async def multimodal_llm_chat(self, prompt, model_name=None, messages=None):
-        """This takes a prompt, and optionally a model name and chat history, then returns a response"""
-        url = f"http://{self.base_url}/multimodal_llm_chat"
-        data = {"prompt": prompt, "model_name": model_name, "messages": messages}
-
-        try:
-            async with httpx.AsyncClient(timeout=3600.0) as client:
-                response = await client.post(url, json=data)
-            if response.status_code == 200:
-                return response.json()
-            else:
-                print(f"MULTIMODAL LLM ERROR: {response.status_code}, Response: {response.text}")
-                return {"MULTIMODAL LLM ERROR": response.text}
-        except Exception as e:
-            print(f"EXCEPTION ERROR: {e}")
-            return {"ERROR": str(e)}
-
     async def qwen_image_image(self, prompt, negative_prompt=None, image=None, model_name=None, lora_name=None,
                                width=None, height=None, steps=None, batch_size=None, strength=None, seed=None,
                                true_cfg_scale=None):

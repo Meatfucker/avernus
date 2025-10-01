@@ -16,7 +16,7 @@ from diffusers.loaders import FromOriginalModelMixin
 from diffusers.configuration_utils import ConfigMixin, register_to_config
 from tqdm import tqdm
 
-from modules.acestep.music_dcae.music_vocoder import ADaMoSHiFiGANV1
+from acestep.music_dcae.music_vocoder import ADaMoSHiFiGANV1
 
 root_dir = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 DEFAULT_PRETRAINED_PATH = os.path.join(root_dir, "checkpoints", "music_dcae_f8c8")
