@@ -5,6 +5,8 @@ faiss-cpu
 fastapi
 ftfy
 hangul_romanize
+imageio
+imageio-ffmpeg
 librosa
 loguru
 num2words
