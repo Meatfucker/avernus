@@ -71,7 +71,7 @@ async def flux_inpaint_generate(data: FluxInpaintRequest = Body(...)):
         if result["status"] is True:
             return result
         else:
-            logger.info(f"Generation Error: {result["status_message"]}")
+            logger.info(f"Generation Error: {result['status_message']}")
             server_manager.kill_pipeline()
             return {"status": False,
                     "status_message": result["status_message"]}
