@@ -169,7 +169,7 @@ class SDXLRequest(BaseModel):
     seed: Optional[int] = Field(None, example=42)
 
 class SDXLResponse(GenericResponse):
-    images: List[str] = Field(..., example=["kajsdflsadfsadf....", "lkjdsaflkjsadlkfjsa3423....", "lwerewjrlwkejrwewr..."])
+    images: Optional[List[str]] = Field(None, example=["kajsdflsadfsadf....", "lkjdsaflkjsadlkfjsa3423....", "lwerewjrlwkejrwewr..."])
 
 class SDXLSchedulerListResponse(BaseModel):
     schedulers: List[str] = Field(..., example=["DPMSolverMultistepScheduler", "EulerAncestralDiscreteScheduler", "LMSDiscreteScheduler"])
