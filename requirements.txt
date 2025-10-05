@@ -21,6 +21,6 @@ spacy
 torch
 torchaudio
 torchvision
-transformers
+git+https://github.com/huggingface/transformers
 unstructured
 uvicorn
