@@ -38,9 +38,11 @@ def generate_ace(prompt,
               "manual_seeds": [str(actual_seeds)]}
     try:
         PIPELINE(**kwargs)
-        return "./tests/test.wav"
+        return {"status": True,
+                "path": "./tests/test.wav"}
     except Exception as e:
-        return e
+        return {"status": False,
+                "status_message": e}
 
 @avernus_ace.post("/ace_generate")
 def ace_generate(data: ACEStepRequest = Body(...)):
@@ -60,9 +62,15 @@ def ace_generate(data: ACEStepRequest = Body(...)):
 
     try:
         response = generate_ace(**kwargs)
+        if response["status"] is True:
+            return {"status": True,
+                    "path": response["path"]}
+        else:
+            return {"status": False,
+                    "status_message": response["status_message"]}
     except Exception as e:
-        return e
-    return StreamingResponse(open(response, "rb"), media_type="audio/wav")
+        return {"status": False,
+                "status_message": str(e)}
 
 @avernus_ace.get("/online")
 async def status():

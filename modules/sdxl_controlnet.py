@@ -30,7 +30,7 @@ def load_sdxl_controlnet_pipeline(model_name, controlnet_processor):
                                                                         torch_dtype=torch.bfloat16,
                                                                         controlnet=controlnet,
                                                                         ).to("cuda")
-    PIPELINE.enable_vae_slicing()
+    PIPELINE.vae.enable_slicing()
 
 def get_sdxl_controlnet(controlnet_processor):
     if controlnet_processor == "canny":
@@ -124,12 +124,17 @@ def generate_sdxl(prompt,
         load_sdxl_loras(lora_name)
     kwargs["image"] = processed_image
     kwargs["controlnet_conditioning_scale"] = controlnet_conditioning
-    images = PIPELINE(**kwargs).images
-    if lora_name is not None:
-        PIPELINE.unload_lora_weights()
-    if ip_adapter_image is not None:
-        PIPELINE.unload_ip_adapter()
-    return images
+    try:
+        images = PIPELINE(**kwargs).images
+        if lora_name is not None:
+            PIPELINE.unload_lora_weights()
+        if ip_adapter_image is not None:
+            PIPELINE.unload_ip_adapter()
+        return {"status": True,
+                "images": images}
+    except Exception as e:
+        return {"status": False,
+                "status_message": str(e)}
 
 def set_scheduler(scheduler):
     global PIPELINE
@@ -221,10 +226,19 @@ def sdxl_generate(data: SDXLRequest = Body(...)):
         kwargs["seed"] = data.seed
     try:
         response = generate_sdxl(**kwargs)
-        base64_images = [image_to_base64(img) for img in response]
+        if response["status"] is True:
+            base64_images = [image_to_base64(img) for img in response["images"]]
+            response = None
+            del response
+        else:
+            return {"status": False,
+                    "status_message": response["status_message"]}
     except Exception as e:
-        return e
-    return {"images": base64_images}
+        return {"status": False,
+                "status_message": str(e)}
+    return {"status": True,
+            "status_message": "SDXL Success",
+            "images": base64_images}
 
 @avernus_sdxl_controlnet.get("/online")
 async def status():

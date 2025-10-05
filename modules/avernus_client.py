@@ -346,6 +346,32 @@ class AvernusClient:
             print(f"ERROR: {e}")
             return {"ERROR": str(e)}
 
+    async def qwen_image_edit_plus(self, prompt, negative_prompt=None, images=None, model_name=None, lora_name=None,
+                              width=None, height=None, steps=None, batch_size=None, seed=None, true_cfg_scale=None):
+        """This takes a prompt and optional other variables and returns a list of base64 encoded images"""
+        url = f"http://{self.base_url}/qwen_image_edit_plus_generate"
+        data = {"prompt": prompt,
+                "negative_prompt":  negative_prompt,
+                "images": images,
+                "model_name": model_name,
+                "lora_name": lora_name,
+                "width": width,
+                "height": height,
+                "steps": steps,
+                "batch_size": batch_size,
+                "seed": seed,
+                "true_cfg_scale": true_cfg_scale}
+        try:
+            async with httpx.AsyncClient(timeout=3600) as client:
+                response = await client.post(url, json=data)
+            if response.status_code == 200:
+                return response.json().get("images", [])
+            else:
+                print(f"QWEN IMAGE EDIT ERROR: {response.status_code}")
+        except Exception as e:
+            print(f"ERROR: {e}")
+            return {"ERROR": str(e)}
+
     async def rag_retrieve(self, prompt, max_candidates=20, similarity_threshold=0.6):
         """This takes a prompt and optionally a number of results, and then returns the mathing RAG documents"""
         url = f"http://{self.base_url}/rag_retrieve"

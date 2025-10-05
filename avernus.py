@@ -1,13 +1,19 @@
+import os
+
 from fastapi import FastAPI, Body
+from fastapi.responses import StreamingResponse
 from loguru import logger
 
 from modules.pydantic_models import (ACEStepRequest, FluxInpaintRequest, FluxRequest, FluxResponse,
-                                     FluxLoraListResponse, LLMRequest, LLMResponse, QwenImageRequest, QwenImageInpaintRequest,
+                                     FluxLoraListResponse, LLMRequest, LLMResponse, QwenImageRequest,
+                                     QwenImageInpaintRequest,
                                      QwenImageLoraListResponse, QwenImageResponse, SDXLInpaintRequest, SDXLRequest,
                                      SDXLResponse, SDXLLoraListResponse, SDXLControlnetListResponse, StatusResponse,
-                                     SDXLSchedulerListResponse, WanTI2VRequest)
-from modules.utils import ServerManager, return_loras, forward_post_request, forward_stream_request, setup_logging
+                                     SDXLSchedulerListResponse, WanTI2VRequest, QwenImageEditPlusRequest)
+from modules.utils import (ServerManager, return_loras, forward_post_request, forward_stream_request, setup_logging,
+                           cleanup_and_stream)
 
+os.environ["TOKENIZERS_PARALLELISM"] = "false"
 setup_logging()
 avernus = FastAPI()
 PIPELINE = None
@@ -20,7 +26,19 @@ async def ace_generate(data: ACEStepRequest = Body(...)):
     logger.info("ace_generate request received")
     await server_manager.set_pipeline("ace", "ACE")
     url = "http://127.0.0.1:6970/ace_generate"
-    return await forward_stream_request(url, data)
+    try:
+        result = await forward_post_request(url, data)
+        if result["status"] is True:
+            return StreamingResponse(open(result["path"], "rb"), media_type="audio/wav")
+        else:
+            logger.info(f"Generation Error: {result["status_message"]}")
+            server_manager.kill_pipeline()
+            return {"status": False,
+                    "status_message": result["status_message"]}
+    except Exception as e:
+        server_manager.kill_pipeline()
+        return {"status": False,
+                "status_message": str(e)}
 
 @avernus.post("/flux_generate", response_model=FluxResponse)
 async def flux_generate(data: FluxRequest = Body(...)):
@@ -28,7 +46,19 @@ async def flux_generate(data: FluxRequest = Body(...)):
     logger.info("flux_generate request received")
     await server_manager.set_pipeline("flux", "FLUX.1-Krea-dev")
     url = "http://127.0.0.1:6970/flux_generate"
-    return await forward_post_request(url, data)
+    try:
+        result = await forward_post_request(url, data)
+        if result["status"] is True:
+            return result
+        else:
+            logger.info(f"Generation Error: {result["status_message"]}")
+            server_manager.kill_pipeline()
+            return {"status": False,
+                    "status_message": result["status_message"]}
+    except Exception as e:
+        server_manager.kill_pipeline()
+        return {"status": False,
+                "status_message": str(e)}
 
 @avernus.post("/flux_inpaint_generate", response_model=FluxResponse)
 async def flux_inpaint_generate(data: FluxInpaintRequest = Body(...)):
@@ -36,7 +66,19 @@ async def flux_inpaint_generate(data: FluxInpaintRequest = Body(...)):
     logger.info("flux_inpaint_generate request received")
     await server_manager.set_pipeline("flux_inpaint", "FLUX.1-dev")
     url = "http://127.0.0.1:6970/flux_inpaint_generate"
-    return await forward_post_request(url, data)
+    try:
+        result = await forward_post_request(url, data)
+        if result["status"] is True:
+            return result
+        else:
+            logger.info(f"Generation Error: {result["status_message"]}")
+            server_manager.kill_pipeline()
+            return {"status": False,
+                    "status_message": result["status_message"]}
+    except Exception as e:
+        server_manager.kill_pipeline()
+        return {"status": False,
+                "status_message": str(e)}
 
 @avernus.post("/flux_fill_generate", response_model=FluxResponse)
 async def flux_fill_generate(data: FluxInpaintRequest = Body(...)):
@@ -44,7 +86,19 @@ async def flux_fill_generate(data: FluxInpaintRequest = Body(...)):
     logger.info("flux_fill_generate request received")
     await server_manager.set_pipeline("flux_fill", "FLUX.1-Fill-dev")
     url = "http://127.0.0.1:6970/flux_fill_generate"
-    return await forward_post_request(url, data)
+    try:
+        result = await forward_post_request(url, data)
+        if result["status"] is True:
+            return result
+        else:
+            logger.info(f"Generation Error: {result["status_message"]}")
+            server_manager.kill_pipeline()
+            return {"status": False,
+                    "status_message": result["status_message"]}
+    except Exception as e:
+        server_manager.kill_pipeline()
+        return {"status": False,
+                "status_message": str(e)}
 
 @avernus.post("/flux_kontext_generate", response_model=FluxResponse)
 async def flux_kontext_generate(data: FluxRequest = Body(...)):
@@ -52,7 +106,19 @@ async def flux_kontext_generate(data: FluxRequest = Body(...)):
     logger.info("flux_kontext_generate request received")
     await server_manager.set_pipeline("flux_kontext", "FLUX.1-Kontext-dev")
     url = "http://127.0.0.1:6970/flux_kontext_generate"
-    return await forward_post_request(url, data)
+    try:
+        result = await forward_post_request(url, data)
+        if result["status"] is True:
+            return result
+        else:
+            logger.info(f"Generation Error: {result["status_message"]}")
+            server_manager.kill_pipeline()
+            return {"status": False,
+                    "status_message": result["status_message"]}
+    except Exception as e:
+        server_manager.kill_pipeline()
+        return {"status": False,
+                "status_message": str(e)}
 
 @avernus.get("/list_flux_loras", response_model=FluxLoraListResponse)
 async def list_flux_loras():
@@ -128,7 +194,19 @@ async def llm_chat(data: LLMRequest = Body(...)):
     logger.info("llm_chat request received")
     await server_manager.set_pipeline("chat", data.model_name)
     url = "http://127.0.0.1:6970/llm_chat"
-    return await forward_post_request(url, data)
+    try:
+        result = await forward_post_request(url, data)
+        if result["status"] is True:
+            return result
+        else:
+            logger.info(f"Generation Error: {result["status_message"]}")
+            server_manager.kill_pipeline()
+            return {"status": False,
+                    "status_message": result["status_message"]}
+    except Exception as e:
+        server_manager.kill_pipeline()
+        return {"status": False,
+                "status_message": str(e)}
 
 @avernus.post("/qwen_image_generate", response_model=QwenImageResponse)
 async def qwen_image_generate(data: QwenImageRequest = Body(...)):
@@ -141,7 +219,19 @@ async def qwen_image_generate(data: QwenImageRequest = Body(...)):
         logger.info("qwen_image_generate request received")
         await server_manager.set_pipeline("qwen_image", "Qwen-Image")
         url = "http://127.0.0.1:6970/qwen_image_generate"
-    return await forward_post_request(url, data)
+    try:
+        result = await forward_post_request(url, data)
+        if result["status"] is True:
+            return result
+        else:
+            logger.info(f"Generation Error: {result["status_message"]}")
+            server_manager.kill_pipeline()
+            return {"status": False,
+                    "status_message": result["status_message"]}
+    except Exception as e:
+        server_manager.kill_pipeline()
+        return {"status": False,
+                "status_message": str(e)}
 
 @avernus.post("/qwen_image_inpaint_generate", response_model=QwenImageResponse)
 async def qwen_image_inpaint_generate(data: QwenImageInpaintRequest = Body(...)):
@@ -149,7 +239,20 @@ async def qwen_image_inpaint_generate(data: QwenImageInpaintRequest = Body(...))
     logger.info("qwen_image_inpaint_generate request received")
     await server_manager.set_pipeline("qwen_image_inpaint", "Qwen-Image")
     url = "http://127.0.0.1:6970/qwen_image_inpaint_generate"
-    return await forward_post_request(url, data)
+    try:
+        result = await forward_post_request(url, data)
+        if result["status"] is True:
+            return result
+        else:
+            logger.info(f"Generation Error: {result["status_message"]}")
+            server_manager.kill_pipeline()
+            return {"status": False,
+                    "status_message": result["status_message"]}
+    except Exception as e:
+        server_manager.kill_pipeline()
+        return {"status": False,
+                "status_message": str(e)}
+
 
 @avernus.post("/qwen_image_edit_generate", response_model=QwenImageResponse)
 async def qwen_image_edit_generate(data: QwenImageRequest = Body(...)):
@@ -157,7 +260,40 @@ async def qwen_image_edit_generate(data: QwenImageRequest = Body(...)):
     logger.info("qwen_image_edit_generate request received")
     await server_manager.set_pipeline("qwen_image_edit", "Qwen-Image-Edit")
     url = "http://127.0.0.1:6970/qwen_image_edit_generate"
-    return await forward_post_request(url, data)
+    try:
+        result = await forward_post_request(url, data)
+        if result["status"] is True:
+            return result
+        else:
+            logger.info(f"Generation Error: {result["status_message"]}")
+            server_manager.kill_pipeline()
+            return {"status": False,
+                    "status_message": result["status_message"]}
+    except Exception as e:
+        server_manager.kill_pipeline()
+        return {"status": False,
+                "status_message": str(e)}
+
+
+@avernus.post("/qwen_image_edit_plus_generate", response_model=QwenImageResponse)
+async def qwen_image_edit_plus_generate(data: QwenImageEditPlusRequest = Body(...)):
+    """Generates some number of Qwen Image Edit images based on user inputs"""
+    logger.info("qwen_image_edit_generate request received")
+    await server_manager.set_pipeline("qwen_image_edit_plus", "Qwen-Image-Edit-Plus")
+    url = "http://127.0.0.1:6970/qwen_image_edit_plus_generate"
+    try:
+        result = await forward_post_request(url, data)
+        if result["status"] is True:
+            return result
+        else:
+            logger.info(f"Generation Error: {result["status_message"]}")
+            server_manager.kill_pipeline()
+            return {"status": False,
+                    "status_message": result["status_message"]}
+    except Exception as e:
+        server_manager.kill_pipeline()
+        return {"status": False,
+                "status_message": str(e)}
 
 @avernus.get("/status", response_model=StatusResponse)
 async def status():
@@ -178,7 +314,19 @@ async def sdxl_generate(data: SDXLRequest = Body(...)):
     if data.image is not None and data.controlnet_image is not None:
         await server_manager.set_pipeline("sdxl_i2i_controlnet", data.model_name)
     url = "http://127.0.0.1:6970/sdxl_generate"
-    return await forward_post_request(url, data)
+    try:
+        result = await forward_post_request(url, data)
+        if result["status"] is True:
+            return result
+        else:
+            logger.info(f"Generation Error: {result["status_message"]}")
+            server_manager.kill_pipeline()
+            return {"status": False,
+                    "status_message": result["status_message"]}
+    except Exception as e:
+        server_manager.kill_pipeline()
+        return {"status": False,
+                "status_message": str(e)}
 
 @avernus.post("/sdxl_inpaint_generate", response_model=SDXLResponse)
 async def sdxl_inpaint_generate(data: SDXLInpaintRequest = Body(...)):
@@ -186,7 +334,19 @@ async def sdxl_inpaint_generate(data: SDXLInpaintRequest = Body(...)):
     logger.info("sdxl_inpaint_generate request received")
     await server_manager.set_pipeline("sdxl_inpaint", data.model_name)
     url = "http://127.0.0.1:6970/sdxl_inpaint_generate"
-    return await forward_post_request(url, data)
+    try:
+        result = await forward_post_request(url, data)
+        if result["status"] is True:
+            return result
+        else:
+            logger.info(f"Generation Error: {result["status_message"]}")
+            server_manager.kill_pipeline()
+            return {"status": False,
+                    "status_message": result["status_message"]}
+    except Exception as e:
+        server_manager.kill_pipeline()
+        return {"status": False,
+                "status_message": str(e)}
 
 @avernus.post("/wan_ti2v_generate")
 async def wan_ti2v_generate(data: WanTI2VRequest = Body(...)):
@@ -196,7 +356,19 @@ async def wan_ti2v_generate(data: WanTI2VRequest = Body(...)):
     if data.image is not None:
         await server_manager.set_pipeline("wan_i2v", data.model_name)
     url = "http://127.0.0.1:6970/wan_ti2v_generate"
-    return await forward_stream_request(url, data)
+    try:
+        result = await forward_post_request(url, data)
+        if result["status"] is True:
+            return StreamingResponse(cleanup_and_stream(result["path"]), media_type="video/mp4")
+        else:
+            logger.info(f"Generation Error: {result["status_message"]}")
+            server_manager.kill_pipeline()
+            return {"status": False,
+                    "status_message": result["status_message"]}
+    except Exception as e:
+        server_manager.kill_pipeline()
+        return {"status": False,
+                "status_message": str(e)}
 
 if __name__ == "__main__":
     import uvicorn

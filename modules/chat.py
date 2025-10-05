@@ -31,9 +31,11 @@ def generate_chat(prompt, model_name, messages=None):
     try:
         outputs = PIPELINE(messages, max_new_tokens=2048, do_sample=True)
         response = outputs[0]["generated_text"][-1]["content"]
-        return response
+        return {"status": True,
+                "response": response}
     except Exception as e:
-        return e
+        return {"status": False,
+                "status_message": str(e)}
 
 @avernus_llm.post("/llm_chat", response_model=LLMResponse)
 def llm_chat(data: LLMRequest = Body(...)):
@@ -44,9 +46,14 @@ def llm_chat(data: LLMRequest = Body(...)):
               "messages": data.messages}
     try:
         response = generate_chat(**kwargs)
+        if response["status"] is True:
+            return response
+        else:
+            return {"status": False,
+                    "status_message": response["status_message"]}
     except Exception as e:
-        return {"error": str(e)}
-    return {"response": response}
+        return {"status": False,
+                "status_message": str(e)}
 
 @avernus_llm.get("/online")
 async def status():

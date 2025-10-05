@@ -1,6 +1,11 @@
 from typing import Dict, List, Optional, Union
 from pydantic import BaseModel, Field
 
+
+class GenericResponse(BaseModel):
+    status: bool = Field(..., example=True)
+    status_message: Optional[str] = Field(None, example="Generation Success")
+
 class ACEStepRequest(BaseModel):
     prompt: str = Field(..., example="Weird jam band music, guitar, bass")
     lyrics: str = Field(..., example="[chorus] Blah blah blah, [inst]")
@@ -44,16 +49,16 @@ class FluxRequest(BaseModel):
     guidance_scale: Optional[float] = Field(None, example=5.0)
     seed: Optional[int] = Field(None, example=42)
 
-class FluxResponse(BaseModel):
-    images: List[str] = Field(..., example=["kajsdflsadfsadf....", "lkjdsaflkjsadlkfjsa3423....", "lwerewjrlwkejrwewr..."])
+class FluxResponse(GenericResponse):
+    images: Optional[List[str]] = Field(None, example=["kajsdflsadfsadf....", "lkjdsaflkjsadlkfjsa3423....", "lwerewjrlwkejrwewr..."])
 
 class LLMRequest(BaseModel):
     prompt: str = Field(..., example="Who is the best at hackey sack?")
     model_name: Optional[str] = Field(None, example="Goekdeniz-Guelmez/Josiefied-Qwen2.5-7B-Instruct-abliterated-v2")
     messages: Optional[List[Dict]] = Field(None, example=[{"role": "user", "content": "Hello"}, {"role": "assistant", "content": "Hi there, how may I assist you?"}])
 
-class LLMResponse(BaseModel):
-    response: str = Field(..., example="Hi Im online and how can I help you?")
+class LLMResponse(GenericResponse):
+    response: Optional[str] = Field(None, example="Hi Im online and how can I help you?")
 
 class MultiModalLLMRequest(BaseModel):
     prompt: str = Field(..., example="Who is the best at hackey sack?")
@@ -96,7 +101,21 @@ class QwenImageRequest(BaseModel):
     true_cfg_scale: Optional[float] = Field(None, example=1.0)
     seed: Optional[int] = Field(None, example=42)
 
-class QwenImageResponse(BaseModel):
+class QwenImageEditPlusRequest(BaseModel):
+    prompt: str = Field(..., example="A big green monster")
+    negative_prompt: Optional[str] = Field(None, example="a red dog")
+    model_name: Optional[str] = Field(None, example="some-repo/some-qwen-image-model")
+    width: Optional[int] = Field(None, example=1024)
+    height: Optional[int] = Field(None, example=1024)
+    steps: Optional[int] = Field(None, example=50)
+    batch_size: Optional[int] = Field(None, example=4)
+    lora_name: Optional[Union[str, List[str]]] = Field(None, example="lora_name.safetensors")
+    images: Optional[List[str]] = Field(None, example=["a9d8fp0sa9dfpasdfllkajsdflkjadslf...", "a9d8fp0sa9dfpasdfllkajsdflkjadslf..."])
+    strength: Optional[float] = Field(None, example=0.75)
+    true_cfg_scale: Optional[float] = Field(None, example=1.0)
+    seed: Optional[int] = Field(None, example=42)
+
+class QwenImageResponse(GenericResponse):
     images: Optional[List[str]] = Field(None, example=["kajsdflsadfsadf....", "lkjdsaflkjsadlkfjsa3423....", "lwerewjrlwkejrwewr..."])
 
 class RAGRequest(BaseModel):
@@ -149,7 +168,7 @@ class SDXLRequest(BaseModel):
     scheduler: Optional[str] = Field(None, example="DPMSolverMultistepScheduler")
     seed: Optional[int] = Field(None, example=42)
 
-class SDXLResponse(BaseModel):
+class SDXLResponse(GenericResponse):
     images: List[str] = Field(..., example=["kajsdflsadfsadf....", "lkjdsaflkjsadlkfjsa3423....", "lwerewjrlwkejrwewr..."])
 
 class SDXLSchedulerListResponse(BaseModel):

@@ -21,7 +21,7 @@ def load_sdxl_pipeline(model_name):
     PIPELINE = StableDiffusionXLImg2ImgPipeline.from_pretrained(model_name,
                                                          torch_dtype=dtype,
                                                          use_safetensors=True).to("cuda")
-    PIPELINE.enable_vae_slicing()
+    PIPELINE.vae.enable_slicing()
 
 def get_seed_generators(amount, seed):
     generator = [torch.Generator(device="cuda").manual_seed(seed + i) for i in range(amount)]
@@ -104,12 +104,17 @@ def generate_sdxl(prompt,
         load_sdxl_loras(lora_name)
     kwargs["image"] = image
     kwargs["strength"] = strength
-    images = PIPELINE(**kwargs).images
-    if lora_name is not None:
-        PIPELINE.unload_lora_weights()
-    if ip_adapter_image is not None:
-        PIPELINE.unload_ip_adapter()
-    return images
+    try:
+        images = PIPELINE(**kwargs).images
+        if lora_name is not None:
+            PIPELINE.unload_lora_weights()
+        if ip_adapter_image is not None:
+            PIPELINE.unload_ip_adapter()
+        return {"status": True,
+                "images": images}
+    except Exception as e:
+        return {"status": False,
+                "status_message": str(e)}
 
 def set_scheduler(scheduler):
     global PIPELINE
@@ -175,10 +180,19 @@ def sdxl_generate(data: SDXLRequest = Body(...)):
         kwargs["seed"] = data.seed
     try:
         response = generate_sdxl(**kwargs)
-        base64_images = [image_to_base64(img) for img in response]
+        if response["status"] is True:
+            base64_images = [image_to_base64(img) for img in response["images"]]
+            response = None
+            del response
+        else:
+            return {"status": False,
+                    "status_message": response["status_message"]}
     except Exception as e:
-        return e
-    return {"images": base64_images}
+        return {"status": False,
+                "status_message": str(e)}
+    return {"status": True,
+            "status_message": "SDXL Success",
+            "images": base64_images}
 
 @avernus_sdxl_i2i.get("/online")
 async def status():

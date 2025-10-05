@@ -18,6 +18,7 @@ def load_flux_fill_pipeline():
     PIPELINE = FluxFillPipeline.from_pretrained("Meatfucker/Flux.1-Fill-dev-bnb-nf4",
                                                  torch_dtype=dtype).to("cuda")
     PIPELINE.enable_model_cpu_offload()
+    PIPELINE.vae.enable_slicing()
 
 def get_seed_generators(amount, seed):
     generator = [torch.Generator(device="cuda").manual_seed(seed + i) for i in range(amount)]
@@ -72,9 +73,11 @@ def generate_flux_fill(prompt,
         images = PIPELINE(**kwargs).images
         if lora_name is not None:
             PIPELINE.unload_lora_weights()
+        return {"status": True,
+                "images": images}
     except Exception as e:
-        return e
-    return images
+        return {"status": False,
+                "status_message": str(e)}
 
 @avernus_flux_fill.post("/flux_fill_generate", response_model=FluxResponse)
 def flux_fill_generate(data: FluxInpaintRequest = Body(...)):
@@ -100,10 +103,17 @@ def flux_fill_generate(data: FluxInpaintRequest = Body(...)):
         kwargs["seed"] = data.seed
     try:
         response = generate_flux_fill(**kwargs)
-        base64_images = [image_to_base64(img) for img in response]
+        if response["status"] is True:
+            base64_images = [image_to_base64(img) for img in response["images"]]
+        else:
+            return {"status": False,
+                    "status_message": response["status_message"]}
     except Exception as e:
-        return e
-    return {"images": base64_images}
+        return {"status": False,
+                "status_message": str(e)}
+    return {"status": True,
+            "status_message": "Flux Success",
+            "images": base64_images}
 
 @avernus_flux_fill.get("/online")
 async def status():

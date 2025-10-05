@@ -17,7 +17,7 @@ def load_qwen_image_pipeline():
     global PIPELINE
     PIPELINE = QwenImageImg2ImgPipeline.from_pretrained("Meatfucker/Qwen-Image-bnb-nf4", torch_dtype=dtype)
     PIPELINE.enable_model_cpu_offload()
-    PIPELINE.enable_vae_slicing()
+    PIPELINE.vae.enable_slicing()
 
 def get_seed_generators(amount, seed):
     generator = [torch.Generator(device="cuda").manual_seed(seed + i) for i in range(amount)]
@@ -73,10 +73,11 @@ def generate_qwen_image(prompt,
         images = PIPELINE(**kwargs).images
         if lora_name is not None:
             PIPELINE.unload_lora_weights()
-        return images
-    except Exception:
-        pass
-        return None
+        return {"status": True,
+                "images": images}
+    except Exception as e:
+        return {"status": False,
+                "status_message": str(e)}
 
 @avernus_qwen_image.post("/qwen_image_i2i_generate", response_model=QwenImageResponse)
 def qwen_image_generate(data: QwenImageRequest = Body(...)):
@@ -101,12 +102,19 @@ def qwen_image_generate(data: QwenImageRequest = Body(...)):
         kwargs["seed"] = data.seed
     try:
         response = generate_qwen_image(**kwargs)
-        base64_images = [image_to_base64(img) for img in response]
-        response = None
-        del response
-    except Exception:
-        return None
-    return {"images": base64_images}
+        if response["status"] is True:
+            base64_images = [image_to_base64(img) for img in response["images"]]
+            response = None
+            del response
+        else:
+            return {"status": False,
+                    "status_message": response["status_message"]}
+    except Exception as e:
+        return {"status": False,
+                "status_message": str(e)}
+    return {"status": True,
+            "status_message": "Qwen Image Edit Plus Success",
+            "images": base64_images}
 
 @avernus_qwen_image.get("/online")
 async def status():

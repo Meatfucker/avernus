@@ -22,7 +22,7 @@ def load_sdxl_inpaint_pipeline(model_name):
     PIPELINE = StableDiffusionXLInpaintPipeline.from_pretrained(model_name,
                                                          torch_dtype=dtype,
                                                          use_safetensors=True).to("cuda")
-    PIPELINE.enable_vae_slicing()
+    PIPELINE.vae.enable_slicing()
 
 def get_seed_generators(amount, seed):
     generator = [torch.Generator(device="cuda").manual_seed(seed + i) for i in range(amount)]
@@ -83,8 +83,13 @@ def generate_sdxl_inpaint(prompt,
         set_scheduler(scheduler)
     if lora_name is not None:
         load_sdxl_loras(lora_name)
-    images = PIPELINE(**kwargs).images
-    return images
+    try:
+        images = PIPELINE(**kwargs).images
+        return {"status": True,
+                "images": images}
+    except Exception as e:
+        return {"status": False,
+                "status_message": str(e)}
 
 def set_scheduler(scheduler):
     global PIPELINE
@@ -150,10 +155,19 @@ def sdxl_inpaint_generate(data: SDXLInpaintRequest = Body(...)):
 
     try:
         response = generate_sdxl_inpaint(**kwargs)
-        base64_images = [image_to_base64(img) for img in response]
+        if response["status"] is True:
+            base64_images = [image_to_base64(img) for img in response["images"]]
+            response = None
+            del response
+        else:
+            return {"status": False,
+                    "status_message": response["status_message"]}
     except Exception as e:
-        return e
-    return {"images": base64_images}
+        return {"status": False,
+                "status_message": str(e)}
+    return {"status": True,
+            "status_message": "SDXL Success",
+            "images": base64_images}
 
 
 @avernus_sdxl_inpaint.get("/online")

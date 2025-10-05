@@ -46,8 +46,7 @@ class ServerManager:
         logger.info(get_memory())
         if self.model_type != model_type or self.model_name != model_name:
             if self.current_process is not None:
-                logger.info(f"Killing {self.model_type}, {self.model_name} server ({self.current_process.pid})")
-                self.current_process.kill()
+                self.kill_pipeline()
             logger.info(f"Starting {model_type}, {model_name} server...")
             try:
                 path = f"modules/{model_type}.py"
@@ -59,6 +58,14 @@ class ServerManager:
                 print(e)
         else:
             pass
+
+    def kill_pipeline(self):
+        if self.current_process is not None:
+            logger.info(f"Killing {self.model_type}, {self.model_name} server ({self.current_process.pid})")
+            self.current_process.kill()
+            self.current_process = None
+            self.model_type = None
+            self.model_name = None
 
     async def wait_until_online(self, url: str, interval: float = 1.0, timeout: float = 60.0):
         """
@@ -191,3 +198,9 @@ async def forward_stream_request(url: str, data) -> StreamingResponse:
         except httpx.HTTPStatusError as exc:
             logger.error(f"Bad response from ACE generation server: {exc}")
             return {"error": f"ACE generation failed with status {exc.response.status_code}"}
+
+def cleanup_and_stream(tmp_path):
+    with open(tmp_path, "rb") as f:
+        yield from f
+    os.remove(tmp_path)  # Remove temp file after streaming
+    return StreamingResponse(cleanup_and_stream(tmp_path), media_type="video/mp4")

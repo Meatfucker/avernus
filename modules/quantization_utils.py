@@ -1,6 +1,7 @@
 #from nunchaku.models.transformers.transformer_qwenimage import NunchakuQwenImageTransformer2DModel
 from diffusers import (FluxPipeline, FluxFillPipeline, FluxKontextPipeline, FluxPriorReduxPipeline,
-                       QwenImagePipeline, QwenImageEditPipeline, QwenImageTransformer2DModel, AutoModel,
+                       QwenImagePipeline, QwenImageEditPipeline, QwenImageEditPlusPipeline, QwenImageTransformer2DModel,
+                       AutoModel,
                        WanImageToVideoPipeline, WanPipeline, WanVACEPipeline)
 from diffusers import BitsAndBytesConfig as DiffusersBitsAndBytesConfig
 from diffusers.quantizers import PipelineQuantizationConfig
@@ -251,6 +252,100 @@ def quantize_qwen_image_edit():
                                                       torch_dtype=dtype)
     generator.save_pretrained("../models/Qwen-Image-Edit")
 
+def quantize_qwen_image_edit_plus():
+    print("loading QwenImageEditPlusPipeline")
+    quantization_config = DiffusersBitsAndBytesConfig(
+        load_in_4bit=True,
+        bnb_4bit_quant_type="nf4",
+        bnb_4bit_compute_dtype=torch.bfloat16,
+        llm_int8_skip_modules=["transformer_blocks.0.img_mod.1",
+                               "transformer_blocks.0.attn.to_q",
+                               "transformer_blocks.0.attn.to_k",
+                               "transformer_blocks.0.attn.to_v",
+                               "transformer_blocks.0.attn.add_k_proj",
+                               "transformer_blocks.0.attn.add_v_proj",
+                               "transformer_blocks.0.attn.add_q_proj",
+                               "transformer_blocks.0.attn.to_out.0",
+                               "transformer_blocks.0.attn.to_add_out",
+                               "transformer_blocks.0.img_mlp.net.0.proj",
+                               "transformer_blocks.0.img_mlp.net.2",
+                               "transformer_blocks.0.txt_mod.1",
+                               "transformer_blocks.0.txt_mlp.net.0.proj",
+                               "transformer_blocks.0.txt_mlp.net.2",
+                               "transformer_blocks.59.img_mod.1",
+                               "transformer_blocks.59.attn.to_q",
+                               "transformer_blocks.59.attn.to_k",
+                               "transformer_blocks.59.attn.to_v",
+                               "transformer_blocks.59.attn.add_k_proj",
+                               "transformer_blocks.59.attn.add_v_proj",
+                               "transformer_blocks.59.attn.add_q_proj",
+                               "transformer_blocks.59.attn.to_out.0",
+                               "transformer_blocks.59.attn.to_add_out",
+                               "transformer_blocks.59.img_mlp.net.0.proj",
+                               "transformer_blocks.59.img_mlp.net.2",
+                               "transformer_blocks.59.txt_mod.1",
+                               "transformer_blocks.59.txt_mlp.net.0.proj",
+                               "transformer_blocks.59.txt_mlp.net.2",
+                               "norm_out.linear",
+                               "proj_out"
+                                ],
+    )
+    transformer = QwenImageTransformer2DModel.from_pretrained(
+        "Qwen/Qwen-Image-Edit-2509",
+        subfolder="transformer",
+        quantization_config=quantization_config,
+        torch_dtype=dtype,
+    )
+    transformer = transformer.to("cpu")
+    quantization_config = TransformersBitsAndBytesConfig(
+        load_in_4bit=True,
+        bnb_4bit_quant_type="nf4",
+        bnb_4bit_compute_dtype=torch.bfloat16,
+        bnb_4bit_use_double_quant=True,
+        llm_int8_skip_modules = ["transformer_blocks.0.img_mod.1",
+                                 "transformer_blocks.0.attn.to_q",
+                                 "transformer_blocks.0.attn.to_k",
+                                 "transformer_blocks.0.attn.to_v",
+                                 "transformer_blocks.0.attn.add_k_proj",
+                                 "transformer_blocks.0.attn.add_v_proj",
+                                 "transformer_blocks.0.attn.add_q_proj",
+                                 "transformer_blocks.0.attn.to_out.0",
+                                 "transformer_blocks.0.attn.to_add_out",
+                                 "transformer_blocks.0.img_mlp.net.0.proj",
+                                 "transformer_blocks.0.img_mlp.net.2",
+                                 "transformer_blocks.0.txt_mod.1",
+                                 "transformer_blocks.0.txt_mlp.net.0.proj",
+                                 "transformer_blocks.0.txt_mlp.net.2",
+                                 "transformer_blocks.59.img_mod.1",
+                                 "transformer_blocks.59.attn.to_q",
+                                 "transformer_blocks.59.attn.to_k",
+                                 "transformer_blocks.59.attn.to_v",
+                                 "transformer_blocks.59.attn.add_k_proj",
+                                 "transformer_blocks.59.attn.add_v_proj",
+                                 "transformer_blocks.59.attn.add_q_proj",
+                                 "transformer_blocks.59.attn.to_out.0",
+                                 "transformer_blocks.59.attn.to_add_out",
+                                 "transformer_blocks.59.img_mlp.net.0.proj",
+                                 "transformer_blocks.59.img_mlp.net.2",
+                                 "transformer_blocks.59.txt_mod.1",
+                                 "transformer_blocks.59.txt_mlp.net.0.proj",
+                                 "transformer_blocks.59.txt_mlp.net.2",
+                                 "norm_out.linear",
+                                 "proj_out"
+                                 ],
+    )
+    text_encoder = Qwen2_5_VLForConditionalGeneration.from_pretrained(
+        "Qwen/Qwen-Image-Edit-2509",
+        subfolder="text_encoder",
+        quantization_config=quantization_config,
+        torch_dtype=dtype,
+    )
+    generator = QwenImageEditPlusPipeline.from_pretrained("Qwen/Qwen-Image-Edit-2509",
+                                                          transformer=transformer,
+                                                          text_encoder=text_encoder,
+                                                          torch_dtype=dtype)
+    generator.save_pretrained("../models/Qwen-Image-Edit-Plus")
+
 def quantize_wan21_t2v_14b():
     model_name="Wan-AI/Wan2.1-T2V-14B-Diffusers"
     transformer_quantization_config = TransformersBitsAndBytesConfig(
@@ -389,6 +484,80 @@ def quantize_wan22_ti2v_5b():
                                                        )
     generator.save_pretrained("../models/Wan2.2-TI2V-5B")
 
+def quantize_wan22_i2v_a14b():
+    model_name="Wan-AI/Wan2.2-I2V-A14B-Diffusers"
+    transformer_quantization_config = TransformersBitsAndBytesConfig(
+        load_in_4bit=True,
+        bnb_4bit_quant_type="nf4",
+        llm_int8_skip_modules=["time_embedder",
+                               "timesteps_proj",
+                               "time_proj",
+                               "norm_out",
+                               "proj_out",
+                               "blocks.0.attn1.norm_k",
+                               "blocks.0.attn1.norm_q",
+                               "blocks.0.attn1.to_k",
+                               "blocks.0.attn1.to_out.0",
+                               "blocks.0.attn1.to_q",
+                               "blocks.0.attn1.to_v",
+                               "blocks.0.attn2.norm_k",
+                               "blocks.0.attn2.norm_q",
+                               "blocks.0.attn2.to_k",
+                               "blocks.0.attn2.to_out.0",
+                               "blocks.0.attn2.to_q",
+                               "blocks.0.attn2.to_v",
+                               "blocks.0.ffn.net.0.proj",
+                               "blocks.0.ffn.net.2",
+                               "blocks.0.norm2",
+                               "blocks.0.scale_shift_table",
+                               "blocks.39.attn1.norm_k",
+                               "blocks.39.attn1.norm_q",
+                               "blocks.39.attn1.to_k",
+                               "blocks.39.attn1.to_out.0",
+                               "blocks.39.attn1.to_q",
+                               "blocks.39.attn1.to_v",
+                               "blocks.39.attn2.norm_k",
+                               "blocks.39.attn2.norm_q",
+                               "blocks.39.attn2.to_k",
+                               "blocks.39.attn2.to_out.0",
+                               "blocks.39.attn2.to_q",
+                               "blocks.39.attn2.to_v",
+                               "blocks.39.ffn.net.0.proj",
+                               "blocks.39.ffn.net.2",
+                               "blocks.39.norm2",
+                               "blocks.39.scale_shift_table"]
+    )
+    text_encoder_quantization_config = TransformersBitsAndBytesConfig(
+        load_in_4bit=True,
+        bnb_4bit_quant_type="nf4",
+        bnb_4bit_compute_dtype=torch.bfloat16,
+    )
+    text_encoder = UMT5EncoderModel.from_pretrained(model_name,
+                                                    subfolder="text_encoder",
+                                                    torch_dtype=torch.bfloat16,
+                                                    quantization_config=text_encoder_quantization_config
+                                                    ).to("cpu")
+
+    vae = AutoModel.from_pretrained(model_name, subfolder="vae", torch_dtype=torch.float32)
+    transformer = AutoModel.from_pretrained(model_name,
+                                            subfolder="transformer",
+                                            torch_dtype=torch.bfloat16,
+                                            quantization_config=transformer_quantization_config
+                                            ).to("cpu")
+    transformer_2 = AutoModel.from_pretrained(model_name,
+                                              subfolder="transformer_2",
+                                              torch_dtype=torch.bfloat16,
+                                              quantization_config=transformer_quantization_config
+                                              )
+    generator = WanImageToVideoPipeline.from_pretrained(model_name,
+                                                        vae=vae,
+                                                        transformer=transformer,
+                                                        transformer_2=transformer_2,
+                                                        text_encoder=text_encoder,
+                                                        torch_dtype=torch.bfloat16
+                                                        )
+    generator.save_pretrained("../models/Wan2.2-I2V-A14B")
+
 def quantize_llm(model_name=None):
     quantization_config = TransformersBitsAndBytesConfig(
         load_in_4bit=True,
@@ -403,4 +572,4 @@ def quantize_llm(model_name=None):
         quantization_config=quantization_config)
     generator.save_pretrained("../models/Josiefied-Qwen2.5-14B-Instruct-abliterated-v4")
 
-quantize_llm()
+#quantize_wan22_i2v_a14b()

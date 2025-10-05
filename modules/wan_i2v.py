@@ -21,6 +21,7 @@ def load_wan_pipeline(model_name="Meatfucker/Wan2.2-TI2V-5B-bnb-nf4"):
     global PIPELINE
     PIPELINE = WanImageToVideoPipeline.from_pretrained(model_name, torch_dtype=torch.bfloat16)
     PIPELINE.enable_model_cpu_offload()
+    PIPELINE.vae.enable_slicing()
 
 def get_seed_generators(amount, seed):
     generator = [torch.Generator(device="cuda").manual_seed(seed + i) for i in range(amount)]
@@ -61,8 +62,14 @@ def generate_wan_ti2v(prompt: str,
     else:
         kwargs["height"] = image_height
     kwargs["image"] = image
-    output = PIPELINE(**kwargs).frames[0]
-    return output
+    try:
+        output = PIPELINE(**kwargs).frames[0]
+        return {"status": True,
+                "video": output}
+    except Exception as e:
+        return {"status": False,
+                "status_message": e}
+
 
 @avernus_wan_i2v.post("/wan_ti2v_generate")
 def wan_ti2v_generate(data: WanTI2VRequest = Body(...)):
@@ -85,16 +92,22 @@ def wan_ti2v_generate(data: WanTI2VRequest = Body(...)):
         kwargs["image"] = base64_to_image(data.image)
     if data.model_name:
         kwargs["model_name"] = data.model_name
-    generated_video = generate_wan_ti2v(**kwargs)
-    tmp_file = tempfile.NamedTemporaryFile(delete=False, suffix=".mp4")
-    tmp_path = tmp_file.name
-    tmp_file.close()
-    export_to_video(generated_video, tmp_path, fps=24)
-    def cleanup_and_stream():
-        with open(tmp_path, "rb") as f:
-            yield from f
-        os.remove(tmp_path)  # Remove temp file after streaming
-    return StreamingResponse(cleanup_and_stream(), media_type="video/mp4")
+    try:
+        response = generate_wan_ti2v(**kwargs)
+        if response["status"] is True:
+            tmp_file = tempfile.NamedTemporaryFile(delete=False, suffix=".mp4")
+            tmp_path = tmp_file.name
+            tmp_file.close()
+            export_to_video(response["video"], tmp_path, fps=24)
+            return {"status": True,
+                    "path": tmp_path}
+        else:
+            return {"status": False,
+                   "status_message": response["status_message"]}
+    except Exception as e:
+        return {"status": False,
+                "status_message": str(e)}
+
 
 @avernus_wan_i2v.get("/online")
 async def status():

@@ -90,16 +90,18 @@ def generate_flux(prompt,
     if lora_name is not None:
         load_flux_loras(lora_name)
     PIPELINE.enable_model_cpu_offload() # This has to be after the ip adapter load or else you'll have tensor location problems
-    PIPELINE.enable_vae_slicing()
+    PIPELINE.vae.enable_slicing()
     try:
         images = PIPELINE(**kwargs).images
         if lora_name is not None:
             PIPELINE.unload_lora_weights()
         if ip_adapter_image is not None:
             PIPELINE.unload_ip_adapter()
-    except Exception:
-        raise
-    return images
+        return {"status": True,
+                "images": images}
+    except Exception as e:
+        return {"status": False,
+                "status_message": str(e)}
 
 def get_redux_embeds(image, prompt, strength):
     text_encoder = CLIPTextModel.from_pretrained("openai/clip-vit-large-patch14", torch_dtype=dtype)
@@ -147,10 +149,17 @@ def flux_generate(data: FluxRequest = Body(...)):
         kwargs["seed"] = data.seed
     try:
         response = generate_flux(**kwargs)
-        base64_images = [image_to_base64(img) for img in response]
+        if response["status"] is True:
+            base64_images = [image_to_base64(img) for img in response["images"]]
+        else:
+            return {"status": False,
+                "status_message": response["status_message"]}
     except Exception as e:
-        return e
-    return {"images": base64_images}
+        return {"status": False,
+                "status_message": str(e)}
+    return {"status": True,
+            "status_message": "Flux Success",
+            "images": base64_images}
 
 @avernus_flux.get("/online")
 async def status():

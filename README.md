@@ -10,8 +10,8 @@ There is a basic python client available in modules/client.py
 
 - LLM chat support.
 - SDXL support for multiple models, image2image, controlnets, and ipadapters.
-- Flux Support. Only dev is currently supported. image2image and controlnets are supported. ipadapters are implemented but waiting on an upstream bugfix to work.
-- Qwen Image and Qwen Image Edit support
+- Flux Support. Only dev is currently supported. image2image and ipadapters are supported.
+- Qwen Image, Qwen Image Edit, and Qwen Image Edit Plus support
 - Wan T2V and I2V Support
 - ACE Step Support
 
@@ -24,8 +24,11 @@ Start via `start_avernus.sh` or `start_avernus.bat` depending on your operating 
 
 - add hidream support
 - Add svg model endpoint
-- Return different status codes if a generation ooms
 - Add LLM chat templates
 - Make api responsive while processing gen
 - add model picker to flux
 - LTX Support
+- 3d model model support
+- hunyuan support
+- chroma support
+- change to new vae slicing call
