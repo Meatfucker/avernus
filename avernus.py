@@ -51,7 +51,7 @@ async def flux_generate(data: FluxRequest = Body(...)):
         if result["status"] is True:
             return result
         else:
-            logger.info(f"Generation Error: {result["status_message"]}")
+            logger.info(f"Generation Error: {result['status_message']}")
             server_manager.kill_pipeline()
             return {"status": False,
                     "status_message": result["status_message"]}
@@ -91,7 +91,7 @@ async def flux_fill_generate(data: FluxInpaintRequest = Body(...)):
         if result["status"] is True:
             return result
         else:
-            logger.info(f"Generation Error: {result["status_message"]}")
+            logger.info(f"Generation Error: {result['status_message']}")
             server_manager.kill_pipeline()
             return {"status": False,
                     "status_message": result["status_message"]}
@@ -111,7 +111,7 @@ async def flux_kontext_generate(data: FluxRequest = Body(...)):
         if result["status"] is True:
             return result
         else:
-            logger.info(f"Generation Error: {result["status_message"]}")
+            logger.info(f"Generation Error: {result['status_message']}")
             server_manager.kill_pipeline()
             return {"status": False,
                     "status_message": result["status_message"]}
@@ -199,7 +199,7 @@ async def llm_chat(data: LLMRequest = Body(...)):
         if result["status"] is True:
             return result
         else:
-            logger.info(f"Generation Error: {result["status_message"]}")
+            logger.info(f"Generation Error: {result['status_message']}")
             server_manager.kill_pipeline()
             return {"status": False,
                     "status_message": result["status_message"]}
@@ -224,7 +224,7 @@ async def qwen_image_generate(data: QwenImageRequest = Body(...)):
         if result["status"] is True:
             return result
         else:
-            logger.info(f"Generation Error: {result["status_message"]}")
+            logger.info(f"Generation Error: {result['status_message']}")
             server_manager.kill_pipeline()
             return {"status": False,
                     "status_message": result["status_message"]}
@@ -244,7 +244,7 @@ async def qwen_image_inpaint_generate(data: QwenImageInpaintRequest = Body(...))
         if result["status"] is True:
             return result
         else:
-            logger.info(f"Generation Error: {result["status_message"]}")
+            logger.info(f"Generation Error: {result['status_message']}")
             server_manager.kill_pipeline()
             return {"status": False,
                     "status_message": result["status_message"]}
@@ -265,7 +265,7 @@ async def qwen_image_edit_generate(data: QwenImageRequest = Body(...)):
         if result["status"] is True:
             return result
         else:
-            logger.info(f"Generation Error: {result["status_message"]}")
+            logger.info(f"Generation Error: {result['status_message']}")
             server_manager.kill_pipeline()
             return {"status": False,
                     "status_message": result["status_message"]}
@@ -286,7 +286,7 @@ async def qwen_image_edit_plus_generate(data: QwenImageEditPlusRequest = Body(..
         if result["status"] is True:
             return result
         else:
-            logger.info(f"Generation Error: {result["status_message"]}")
+            logger.info(f"Generation Error: {result['status_message']}")
             server_manager.kill_pipeline()
             return {"status": False,
                     "status_message": result["status_message"]}
@@ -319,7 +319,7 @@ async def sdxl_generate(data: SDXLRequest = Body(...)):
         if result["status"] is True:
             return result
         else:
-            logger.info(f"Generation Error: {result["status_message"]}")
+            logger.info(f"Generation Error: {result['status_message']}")
             server_manager.kill_pipeline()
             return {"status": False,
                     "status_message": result["status_message"]}
@@ -339,7 +339,7 @@ async def sdxl_inpaint_generate(data: SDXLInpaintRequest = Body(...)):
         if result["status"] is True:
             return result
         else:
-            logger.info(f"Generation Error: {result["status_message"]}")
+            logger.info(f"Generation Error: {result['status_message']}")
             server_manager.kill_pipeline()
             return {"status": False,
                     "status_message": result["status_message"]}
@@ -361,7 +361,7 @@ async def wan_ti2v_generate(data: WanTI2VRequest = Body(...)):
         if result["status"] is True:
             return StreamingResponse(cleanup_and_stream(result["path"]), media_type="video/mp4")
         else:
-            logger.info(f"Generation Error: {result["status_message"]}")
+            logger.info(f"Generation Error: {result['status_message']}")
             server_manager.kill_pipeline()
             return {"status": False,
                     "status_message": result["status_message"]}
