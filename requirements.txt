@@ -1,6 +1,6 @@
 accelerate
 bitsandbytes
-diffusers
+git+https://github.com/huggingface/diffusers
 faiss-cpu
 fastapi
 ftfy
