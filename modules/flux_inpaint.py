@@ -13,10 +13,9 @@ LOADED: bool = False
 dtype = torch.bfloat16
 avernus_flux_inpaint = FastAPI()
 
-def load_flux_inpaint_pipeline():
+def load_flux_inpaint_pipeline(model_name="Meatfucker/Flux.1-dev-bnb-nf4"):
     global PIPELINE
-    PIPELINE = FluxInpaintPipeline.from_pretrained("Meatfucker/Flux.1-dev-bnb-nf4",
-                                                    torch_dtype=dtype).to("cuda")
+    PIPELINE = FluxInpaintPipeline.from_pretrained(model_name, torch_dtype=dtype).to("cuda")
     PIPELINE.enable_model_cpu_offload()
     PIPELINE.vae.enable_slicing()
 
@@ -49,11 +48,15 @@ def generate_flux_inpaint(prompt,
                           strength=None,
                           lora_name=None,
                           guidance_scale=None,
-                          seed=None):
+                          seed=None,
+                          model_name=None):
     global PIPELINE
     global LOADED
     if not LOADED:
-        load_flux_inpaint_pipeline()
+        if model_name is not None:
+            load_flux_inpaint_pipeline(model_name)
+        else:
+            load_flux_inpaint_pipeline()
         LOADED = True
     kwargs = {}
     kwargs["prompt"] = prompt
@@ -100,6 +103,8 @@ def flux_inpaint_generate(data: FluxInpaintRequest = Body(...)):
         kwargs["lora_name"] = [data.lora_name]
     else:
         kwargs["lora_name"] = data.lora_name
+    if data.model_name:
+        kwargs["model_name"] = data.model_name
     if data.seed:
         kwargs["seed"] = data.seed
     try:

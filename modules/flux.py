@@ -16,10 +16,9 @@ dtype = torch.bfloat16
 avernus_flux = FastAPI()
 
 
-def load_flux_pipeline():
+def load_flux_pipeline(model_name="Meatfucker/Flux.1-dev-bnb-nf4"):
     global PIPELINE
-    PIPELINE = FluxPipeline.from_pretrained("Meatfucker/Flux.1-dev-bnb-nf4",
-                                            torch_dtype=dtype).to("cuda")
+    PIPELINE = FluxPipeline.from_pretrained(model_name, torch_dtype=dtype).to("cuda")
 
 def get_seed_generators(amount, seed):
     generator = [torch.Generator(device="cuda").manual_seed(seed + i) for i in range(amount)]
@@ -62,11 +61,15 @@ def generate_flux(prompt,
                   ip_adapter_image=None,
                   ip_adapter_strength=None,
                   guidance_scale=None,
-                  seed=None):
+                  seed=None,
+                  model_name=None):
     global PIPELINE
     global LOADED
     if not LOADED:
-        load_flux_pipeline()
+        if model_name is not None:
+            load_flux_pipeline(model_name)
+        else:
+            load_flux_pipeline()
         LOADED = True
     kwargs = {"width": width if width is not None else 1024,
               "height": height if height is not None else 1024,
@@ -140,6 +143,8 @@ def flux_generate(data: FluxRequest = Body(...)):
         kwargs["lora_name"] = data.lora_name
     if data.image:
         kwargs["image"] = base64_to_image(data.image)
+    if data.model_name:
+        kwargs["model_name"] = data.model_name
     if data.ip_adapter_image:
         kwargs["ip_adapter_strength"] = data.ip_adapter_strength
         kwargs["ip_adapter_image"] = base64_to_image(data.ip_adapter_image)

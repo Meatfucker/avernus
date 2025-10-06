@@ -48,6 +48,7 @@ class FluxRequest(BaseModel):
     ip_adapter_strength: Optional[float] = Field(None, example=0.6)
     guidance_scale: Optional[float] = Field(None, example=5.0)
     seed: Optional[int] = Field(None, example=42)
+    model_name: Optional[str] = Field(None, example="Meatfucker/Flux.1-dev-bnb-nf4")
 
 class FluxResponse(GenericResponse):
     images: Optional[List[str]] = Field(None, example=["kajsdflsadfsadf....", "lkjdsaflkjsadlkfjsa3423....", "lwerewjrlwkejrwewr..."])

@@ -44,7 +44,7 @@ async def ace_generate(data: ACEStepRequest = Body(...)):
 async def flux_generate(data: FluxRequest = Body(...)):
     """Generates some number of Flux images based on user inputs"""
     logger.info("flux_generate request received")
-    await server_manager.set_pipeline("flux", "FLUX.1-Krea-dev")
+    await server_manager.set_pipeline("flux", data.model_name)
     url = "http://127.0.0.1:6970/flux_generate"
     try:
         result = await forward_post_request(url, data)
@@ -64,7 +64,7 @@ async def flux_generate(data: FluxRequest = Body(...)):
 async def flux_inpaint_generate(data: FluxInpaintRequest = Body(...)):
     """Generates some number of flux inpaint images based on user inputs."""
     logger.info("flux_inpaint_generate request received")
-    await server_manager.set_pipeline("flux_inpaint", "FLUX.1-dev")
+    await server_manager.set_pipeline("flux_inpaint", data.model_name)
     url = "http://127.0.0.1:6970/flux_inpaint_generate"
     try:
         result = await forward_post_request(url, data)
