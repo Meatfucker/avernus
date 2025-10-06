@@ -19,7 +19,7 @@ avernus_wan_i2v = FastAPI()
 
 def load_wan_pipeline(model_name="Meatfucker/Wan2.2-TI2V-5B-bnb-nf4"):
     global PIPELINE
-    PIPELINE = WanImageToVideoPipeline.from_pretrained(model_name, torch_dtype=torch.bfloat16)
+    PIPELINE = WanImageToVideoPipeline.from_pretrained(model_name, torch_dtype=torch.bfloat16).to("cpu")
     PIPELINE.enable_model_cpu_offload()
     PIPELINE.vae.enable_slicing()
 
