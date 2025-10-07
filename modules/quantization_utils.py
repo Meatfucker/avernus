@@ -489,7 +489,7 @@ def quantize_wan21_i2v_14b_480():
                                                        text_encoder=text_encoder,
                                                        torch_dtype=torch.bfloat16
                                                        )
-    generator.save_pretrained("../models/Wan2.2-TI2V-5B")
+    generator.save_pretrained("../models/Wan2.1-I2V-14B-480P")
 
 def quantize_wan22_ti2v_5b():
     model_name="Wan-AI/Wan2.2-TI2V-5B-Diffusers"

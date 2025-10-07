@@ -372,23 +372,6 @@ class AvernusClient:
             print(f"ERROR: {e}")
             return {"ERROR": str(e)}
 
-    async def rag_retrieve(self, prompt, max_candidates=20, similarity_threshold=0.6):
-        """This takes a prompt and optionally a number of results, and then returns the mathing RAG documents"""
-        url = f"http://{self.base_url}/rag_retrieve"
-        data = {"prompt": prompt, "max_candidates": max_candidates, "similarity_threshold": similarity_threshold}
-
-        try:
-            async with httpx.AsyncClient(timeout=3600.0) as client:
-                response = await client.post(url, json=data)
-            if response.status_code == 200:
-                return response.json().get("response", "")
-            else:
-                print(f"RAG ERROR: {response.status_code}, Response: {response.text}")
-                return {"RAG ERROR": response.text}
-        except Exception as e:
-            print(f"EXCEPTION ERROR: {e}")
-            return {"ERROR": str(e)}
-
     async def sdxl_image(self, prompt, image=None, negative_prompt=None, model_name=None, lora_name=None, width=None,
                          height=None, steps=None, batch_size=None, guidance_scale=None, strength=None,
                          controlnet_image=None, controlnet_processor=None, controlnet_conditioning=None,
@@ -469,7 +452,7 @@ class AvernusClient:
                 "image": image,
                 "model_name": model_name}
         try:
-            async with httpx.AsyncClient(timeout=3600) as client:
+            async with httpx.AsyncClient(timeout=360000) as client:
                 response = await client.post(url, json=data)
             if response.status_code == 200:
                 # Save the returned binary video content
