@@ -40,6 +40,11 @@ class CheckStatus(TimedTest):
         status = await self.client.check_status()
         logger.success(status)
 
+class ChromaTest(TimedTest):
+    async def run_test(self):
+        images = await self.client.chroma_image("frog made of yarn", batch_size=1)
+        await base64_image_to_file(images, "chroma")
+
 class FluxI2ITest(TimedTest):
     async def run_test(self):
         image = Image.open("tests/flux_image_0.png")
@@ -109,6 +114,11 @@ class FluxTest(TimedTest):
     async def run_test(self):
         images = await self.client.flux_image("Mucus Balloon", batch_size=1)
         await base64_image_to_file(images, "flux")
+
+class HiDreamTest(TimedTest):
+    async def run_test(self):
+        images = await self.client.hidream_image("laser turtle", batch_size=1)
+        await base64_image_to_file(images, "hidream")
 
 class LlmChatTest(TimedTest):
     async def run_test(self):

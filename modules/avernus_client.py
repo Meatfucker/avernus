@@ -51,6 +51,32 @@ class AvernusClient:
             print(f"status ERROR: {e}")
             return {"ERROR": str(e)}
 
+    async def chroma_image(self, prompt, image=None, model_name=None, lora_name=None, width=None, height=None, steps=None,
+                         batch_size=None, strength=None, seed=None, guidance_scale=None):
+        """This takes a prompt and optional other variables and returns a list of base64 encoded images"""
+        url = f"http://{self.base_url}/chroma_generate"
+        data = {"prompt": prompt,
+                "image": image,
+                "model_name": model_name,
+                "lora_name": lora_name,
+                "width": width,
+                "height": height,
+                "steps": steps,
+                "batch_size": batch_size,
+                "strength": strength,
+                "seed": seed,
+                "guidance_scale": guidance_scale}
+        try:
+            async with httpx.AsyncClient(timeout=3600) as client:
+                response = await client.post(url, json=data)
+            if response.status_code == 200:
+                return response.json().get("images", [])
+            else:
+                print(f"CHROMA ERROR: {response.status_code}")
+        except Exception as e:
+            print(f"ERROR: {e}")
+            return {"ERROR": str(e)}
+
     async def flux_fill_image(self, prompt, image=None, model_name=None, width=None,
                               height=None, steps=None, batch_size=None, guidance_scale=None, mask_image=None,
                               strength=None, lora_name=None, seed=None):
@@ -162,6 +188,29 @@ class AvernusClient:
                 return response.json().get("images", [])
             else:
                 print(f"FLUX KONTEXT ERROR: {response.status_code}")
+        except Exception as e:
+            print(f"ERROR: {e}")
+            return {"ERROR": str(e)}
+
+    async def hidream_image(self, prompt, model_name=None, width=None, height=None, steps=None, batch_size=None,
+                            seed=None, guidance_scale=None):
+        """This takes a prompt and optional other variables and returns a list of base64 encoded images"""
+        url = f"http://{self.base_url}/hidream_generate"
+        data = {"prompt": prompt,
+                "model_name": model_name,
+                "width": width,
+                "height": height,
+                "steps": steps,
+                "batch_size": batch_size,
+                "seed": seed,
+                "guidance_scale": guidance_scale}
+        try:
+            async with httpx.AsyncClient(timeout=3600) as client:
+                response = await client.post(url, json=data)
+            if response.status_code == 200:
+                return response.json().get("images", [])
+            else:
+                print(f"HIDREAM ERROR: {response.status_code}")
         except Exception as e:
             print(f"ERROR: {e}")
             return {"ERROR": str(e)}

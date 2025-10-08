@@ -20,6 +20,7 @@ python-multipart
 sentencepiece
 sentence_transformers
 spacy
+tiktoken
 torch
 torchaudio
 torchvision

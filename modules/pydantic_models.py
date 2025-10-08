@@ -15,6 +15,21 @@ class ACEStepRequest(BaseModel):
     omega_scale: Optional[float] = Field(None, example=10.0)
     actual_seeds: Optional[int] = Field(None, example=42)
 
+class ChromaRequest(BaseModel):
+    prompt: str = Field(..., example="A big green monster")
+    width: Optional[int] = Field(None, example=1024)
+    height: Optional[int] = Field(None, example=1024)
+    steps: Optional[int] = Field(None, example=30)
+    batch_size: Optional[int] = Field(None, example=4)
+    image: Optional[str] = Field(None, example="a9d8fp0sa9dfpasdfllkajsdflkjadslf...")
+    strength: Optional[float] = Field(None, example=0.75)
+    guidance_scale: Optional[float] = Field(None, example=5.0)
+    seed: Optional[int] = Field(None, example=42)
+    model_name: Optional[str] = Field(None, example="Meatfucker/Flux.1-dev-bnb-nf4")
+
+class ChromaResponse(GenericResponse):
+    images: Optional[List[str]] = Field(None, example=["kajsdflsadfsadf....", "lkjdsaflkjsadlkfjsa3423....", "lwerewjrlwkejrwewr..."])
+
 class FluxControlnetListResponse(BaseModel):
     flux_controlnets: List[str] = Field(..., example=["canny", "depth"])
 
@@ -51,6 +66,19 @@ class FluxRequest(BaseModel):
     model_name: Optional[str] = Field(None, example="Meatfucker/Flux.1-dev-bnb-nf4")
 
 class FluxResponse(GenericResponse):
+    images: Optional[List[str]] = Field(None, example=["kajsdflsadfsadf....", "lkjdsaflkjsadlkfjsa3423....", "lwerewjrlwkejrwewr..."])
+
+class HiDreamRequest(BaseModel):
+    prompt: str = Field(..., example="A big green monster")
+    width: Optional[int] = Field(None, example=1024)
+    height: Optional[int] = Field(None, example=1024)
+    steps: Optional[int] = Field(None, example=30)
+    batch_size: Optional[int] = Field(None, example=4)
+    guidance_scale: Optional[float] = Field(None, example=5.0)
+    seed: Optional[int] = Field(None, example=42)
+    model_name: Optional[str] = Field(None, example="Meatfucker/Flux.1-dev-bnb-nf4")
+
+class HiDreamResponse(GenericResponse):
     images: Optional[List[str]] = Field(None, example=["kajsdflsadfsadf....", "lkjdsaflkjsadlkfjsa3423....", "lwerewjrlwkejrwewr..."])
 
 class LLMRequest(BaseModel):

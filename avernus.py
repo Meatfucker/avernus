@@ -5,12 +5,17 @@ from fastapi import FastAPI, Body
 from fastapi.responses import StreamingResponse
 from loguru import logger
 
-from modules.pydantic_models import (ACEStepRequest, FluxInpaintRequest, FluxRequest, FluxResponse,
-                                     FluxLoraListResponse, LLMRequest, LLMResponse, QwenImageRequest,
-                                     QwenImageInpaintRequest,
-                                     QwenImageLoraListResponse, QwenImageResponse, SDXLInpaintRequest, SDXLRequest,
-                                     SDXLResponse, SDXLLoraListResponse, SDXLControlnetListResponse, StatusResponse,
-                                     SDXLSchedulerListResponse, WanTI2VRequest, QwenImageEditPlusRequest)
+from modules.pydantic_models import (ACEStepRequest,
+                                     ChromaRequest, ChromaResponse,
+                                     FluxInpaintRequest, FluxRequest, FluxResponse, FluxLoraListResponse,
+                                     HiDreamResponse, HiDreamRequest,
+                                     LLMRequest, LLMResponse,
+                                     QwenImageRequest, QwenImageInpaintRequest, QwenImageLoraListResponse,
+                                     QwenImageResponse, QwenImageEditPlusRequest,
+                                     SDXLInpaintRequest, SDXLRequest, SDXLResponse, SDXLLoraListResponse,
+                                     SDXLControlnetListResponse, SDXLSchedulerListResponse,
+                                     StatusResponse,
+                                     WanTI2VRequest)
 from modules.utils import (ServerManager, return_loras, forward_post_request, forward_stream_request, setup_logging,
                            cleanup_and_stream)
 
@@ -33,6 +38,27 @@ async def ace_generate(data: ACEStepRequest = Body(...)):
             result = await forward_post_request(url, data)
             if result["status"] is True:
                 return StreamingResponse(open(result["path"], "rb"), media_type="audio/wav")
+            else:
+                logger.info(f"Generation Error: {result['status_message']}")
+                server_manager.kill_pipeline()
+                return {"status": False,
+                        "status_message": result["status_message"]}
+        except Exception as e:
+            server_manager.kill_pipeline()
+            return {"status": False,
+                    "status_message": str(e)}
+
+@avernus.post("/chroma_generate", response_model=ChromaResponse)
+async def chroma_generate(data: ChromaRequest = Body(...)):
+    """Generates some number of Chroma images based on user inputs"""
+    logger.info("chroma_generate request received")
+    async with pipeline_lock:
+        await server_manager.set_pipeline("chroma", data.model_name)
+        url = "http://127.0.0.1:6970/chroma_generate"
+        try:
+            result = await forward_post_request(url, data)
+            if result["status"] is True:
+                return result
             else:
                 logger.info(f"Generation Error: {result['status_message']}")
                 server_manager.kill_pipeline()
@@ -113,6 +139,27 @@ async def flux_kontext_generate(data: FluxRequest = Body(...)):
     async with pipeline_lock:
         await server_manager.set_pipeline("flux_kontext", "FLUX.1-Kontext-dev")
         url = "http://127.0.0.1:6970/flux_kontext_generate"
+        try:
+            result = await forward_post_request(url, data)
+            if result["status"] is True:
+                return result
+            else:
+                logger.info(f"Generation Error: {result['status_message']}")
+                server_manager.kill_pipeline()
+                return {"status": False,
+                        "status_message": result["status_message"]}
+        except Exception as e:
+            server_manager.kill_pipeline()
+            return {"status": False,
+                    "status_message": str(e)}
+
+@avernus.post("/hidream_generate", response_model=HiDreamResponse)
+async def hidream_generate(data: HiDreamRequest = Body(...)):
+    """Generates some number of HiDream images based on user inputs"""
+    logger.info("hidream_generate request received")
+    async with pipeline_lock:
+        await server_manager.set_pipeline("hidream", data.model_name)
+        url = "http://127.0.0.1:6970/hidream_generate"
         try:
             result = await forward_post_request(url, data)
             if result["status"] is True:

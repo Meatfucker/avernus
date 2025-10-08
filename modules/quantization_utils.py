@@ -1,18 +1,29 @@
-#from nunchaku.models.transformers.transformer_qwenimage import NunchakuQwenImageTransformer2DModel
 from diffusers import (FluxPipeline, FluxFillPipeline, FluxKontextPipeline, FluxPriorReduxPipeline,
                        QwenImagePipeline, QwenImageEditPipeline, QwenImageEditPlusPipeline, QwenImageTransformer2DModel,
-                       AutoModel,
-                       WanImageToVideoPipeline, WanPipeline, WanVACEPipeline)
+                       AutoModel, WanImageToVideoPipeline, WanPipeline, WanVACEPipeline, HiDreamImagePipeline,
+                       HiDreamImageTransformer2DModel, ChromaPipeline)
 from diffusers import BitsAndBytesConfig as DiffusersBitsAndBytesConfig
 from diffusers.quantizers import PipelineQuantizationConfig
 from transformers import BitsAndBytesConfig as TransformersBitsAndBytesConfig
 from transformers import (Qwen2_5_VLForConditionalGeneration, CLIPTokenizer, CLIPTextModel, T5TokenizerFast,
-                          T5EncoderModel, UMT5EncoderModel, AutoModelForCausalLM, AutoTokenizer)
+                          T5EncoderModel, UMT5EncoderModel, AutoModelForCausalLM, AutoTokenizer, CLIPTextModelWithProjection,
+                          LlamaForCausalLM)
 import torch
 
 rank = 32
 dtype = torch.bfloat16
 
+def quantize_chroma():
+    print("loading ChromaPipeline")
+    pipeline_quant_config = PipelineQuantizationConfig(
+        quant_backend="bitsandbytes_4bit",
+        quant_kwargs={"load_in_4bit": True, "bnb_4bit_quant_type": "nf4", "bnb_4bit_compute_dtype": torch.bfloat16},
+        components_to_quantize=["transformer", "text_encoder"],
+    )
+    generator = ChromaPipeline.from_pretrained("lodestones/Chroma1-HD",
+                                               quantization_config=pipeline_quant_config,
+                                               torch_dtype=dtype).to("cuda")
+    generator.save_pretrained("../models/Chroma1-HD")
 
 def quantize_flux_kontext():
     print("loading FluxKontextPipeline")
@@ -61,6 +72,38 @@ def quantize_flux():
                                             quantization_config=pipeline_quant_config,
                                             torch_dtype=dtype).to("cuda")
     generator.save_pretrained("../models/Flux.1-dev")
+
+def quantize_hidream():
+    print("loading HiDreamPipeline")
+    pipeline_quant_config = PipelineQuantizationConfig(
+        quant_backend="bitsandbytes_4bit",
+        quant_kwargs={"load_in_4bit": True, "bnb_4bit_quant_type": "nf4", "bnb_4bit_compute_dtype": torch.bfloat16},
+        components_to_quantize=["transformer", "text_encoder_3"],
+    )
+    llama_quant_config = TransformersBitsAndBytesConfig(load_in_4bit=True,
+                                                        bnb_4bit_quant_type="nf4",
+                                                        bnb_4bit_compute_dtype=torch.bfloat16,
+                                                        bnb_4bit_use_double_quant=True)
+
+    tokenizer_4 = AutoTokenizer.from_pretrained("meta-llama/Meta-Llama-3.1-8B-Instruct")
+    text_encoder_4 = LlamaForCausalLM.from_pretrained("meta-llama/Meta-Llama-3.1-8B-Instruct",
+                                                      output_hidden_states=True,
+                                                      output_attentions=True,
+                                                      quantization_config=llama_quant_config,
+                                                      torch_dtype=torch.bfloat16).to("cpu")
+
+
+    generator = HiDreamImagePipeline.from_pretrained("HiDream-ai/HiDream-I1-Full",
+                                                     text_encoder_4=text_encoder_4,
+                                                     tokenizer_4=tokenizer_4,
+                                                     torch_dtype=dtype,
+                                                     quantization_config=pipeline_quant_config)
+    gen_config = generator.text_encoder_4.generation_config
+    gen_config.output_attentions = False
+    gen_config.output_hidden_states = False
+    gen_config.return_dict_in_generate = False
+    generator.save_pretrained("../models/HiDream-I1-Full")
+
 
 def quantize_qwen_image():
     print("loading QwenImagePipeline")
@@ -648,4 +691,4 @@ def quantize_llm(model_name=None):
         quantization_config=quantization_config)
     generator.save_pretrained("../models/Josiefied-Qwen2.5-14B-Instruct-abliterated-v4")
 
-quantize_wan21_i2v_14b_480()
+quantize_chroma()
