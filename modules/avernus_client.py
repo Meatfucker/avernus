@@ -335,7 +335,35 @@ class AvernusClient:
             if response.status_code == 200:
                 return response.json().get("images", [])
             else:
-                print(f"FLUX ERROR: {response.status_code}")
+                print(f"QWEN IMAGE ERROR: {response.status_code}")
+        except Exception as e:
+            print(f"ERROR: {e}")
+            return {"ERROR": str(e)}
+
+    async def qwen_image_nunchaku_image(self, prompt, negative_prompt=None, image=None, model_name=None, lora_name=None,
+                                        width=None, height=None, steps=None, batch_size=None, strength=None, seed=None,
+                                        true_cfg_scale=None):
+        """This takes a prompt and optional other variables and returns a list of base64 encoded images"""
+        url = f"http://{self.base_url}/qwen_image_nunchaku_generate"
+        data = {"prompt": prompt,
+                "negative_prompt": negative_prompt,
+                "image": image,
+                "model_name": model_name,
+                "lora_name": lora_name,
+                "width": width,
+                "height": height,
+                "steps": steps,
+                "batch_size": batch_size,
+                "strength": strength,
+                "seed": seed,
+                "true_cfg_scale": true_cfg_scale}
+        try:
+            async with httpx.AsyncClient(timeout=3600) as client:
+                response = await client.post(url, json=data)
+            if response.status_code == 200:
+                return response.json().get("images", [])
+            else:
+                print(f"QWEN IMAGE NUNCHAKU ERROR: {response.status_code}")
         except Exception as e:
             print(f"ERROR: {e}")
             return {"ERROR": str(e)}
@@ -369,6 +397,35 @@ class AvernusClient:
             print(f"ERROR: {e}")
             return {"ERROR": str(e)}
 
+    async def qwen_image_inpaint_nunchaku_image(self, prompt, negative_prompt=None, image=None, model_name=None, width=None,
+                                                height=None, steps=None, batch_size=None, true_cfg_scale=None, mask_image=None,
+                                                strength=None, lora_name=None, seed=None):
+        """This takes a prompt, and optional other variables and returns a list of base64 encoded images"""
+        url = f"http://{self.base_url}/qwen_image_inpaint_nunchaku_generate"
+        data = {"prompt": prompt,
+                "negative_prompt": negative_prompt,
+                "image": image,
+                "model_name": model_name,
+                "lora_name": lora_name,
+                "width": width,
+                "height": height,
+                "steps": steps,
+                "batch_size": batch_size,
+                "true_cfg_scale": true_cfg_scale,
+                "mask_image": mask_image,
+                "strength": strength,
+                "seed": seed}
+        try:
+            async with httpx.AsyncClient(timeout=3600) as client:
+                response = await client.post(url, json=data)
+            if response.status_code == 200:
+                return response.json().get("images", [])
+            else:
+                print(f"QWEN IMAGE INPAINT NUNCHAKU ERROR: {response.status_code}")
+        except Exception as e:
+            print(f"ERROR: {e}")
+            return {"ERROR": str(e)}
+
     async def qwen_image_edit(self, prompt, negative_prompt=None, image=None, model_name=None, lora_name=None,
                               width=None, height=None, steps=None, batch_size=None, seed=None, true_cfg_scale=None):
         """This takes a prompt and optional other variables and returns a list of base64 encoded images"""
@@ -395,6 +452,32 @@ class AvernusClient:
             print(f"ERROR: {e}")
             return {"ERROR": str(e)}
 
+    async def qwen_image_edit_nunchaku(self, prompt, negative_prompt=None, image=None, model_name=None, lora_name=None,
+                                       width=None, height=None, steps=None, batch_size=None, seed=None, true_cfg_scale=None):
+        """This takes a prompt and optional other variables and returns a list of base64 encoded images"""
+        url = f"http://{self.base_url}/qwen_image_edit_nunchaku_generate"
+        data = {"prompt": prompt,
+                "negative_prompt":  negative_prompt,
+                "image": image,
+                "model_name": model_name,
+                "lora_name": lora_name,
+                "width": width,
+                "height": height,
+                "steps": steps,
+                "batch_size": batch_size,
+                "seed": seed,
+                "true_cfg_scale": true_cfg_scale}
+        try:
+            async with httpx.AsyncClient(timeout=3600) as client:
+                response = await client.post(url, json=data)
+            if response.status_code == 200:
+                return response.json().get("images", [])
+            else:
+                print(f"QWEN IMAGE EDIT NUNCHAKU ERROR: {response.status_code}")
+        except Exception as e:
+            print(f"ERROR: {e}")
+            return {"ERROR": str(e)}
+
     async def qwen_image_edit_plus(self, prompt, negative_prompt=None, images=None, model_name=None, lora_name=None,
                               width=None, height=None, steps=None, batch_size=None, seed=None, true_cfg_scale=None):
         """This takes a prompt and optional other variables and returns a list of base64 encoded images"""
@@ -417,6 +500,32 @@ class AvernusClient:
                 return response.json().get("images", [])
             else:
                 print(f"QWEN IMAGE EDIT ERROR: {response.status_code}")
+        except Exception as e:
+            print(f"ERROR: {e}")
+            return {"ERROR": str(e)}
+
+    async def qwen_image_edit_plus_nunchaku(self, prompt, negative_prompt=None, images=None, model_name=None, lora_name=None,
+                                            width=None, height=None, steps=None, batch_size=None, seed=None, true_cfg_scale=None):
+        """This takes a prompt and optional other variables and returns a list of base64 encoded images"""
+        url = f"http://{self.base_url}/qwen_image_edit_plus_nunchaku_generate"
+        data = {"prompt": prompt,
+                "negative_prompt":  negative_prompt,
+                "images": images,
+                "model_name": model_name,
+                "lora_name": lora_name,
+                "width": width,
+                "height": height,
+                "steps": steps,
+                "batch_size": batch_size,
+                "seed": seed,
+                "true_cfg_scale": true_cfg_scale}
+        try:
+            async with httpx.AsyncClient(timeout=3600) as client:
+                response = await client.post(url, json=data)
+            if response.status_code == 200:
+                return response.json().get("images", [])
+            else:
+                print(f"QWEN IMAGE EDIT NUNCHAKU ERROR: {response.status_code}")
         except Exception as e:
             print(f"ERROR: {e}")
             return {"ERROR": str(e)}

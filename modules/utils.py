@@ -25,7 +25,13 @@ class InterceptHandler(logging.Handler):
             level = record.levelno
         logger.opt(depth=6, exception=record.exc_info).log(level, record.getMessage())
 
+class EndpointFilter(logging.Filter):
+    def filter(self, record: logging.LogRecord) -> bool:
+        # Don't log requests to `/ping`
+        return "/status" not in record.getMessage()
+
 def setup_logging():
+    logging.getLogger("uvicorn.access").addFilter(EndpointFilter())
     logger.remove()
     logger.add(sys.stdout, level="INFO", format="<green>{time:YYYY-MM-DD HH:mm:ss}</green> | <level>{level: <8}</level> | <level>{message}</level>")
     logging.basicConfig(handlers=[InterceptHandler()], level=0, force=True)
@@ -66,6 +72,12 @@ class ServerManager:
             self.current_process = None
             self.model_type = None
             self.model_name = None
+
+    def get_model_name(self):
+        return self.model_name
+
+    def get_model_type(self):
+        return self.model_type
 
     async def wait_until_online(self, url: str, interval: float = 1.0, timeout: float = 60.0):
         """

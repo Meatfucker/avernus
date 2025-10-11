@@ -93,4 +93,4 @@ async def status():
 
 if __name__ == "__main__":
     import uvicorn
-    uvicorn.run(avernus_hidream, host="0.0.0.0", port=6970)
+    uvicorn.run(avernus_hidream, host="0.0.0.0", port=6970, log_level="critical")

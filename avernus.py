@@ -289,6 +289,32 @@ async def qwen_image_generate(data: QwenImageRequest = Body(...)):
             return {"status": False,
                     "status_message": str(e)}
 
+@avernus.post("/qwen_image_nunchaku_generate", response_model=QwenImageResponse)
+async def qwen_image_nunchaku_generate(data: QwenImageRequest = Body(...)):
+    """Generates some number of Qwen Image Nunchaku images based on user inputs"""
+    async with pipeline_lock:
+        if data.image:
+            logger.info("qwen_image_nunchaku_i2i_generate request received")
+            await server_manager.set_pipeline("qwen_image_i2i_nunchaku", "Qwen-Image")
+            url = "http://127.0.0.1:6970/qwen_image_i2i_nunchaku_generate"
+        else:
+            logger.info("qwen_image_nunchaku_generate request received")
+            await server_manager.set_pipeline("qwen_image_nunchaku", "Qwen-Image")
+            url = "http://127.0.0.1:6970/qwen_image_nunchaku_generate"
+        try:
+            result = await forward_post_request(url, data)
+            if result["status"] is True:
+                return result
+            else:
+                logger.info(f"Generation Error: {result['status_message']}")
+                server_manager.kill_pipeline()
+                return {"status": False,
+                        "status_message": result["status_message"]}
+        except Exception as e:
+            server_manager.kill_pipeline()
+            return {"status": False,
+                    "status_message": str(e)}
+
 @avernus.post("/qwen_image_inpaint_generate", response_model=QwenImageResponse)
 async def qwen_image_inpaint_generate(data: QwenImageInpaintRequest = Body(...)):
     """Generates some number of qwen image inpaint images based on user inputs."""
@@ -296,6 +322,27 @@ async def qwen_image_inpaint_generate(data: QwenImageInpaintRequest = Body(...))
     async with pipeline_lock:
         await server_manager.set_pipeline("qwen_image_inpaint", "Qwen-Image")
         url = "http://127.0.0.1:6970/qwen_image_inpaint_generate"
+        try:
+            result = await forward_post_request(url, data)
+            if result["status"] is True:
+                return result
+            else:
+                logger.info(f"Generation Error: {result['status_message']}")
+                server_manager.kill_pipeline()
+                return {"status": False,
+                        "status_message": result["status_message"]}
+        except Exception as e:
+            server_manager.kill_pipeline()
+            return {"status": False,
+                    "status_message": str(e)}
+
+@avernus.post("/qwen_image_inpaint_nunchaku_generate", response_model=QwenImageResponse)
+async def qwen_image_inpaint_nunchaku_generate(data: QwenImageInpaintRequest = Body(...)):
+    """Generates some number of qwen image inpaint images based on user inputs."""
+    logger.info("qwen_image_inpaint_nunchaku_generate request received")
+    async with pipeline_lock:
+        await server_manager.set_pipeline("qwen_image_inpaint_nunchaku", "Qwen-Image")
+        url = "http://127.0.0.1:6970/qwen_image_inpaint_nunchaku_generate"
         try:
             result = await forward_post_request(url, data)
             if result["status"] is True:
@@ -332,6 +379,27 @@ async def qwen_image_edit_generate(data: QwenImageRequest = Body(...)):
             return {"status": False,
                     "status_message": str(e)}
 
+@avernus.post("/qwen_image_edit_nunchaku_generate", response_model=QwenImageResponse)
+async def qwen_image_edit_nunchaku_generate(data: QwenImageRequest = Body(...)):
+    """Generates some number of Qwen Image Edit images based on user inputs"""
+    logger.info("qwen_image_edit_nunchaku_generate request received")
+    async with pipeline_lock:
+        await server_manager.set_pipeline("qwen_image_edit_nunchaku", "Qwen-Image-Edit")
+        url = "http://127.0.0.1:6970/qwen_image_edit_nunchaku_generate"
+        try:
+            result = await forward_post_request(url, data)
+            if result["status"] is True:
+                return result
+            else:
+                logger.info(f"Generation Error: {result['status_message']}")
+                server_manager.kill_pipeline()
+                return {"status": False,
+                        "status_message": result["status_message"]}
+        except Exception as e:
+            server_manager.kill_pipeline()
+            return {"status": False,
+                    "status_message": str(e)}
+
 
 @avernus.post("/qwen_image_edit_plus_generate", response_model=QwenImageResponse)
 async def qwen_image_edit_plus_generate(data: QwenImageEditPlusRequest = Body(...)):
@@ -354,11 +422,32 @@ async def qwen_image_edit_plus_generate(data: QwenImageEditPlusRequest = Body(..
             return {"status": False,
                     "status_message": str(e)}
 
+@avernus.post("/qwen_image_edit_plus_nunchaku_generate", response_model=QwenImageResponse)
+async def qwen_image_edit_plus_nunchaku_generate(data: QwenImageEditPlusRequest = Body(...)):
+    """Generates some number of Qwen Image Edit images based on user inputs"""
+    logger.info("qwen_image_edit_generate request received")
+    async with pipeline_lock:
+        await server_manager.set_pipeline("qwen_image_edit_plus_nunchaku", "Qwen-Image-Edit-Plus")
+        url = "http://127.0.0.1:6970/qwen_image_edit_plus_nunchaku_generate"
+        try:
+            result = await forward_post_request(url, data)
+            if result["status"] is True:
+                return result
+            else:
+                logger.info(f"Generation Error: {result['status_message']}")
+                server_manager.kill_pipeline()
+                return {"status": False,
+                        "status_message": result["status_message"]}
+        except Exception as e:
+            server_manager.kill_pipeline()
+            return {"status": False,
+                    "status_message": str(e)}
+
 @avernus.get("/status", response_model=StatusResponse)
 async def status():
     """ This returns Ok when hit"""
-    logger.info("status request received")
-    return {"status": str("Ok!"), "version": str("0.6.0")}
+    return {"status": str("Ok!"),
+            "version": str("0.6.0")}
 
 @avernus.post("/sdxl_generate", response_model=SDXLResponse)
 async def sdxl_generate(data: SDXLRequest = Body(...)):

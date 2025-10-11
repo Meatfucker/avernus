@@ -151,42 +151,7 @@ def quantize_qwen_image():
     )
     transformer = transformer.to("cpu")
     quantization_config = TransformersBitsAndBytesConfig(
-        load_in_4bit=True,
-        bnb_4bit_quant_type="nf4",
-        bnb_4bit_compute_dtype=torch.bfloat16,
-        bnb_4bit_use_double_quant=True,
-        llm_int8_skip_modules = ["transformer_blocks.0.img_mod.1",
-                                 "transformer_blocks.0.attn.to_q",
-                                 "transformer_blocks.0.attn.to_k",
-                                 "transformer_blocks.0.attn.to_v",
-                                 "transformer_blocks.0.attn.add_k_proj",
-                                 "transformer_blocks.0.attn.add_v_proj",
-                                 "transformer_blocks.0.attn.add_q_proj",
-                                 "transformer_blocks.0.attn.to_out.0",
-                                 "transformer_blocks.0.attn.to_add_out",
-                                 "transformer_blocks.0.img_mlp.net.0.proj",
-                                 "transformer_blocks.0.img_mlp.net.2",
-                                 "transformer_blocks.0.txt_mod.1",
-                                 "transformer_blocks.0.txt_mlp.net.0.proj",
-                                 "transformer_blocks.0.txt_mlp.net.2",
-                                 "transformer_blocks.59.img_mod.1",
-                                 "transformer_blocks.59.attn.to_q",
-                                 "transformer_blocks.59.attn.to_k",
-                                 "transformer_blocks.59.attn.to_v",
-                                 "transformer_blocks.59.attn.add_k_proj",
-                                 "transformer_blocks.59.attn.add_v_proj",
-                                 "transformer_blocks.59.attn.add_q_proj",
-                                 "transformer_blocks.59.attn.to_out.0",
-                                 "transformer_blocks.59.attn.to_add_out",
-                                 "transformer_blocks.59.img_mlp.net.0.proj",
-                                 "transformer_blocks.59.img_mlp.net.2",
-                                 "transformer_blocks.59.txt_mod.1",
-                                 "transformer_blocks.59.txt_mlp.net.0.proj",
-                                 "transformer_blocks.59.txt_mlp.net.2",
-                                 "norm_out.linear",
-                                 "proj_out"
-                                 ],
-    )
+        load_in_8bit=True)
 
     text_encoder = Qwen2_5_VLForConditionalGeneration.from_pretrained(
         "Qwen/Qwen-Image",
@@ -691,4 +656,4 @@ def quantize_llm(model_name=None):
         quantization_config=quantization_config)
     generator.save_pretrained("../models/Josiefied-Qwen2.5-14B-Instruct-abliterated-v4")
 
-quantize_chroma()
+quantize_qwen_image()
