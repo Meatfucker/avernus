@@ -15,7 +15,7 @@ def load_pipeline(model_name=None):
         model_name = "Goekdeniz-Guelmez/Josiefied-Qwen2.5-14B-Instruct-abliterated-v4"
     PIPELINE = pipeline(task="text-generation",
                         model=model_name,
-                        model_kwargs={"torch_dtype": torch.bfloat16, "quantization_config": {"load_in_4bit": True}}
+                        model_kwargs={"torch_dtype": torch.bfloat16, "quantization_config": {"load_in_4bit": True, "quant_method": "bitsandbytes"}}
                         )
 
 def generate_chat(prompt, model_name, messages=None):
