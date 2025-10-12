@@ -5,7 +5,6 @@ import tempfile
 from diffusers import WanPipeline, UniPCMultistepScheduler, AutoencoderKLWan
 from diffusers.utils import export_to_video
 from fastapi import FastAPI, Body
-from fastapi.responses import StreamingResponse
 import torch
 
 from pydantic_models import WanTI2VRequest

@@ -1,13 +1,12 @@
 from typing import Any
 import tempfile
 
-from diffusers import WanVideoToVideoPipeline, UniPCMultistepScheduler
+from diffusers import WanVideoToVideoPipeline, UniPCMultistepScheduler, AutoencoderKLWan
 from diffusers.utils import export_to_video
-from fastapi import FastAPI, Body, Form, UploadFile, File
-from fastapi.responses import StreamingResponse
+from fastapi import FastAPI, Form, UploadFile, File
+
 import torch
 
-from pydantic_models import WanTI2VRequest
 
 PIPELINE: WanVideoToVideoPipeline
 LOADED: bool = False
@@ -17,7 +16,8 @@ avernus_wan_v2v = FastAPI()
 
 def load_wan_pipeline(model_name="Meatfucker/Wan2.2-TI2V-5B-bnb-nf4", flow_shift=3.0):
     global PIPELINE
-    PIPELINE = WanVideoToVideoPipeline.from_pretrained(model_name, torch_dtype=torch.bfloat16)
+    vae = AutoencoderKLWan.from_pretrained(model_name, subfolder="vae", torch_dtype=torch.float32)
+    PIPELINE = WanVideoToVideoPipeline.from_pretrained(model_name, vae=vae, torch_dtype=torch.bfloat16)
     PIPELINE.scheduler = UniPCMultistepScheduler.from_config(PIPELINE.scheduler.config, flow_shift=flow_shift)
     PIPELINE.enable_model_cpu_offload()
     PIPELINE.vae.enable_slicing()
