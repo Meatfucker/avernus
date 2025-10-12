@@ -1,8 +1,9 @@
 import asyncio
 import os
 
-from fastapi import FastAPI, Body
-from fastapi.responses import StreamingResponse
+from fastapi import FastAPI, Body, Form, UploadFile, File
+from fastapi.responses import StreamingResponse, JSONResponse
+import httpx
 from loguru import logger
 
 from modules.pydantic_models import (ACEStepRequest,
@@ -15,7 +16,7 @@ from modules.pydantic_models import (ACEStepRequest,
                                      SDXLInpaintRequest, SDXLRequest, SDXLResponse, SDXLLoraListResponse,
                                      SDXLControlnetListResponse, SDXLSchedulerListResponse,
                                      StatusResponse,
-                                     WanTI2VRequest)
+                                     WanTI2VRequest, WanVACERequest)
 from modules.utils import (ServerManager, return_loras, forward_post_request, forward_stream_request, setup_logging,
                            cleanup_and_stream)
 
@@ -520,6 +521,74 @@ async def wan_ti2v_generate(data: WanTI2VRequest = Body(...)):
             server_manager.kill_pipeline()
             return {"status": False,
                     "status_message": str(e)}
+
+@avernus.post("/wan_vace_generate")
+async def wan_vace_generate(data: WanVACERequest = Body(...)):
+    logger.info("wan_vace_generate request received")
+    async with pipeline_lock:
+        await server_manager.set_pipeline("wan_vace", data.model_name)
+        url = "http://127.0.0.1:6970/wan_vace_generate"
+        try:
+            result = await forward_post_request(url, data)
+            if result["status"] is True:
+                return StreamingResponse(cleanup_and_stream(result["path"]), media_type="video/mp4")
+            else:
+                logger.info(f"Generation Error: {result['status_message']}")
+                server_manager.kill_pipeline()
+                return {"status": False,
+                        "status_message": result["status_message"]}
+        except Exception as e:
+            server_manager.kill_pipeline()
+            return {"status": False,
+                    "status_message": str(e)}
+
+@avernus.post("/wan_v2v_generate")
+async def wan_v2v_generate(
+    prompt: str = Form(...),
+    negative_prompt: str | None = Form(None),
+    width: int | None = Form(None),
+    height: int | None = Form(None),
+    steps: int | None = Form(None),
+    num_frames: int | None = Form(None),
+    guidance_scale: float | None = Form(None),
+    seed: int | None = Form(None),
+    model_name: str | None = Form(None),
+    video: UploadFile | None = File(None)  # 👈 NEW
+):
+    logger.info("wan_ti2v_generate request received")
+
+    async with pipeline_lock:
+        await server_manager.set_pipeline("wan_v2v", model_name)
+        url = "http://127.0.0.1:6970/wan_v2v_generate"
+        form_data = {"prompt": prompt,
+                     "negative_prompt": negative_prompt,
+                     "width": width,
+                     "height": height,
+                     "steps": steps,
+                     "num_frames": num_frames,
+                     "guidance_scale": guidance_scale,
+                     "seed": seed,
+                     "model_name": model_name}
+        files = {}
+        if video:
+            video_bytes = await video.read()
+            files["video"] = (video.filename, video_bytes, video.content_type)
+        else:
+            return JSONResponse({"status": False, "status_message": "Video required"}, status_code=500)
+        try:
+            async with httpx.AsyncClient(timeout=360000) as client:
+                result = await client.post(url, data=form_data, files=files)
+            result_json = result.json()
+
+            if result_json["status"] is True:
+                return StreamingResponse(cleanup_and_stream(result_json["path"]), media_type="video/mp4")
+            else:
+                logger.info(f"Generation Error: {result_json['status_message']}")
+                server_manager.kill_pipeline()
+                return JSONResponse(result_json, status_code=500)
+        except Exception as e:
+            server_manager.kill_pipeline()
+            return JSONResponse({"status": False, "status_message": str(e)}, status_code=500)
 
 if __name__ == "__main__":
     import uvicorn

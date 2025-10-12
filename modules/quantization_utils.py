@@ -1,7 +1,7 @@
 from diffusers import (FluxPipeline, FluxFillPipeline, FluxKontextPipeline, FluxPriorReduxPipeline,
                        QwenImagePipeline, QwenImageEditPipeline, QwenImageEditPlusPipeline, QwenImageTransformer2DModel,
                        AutoModel, WanImageToVideoPipeline, WanPipeline, WanVACEPipeline, HiDreamImagePipeline,
-                       HiDreamImageTransformer2DModel, ChromaPipeline)
+                       HiDreamImageTransformer2DModel, ChromaPipeline, WanVACETransformer3DModel)
 from diffusers import BitsAndBytesConfig as DiffusersBitsAndBytesConfig
 from diffusers.quantizers import PipelineQuantizationConfig
 from transformers import BitsAndBytesConfig as TransformersBitsAndBytesConfig
@@ -555,11 +555,11 @@ def quantize_wan22_ti2v_5b():
                                                     )
 
     vae = AutoModel.from_pretrained(model_name, subfolder="vae", torch_dtype=torch.float32)
-    transformer = AutoModel.from_pretrained(model_name,
-                                            subfolder="transformer",
-                                            torch_dtype=torch.bfloat16,
-                                            quantization_config=transformer_quantization_config
-                                            )
+    transformer = WanVACETransformer3DModel.from_pretrained(model_name,
+                                                            subfolder="transformer",
+                                                            torch_dtype=torch.bfloat16,
+                                                            quantization_config=transformer_quantization_config
+                                                            )
     generator = WanImageToVideoPipeline.from_pretrained(model_name,
                                                        vae=vae,
                                                        transformer=transformer,
@@ -567,6 +567,75 @@ def quantize_wan22_ti2v_5b():
                                                        torch_dtype=torch.bfloat16
                                                        )
     generator.save_pretrained("../models/Wan2.2-TI2V-5B")
+
+def quantize_wan21_vace_1_3b():
+    model_name="Wan-AI/Wan2.1-VACE-1.3B-diffusers"
+    transformer_quantization_config = TransformersBitsAndBytesConfig(
+        load_in_4bit=True,
+        bnb_4bit_quant_type="nf4",
+        llm_int8_skip_modules=["time_embedder",
+                               "timesteps_proj",
+                               "time_proj",
+                               "norm_out",
+                               "proj_out",
+                               "blocks.0.attn1.norm_k",
+                               "blocks.0.attn1.norm_q",
+                               "blocks.0.attn1.to_k",
+                               "blocks.0.attn1.to_out.0",
+                               "blocks.0.attn1.to_q",
+                               "blocks.0.attn1.to_v",
+                               "blocks.0.attn2.norm_k",
+                               "blocks.0.attn2.norm_q",
+                               "blocks.0.attn2.to_k",
+                               "blocks.0.attn2.to_out.0",
+                               "blocks.0.attn2.to_q",
+                               "blocks.0.attn2.to_v",
+                               "blocks.0.ffn.net.0.proj",
+                               "blocks.0.ffn.net.2",
+                               "blocks.0.norm2",
+                               "blocks.0.scale_shift_table",
+                               "blocks.29.attn1.norm_k",
+                               "blocks.29.attn1.norm_q",
+                               "blocks.29.attn1.to_k",
+                               "blocks.29.attn1.to_out.0",
+                               "blocks.29.attn1.to_q",
+                               "blocks.29.attn1.to_v",
+                               "blocks.29.attn2.norm_k",
+                               "blocks.29.attn2.norm_q",
+                               "blocks.29.attn2.to_k",
+                               "blocks.29.attn2.to_out.0",
+                               "blocks.29.attn2.to_q",
+                               "blocks.29.attn2.to_v",
+                               "blocks.29.ffn.net.0.proj",
+                               "blocks.29.ffn.net.2",
+                               "blocks.29.norm2",
+                               "blocks.29.scale_shift_table"
+                               ],
+    )
+    text_encoder_quantization_config = TransformersBitsAndBytesConfig(
+        load_in_4bit=True,
+        bnb_4bit_quant_type="nf4",
+        bnb_4bit_compute_dtype=torch.bfloat16,
+    )
+    text_encoder = UMT5EncoderModel.from_pretrained(model_name,
+                                                    subfolder="text_encoder",
+                                                    torch_dtype=torch.bfloat16,
+                                                    quantization_config=text_encoder_quantization_config
+                                                    )
+
+    vae = AutoModel.from_pretrained(model_name, subfolder="vae", torch_dtype=torch.float32)
+    transformer = AutoModel.from_pretrained(model_name,
+                                            subfolder="transformer",
+                                            torch_dtype=torch.bfloat16,
+                                            quantization_config=transformer_quantization_config
+                                            )
+    generator = WanVACEPipeline.from_pretrained(model_name,
+                                                vae=vae,
+                                                transformer=transformer,
+                                                text_encoder=text_encoder,
+                                                torch_dtype=torch.bfloat16
+                                                )
+    generator.save_pretrained("../models/Wan2.1-VACE-1.3B")
 
 def quantize_wan22_i2v_a14b():
     model_name="Wan-AI/Wan2.2-I2V-A14B-Diffusers"
@@ -656,4 +725,4 @@ def quantize_llm(model_name=None):
         quantization_config=quantization_config)
     generator.save_pretrained("../models/Josiefied-Qwen2.5-14B-Instruct-abliterated-v4")
 
-quantize_qwen_image()
+quantize_wan21_vace_1_3b()

@@ -1,11 +1,9 @@
-import os
 import tempfile
 from typing import Any
 
-from diffusers import WanImageToVideoPipeline
+from diffusers import WanImageToVideoPipeline, UniPCMultistepScheduler
 from diffusers.utils import export_to_video
 from fastapi import FastAPI, Body
-from fastapi.responses import StreamingResponse
 import torch
 
 from pydantic_models import WanTI2VRequest
@@ -17,9 +15,10 @@ dtype = torch.bfloat16
 avernus_wan_i2v = FastAPI()
 
 
-def load_wan_pipeline(model_name="Meatfucker/Wan2.2-TI2V-5B-bnb-nf4"):
+def load_wan_pipeline(model_name="Meatfucker/Wan2.2-TI2V-5B-bnb-nf4", flow_shift=3.0):
     global PIPELINE
     PIPELINE = WanImageToVideoPipeline.from_pretrained(model_name, torch_dtype=torch.bfloat16).to("cpu")
+    PIPELINE.scheduler = UniPCMultistepScheduler.from_config(PIPELINE.scheduler.config, flow_shift=flow_shift)
     PIPELINE.enable_model_cpu_offload()
     PIPELINE.vae.enable_slicing()
 
@@ -28,20 +27,21 @@ def get_seed_generators(amount, seed):
     return generator
 
 def generate_wan_ti2v(prompt: str,
-                     image = None,
-                     negative_prompt: str = None,
-                     num_frames: int = 81,
-                     guidance_scale: float = 5.0,
-                     height: int = None,
-                     width: int = None,
-                     seed: int = None,
-                     model_name: str = None):
+                      image = None,
+                      negative_prompt: str = None,
+                      num_frames: int = 81,
+                      flow_shift: float = 3.0,
+                      guidance_scale: float = 5.0,
+                      height: int = None,
+                      width: int = None,
+                      seed: int = None,
+                      model_name: str = None):
     global PIPELINE
     global LOADED
     if model_name is None:
         model_name = "Meatfucker/Wan2.2-TI2V-5B-bnb-nf4"
     if not LOADED:
-        load_wan_pipeline(model_name)
+        load_wan_pipeline(model_name, flow_shift)
         LOADED = True
     kwargs = {}
     kwargs["prompt"] = prompt
@@ -86,6 +86,8 @@ def wan_ti2v_generate(data: WanTI2VRequest = Body(...)):
         kwargs["num_frames"] = data.num_frames
     if data.guidance_scale:
         kwargs["guidance_scale"] = data.guidance_scale
+    if data.flow_shift:
+        kwargs["flow_shift"] = data.flow_shift
     if data.seed:
         kwargs["seed"] = data.seed
     if data.image:
