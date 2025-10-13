@@ -16,7 +16,7 @@ dtype = torch.bfloat16
 avernus_wan_vace = FastAPI()
 
 
-def load_wan_pipeline(model_name="./models/Wan2.1-VACE-1.3B", flow_shift=3.0):
+def load_wan_pipeline(model_name="Meatfucker/Wan2.1-VACE-1.3B-nf4-bnb", flow_shift=3.0):
     global PIPELINE
     vae = AutoencoderKLWan.from_pretrained(model_name, subfolder="vae", torch_dtype=torch.float32)
     PIPELINE = WanVACEPipeline.from_pretrained(model_name, vae=vae, torch_dtype=torch.bfloat16).to("cpu")
@@ -82,7 +82,7 @@ def generate_wan_vace(prompt: str,
     global PIPELINE
     global LOADED
     if model_name is None:
-        model_name = "./models/Wan2.1-VACE-1.3B"
+        model_name = "Meatfucker/Wan2.1-VACE-1.3B-nf4-bnb"
     if not LOADED:
         load_wan_pipeline(model_name, flow_shift)
         LOADED = True

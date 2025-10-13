@@ -17,7 +17,7 @@ from modules.pydantic_models import (ACEStepRequest,
                                      SDXLControlnetListResponse, SDXLSchedulerListResponse,
                                      StatusResponse,
                                      WanTI2VRequest, WanVACERequest)
-from modules.utils import (ServerManager, return_loras, forward_post_request, forward_stream_request, setup_logging,
+from modules.utils import (ServerManager, return_loras, forward_post_request, setup_logging,
                            cleanup_and_stream)
 
 os.environ["TOKENIZERS_PARALLELISM"] = "false"
@@ -549,13 +549,13 @@ async def wan_v2v_generate(
     width: int | None = Form(None),
     height: int | None = Form(None),
     steps: int | None = Form(None),
-    num_frames: int | None = Form(None),
     guidance_scale: float | None = Form(None),
+    flow_shift: float | None = Form(None),
     seed: int | None = Form(None),
     model_name: str | None = Form(None),
     video: UploadFile | None = File(None)  # 👈 NEW
 ):
-    logger.info("wan_ti2v_generate request received")
+    logger.info("wan_v2v_generate request received")
 
     async with pipeline_lock:
         await server_manager.set_pipeline("wan_v2v", model_name)
@@ -565,10 +565,11 @@ async def wan_v2v_generate(
                      "width": width,
                      "height": height,
                      "steps": steps,
-                     "num_frames": num_frames,
                      "guidance_scale": guidance_scale,
+                     "flow_shift": flow_shift,
                      "seed": seed,
                      "model_name": model_name}
+        form_data = {k: str(v) for k, v in form_data.items() if v is not None}
         files = {}
         if video:
             video_bytes = await video.read()

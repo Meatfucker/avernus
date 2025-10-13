@@ -660,24 +660,22 @@ class AvernusClient:
             print(f"ERROR: {e}")
             return {"ERROR": str(e)}
 
-    async def wan_v2v(self, prompt, negative_prompt=None, width=None, height=None, steps=None, num_frames=None,
+    async def wan_v2v(self, prompt, negative_prompt=None, width=None, height=None, steps=None,
                       guidance_scale=None, seed=None, model_name=None, video_path=None, flow_shift=None):
         """This takes a prompt and (optionally) a video, and returns a generated video."""
         url = f"http://{self.base_url}/wan_v2v_generate"
-
         data = {
             "prompt": prompt,
             "negative_prompt": negative_prompt,
             "width": width,
             "height": height,
-            "num_frames": num_frames,
             "guidance_scale": guidance_scale,
             "seed": seed,
             "steps": steps,
             "model_name": model_name,
             "flow_shift": flow_shift
         }
-
+        data = {k: str(v) for k, v in data.items() if v is not None}
         files = None
         if video_path:
             async with aiofiles.open(video_path, "rb") as f:
@@ -685,7 +683,7 @@ class AvernusClient:
             files = {"video": (os.path.basename(video_path), video_bytes, "video/mp4")}
 
         try:
-            async with httpx.AsyncClient(timeout=3600) as client:
+            async with httpx.AsyncClient(timeout=360000) as client:
                 response = await client.post(url, data=data, files=files)
 
             if response.status_code == 200 and response.headers.get("content-type") == "video/mp4":

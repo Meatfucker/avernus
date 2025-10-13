@@ -423,6 +423,27 @@ def quantize_wan21_t2v_14b():
                                                        )
     generator.save_pretrained("../models/Wan2.1-T2V-14B")
 
+def quantize_wan21_t2v_1_3b():
+    model_name="Wan-AI/Wan2.1-T2V-1.3B-Diffusers"
+    text_encoder_quantization_config = TransformersBitsAndBytesConfig(
+        load_in_4bit=True,
+        bnb_4bit_quant_type="nf4",
+        bnb_4bit_compute_dtype=torch.bfloat16,
+    )
+    text_encoder = UMT5EncoderModel.from_pretrained(model_name,
+                                                    subfolder="text_encoder",
+                                                    torch_dtype=torch.bfloat16,
+                                                    quantization_config=text_encoder_quantization_config
+                                                    )
+
+    vae = AutoModel.from_pretrained(model_name, subfolder="vae", torch_dtype=torch.float32)
+    generator = WanImageToVideoPipeline.from_pretrained(model_name,
+                                                       vae=vae,
+                                                       text_encoder=text_encoder,
+                                                       torch_dtype=torch.bfloat16
+                                                       )
+    generator.save_pretrained("../models/Wan2.1-T2V-1.3B")
+
 def quantize_wan21_i2v_14b_480():
     model_name="Wan-AI/Wan2.1-I2V-14B-480P-Diffusers"
     transformer_quantization_config = TransformersBitsAndBytesConfig(
@@ -725,4 +746,4 @@ def quantize_llm(model_name=None):
         quantization_config=quantization_config)
     generator.save_pretrained("../models/Josiefied-Qwen2.5-14B-Instruct-abliterated-v4")
 
-quantize_wan21_vace_1_3b()
+quantize_wan21_t2v_14b()
