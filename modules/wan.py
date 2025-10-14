@@ -27,7 +27,7 @@ def get_seed_generators(amount, seed):
     generator = [torch.Generator(device="cuda").manual_seed(seed + i) for i in range(amount)]
     return generator
 
-def generate_wan_v2v(prompt: str,
+def generate_wan_ti2v(prompt: str,
                      video = None,
                      negative_prompt: str = None,
                      num_frames: int = 81,
