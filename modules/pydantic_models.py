@@ -155,6 +155,13 @@ class RAGRequest(BaseModel):
 class RAGResponse(BaseModel):
     response: List[str] = Field(..., example=["glip", "glop", "blip", "blop"])
 
+class RealESRGANRequest(BaseModel):
+    image: str = Field(..., example="a9d8fp0sa9dfpasdfllkajsdflkjadslf...")
+    scale: Optional[int] = Field(None, example=4)
+
+class RealESRGANResponse(GenericResponse):
+    images: Optional[str] = Field(None, example="kajsdflsadfsadf....")
+
 class SDXLControlnetListResponse(BaseModel):
     sdxl_controlnets: List[str] = Field(..., example=["canny", "depth"])
 
@@ -206,6 +213,12 @@ class SDXLSchedulerListResponse(BaseModel):
 class StatusResponse(BaseModel):
     status: str = Field(..., example="Ok!")
     version: str = Field(..., example="0.2.0")
+
+class Swin2SRRequest(BaseModel):
+    image: str = Field(..., example="a9d8fp0sa9dfpasdfllkajsdflkjadslf...")
+
+class Swin2SRResponse(GenericResponse):
+    images: Optional[str] = Field(None, example="kajsdflsadfsadf....")
 
 class WanTI2VRequest(BaseModel):
     prompt: str = Field(..., example="A big green monster")

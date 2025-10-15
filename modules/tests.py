@@ -166,6 +166,14 @@ class QwenImageInpaintTest(TimedTest):
                                                       strength=0.9)
         await base64_image_to_file(images, "qwen_image_inpaint")
 
+class RealESRGANTest(TimedTest):
+    async def run_test(self):
+        image = Image.open("tests/mushroom.png")
+        image = image_to_base64(image)
+        upscaled_image = await self.client.realesrgan(image=image,
+                                                      scale=8)
+        await base64_image_to_file([upscaled_image], "realesrgan")
+
 
 class SDXLControlnetI2ILoraTest(TimedTest):
     async def run_test(self):
@@ -299,6 +307,14 @@ class SDXLTest(TimedTest):
                                               batch_size=2,
                                               scheduler="DPMSolverSDEScheduler")
         await base64_image_to_file(images, "sdxl")
+
+class Swin2SRTest(TimedTest):
+    async def run_test(self):
+        image = Image.open("tests/mushroom.png")
+        image = image_to_base64(image)
+        upscaled_image = await self.client.realesrgan(image=image,
+                                                      scale=8)
+        await base64_image_to_file([upscaled_image], "swin2sr")
 
 class WANTest(TimedTest):
     async def run_test(self):

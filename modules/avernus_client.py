@@ -23,7 +23,7 @@ class AvernusClient:
                 "actual_seeds": actual_seeds}
 
         try:
-            async with httpx.AsyncClient(timeout=3600) as client:
+            async with httpx.AsyncClient(timeout=None) as client:
                 response = await client.post(url, json=data)
             if response.status_code == 200:
                 # Save the returned binary video content
@@ -42,7 +42,7 @@ class AvernusClient:
         url = f"http://{self.base_url}/status"
 
         try:
-            async with httpx.AsyncClient(timeout=30.0) as client:
+            async with httpx.AsyncClient(timeout=5.0) as client:
                 response = await client.get(url)
             if response.status_code == 200:
                 return response.json()
@@ -69,7 +69,7 @@ class AvernusClient:
                 "seed": seed,
                 "guidance_scale": guidance_scale}
         try:
-            async with httpx.AsyncClient(timeout=3600) as client:
+            async with httpx.AsyncClient(timeout=None) as client:
                 response = await client.post(url, json=data)
             if response.status_code == 200:
                 return response.json().get("images", [])
@@ -97,7 +97,7 @@ class AvernusClient:
                 "strength": strength,
                 "seed": seed}
         try:
-            async with httpx.AsyncClient(timeout=3600) as client:
+            async with httpx.AsyncClient(timeout=None) as client:
                 response = await client.post(url, json=data)
             if response.status_code == 200:
                 return response.json().get("images", [])
@@ -126,7 +126,7 @@ class AvernusClient:
                 "seed": seed,
                 "guidance_scale": guidance_scale}
         try:
-            async with httpx.AsyncClient(timeout=3600) as client:
+            async with httpx.AsyncClient(timeout=None) as client:
                 response = await client.post(url, json=data)
             if response.status_code == 200:
                 return response.json().get("images", [])
@@ -154,7 +154,7 @@ class AvernusClient:
                 "strength": strength,
                 "seed": seed}
         try:
-            async with httpx.AsyncClient(timeout=3600) as client:
+            async with httpx.AsyncClient(timeout=None) as client:
                 response = await client.post(url, json=data)
             if response.status_code == 200:
                 return response.json().get("images", [])
@@ -184,7 +184,7 @@ class AvernusClient:
                 "seed": seed,
                 "guidance_scale": guidance_scale}
         try:
-            async with httpx.AsyncClient(timeout=3600) as client:
+            async with httpx.AsyncClient(timeout=None) as client:
                 response = await client.post(url, json=data)
             if response.status_code == 200:
                 return response.json().get("images", [])
@@ -207,7 +207,7 @@ class AvernusClient:
                 "seed": seed,
                 "guidance_scale": guidance_scale}
         try:
-            async with httpx.AsyncClient(timeout=3600) as client:
+            async with httpx.AsyncClient(timeout=None) as client:
                 response = await client.post(url, json=data)
             if response.status_code == 200:
                 return response.json().get("images", [])
@@ -222,7 +222,7 @@ class AvernusClient:
         url = f"http://{self.base_url}/list_flux_loras"
 
         try:
-            async with httpx.AsyncClient(timeout=30.0) as client:
+            async with httpx.AsyncClient(timeout=5.0) as client:
                 response = await client.get(url)
             if response.status_code == 200:
                 return response.json().get("loras", [])
@@ -238,7 +238,7 @@ class AvernusClient:
         url = f"http://{self.base_url}/list_qwen_image_loras"
 
         try:
-            async with httpx.AsyncClient(timeout=30.0) as client:
+            async with httpx.AsyncClient(timeout=5.0) as client:
                 response = await client.get(url)
             if response.status_code == 200:
                 return response.json().get("loras", [])
@@ -254,7 +254,7 @@ class AvernusClient:
         url = f"http://{self.base_url}/list_sdxl_controlnets"
 
         try:
-            async with httpx.AsyncClient(timeout=30.0) as client:
+            async with httpx.AsyncClient(timeout=5.0) as client:
                 response = await client.get(url)
             if response.status_code == 200:
                 return response.json().get("sdxl_controlnets", [])
@@ -270,7 +270,7 @@ class AvernusClient:
         url = f"http://{self.base_url}/list_sdxl_loras"
 
         try:
-            async with httpx.AsyncClient(timeout=30.0) as client:
+            async with httpx.AsyncClient(timeout=5.0) as client:
                 response = await client.get(url)
             if response.status_code == 200:
                 return response.json().get("loras", [])
@@ -286,7 +286,7 @@ class AvernusClient:
         url = f"http://{self.base_url}/list_sdxl_schedulers"
 
         try:
-            async with httpx.AsyncClient(timeout=30.0) as client:
+            async with httpx.AsyncClient(timeout=5.0) as client:
                 response = await client.get(url)
             if response.status_code == 200:
                 return response.json().get("schedulers", [])
@@ -303,7 +303,7 @@ class AvernusClient:
         data = {"prompt": prompt, "model_name": model_name, "messages": messages}
 
         try:
-            async with httpx.AsyncClient(timeout=3600.0) as client:
+            async with httpx.AsyncClient(timeout=None) as client:
                 response = await client.post(url, json=data)
             if response.status_code == 200:
                 return response.json().get("response", "")
@@ -332,7 +332,7 @@ class AvernusClient:
                 "seed": seed,
                 "true_cfg_scale": true_cfg_scale}
         try:
-            async with httpx.AsyncClient(timeout=3600) as client:
+            async with httpx.AsyncClient(timeout=None) as client:
                 response = await client.post(url, json=data)
             if response.status_code == 200:
                 return response.json().get("images", [])
@@ -360,7 +360,7 @@ class AvernusClient:
                 "seed": seed,
                 "true_cfg_scale": true_cfg_scale}
         try:
-            async with httpx.AsyncClient(timeout=3600) as client:
+            async with httpx.AsyncClient(timeout=None) as client:
                 response = await client.post(url, json=data)
             if response.status_code == 200:
                 return response.json().get("images", [])
@@ -389,7 +389,7 @@ class AvernusClient:
                 "strength": strength,
                 "seed": seed}
         try:
-            async with httpx.AsyncClient(timeout=3600) as client:
+            async with httpx.AsyncClient(timeout=None) as client:
                 response = await client.post(url, json=data)
             if response.status_code == 200:
                 return response.json().get("images", [])
@@ -418,7 +418,7 @@ class AvernusClient:
                 "strength": strength,
                 "seed": seed}
         try:
-            async with httpx.AsyncClient(timeout=3600) as client:
+            async with httpx.AsyncClient(timeout=None) as client:
                 response = await client.post(url, json=data)
             if response.status_code == 200:
                 return response.json().get("images", [])
@@ -444,7 +444,7 @@ class AvernusClient:
                 "seed": seed,
                 "true_cfg_scale": true_cfg_scale}
         try:
-            async with httpx.AsyncClient(timeout=3600) as client:
+            async with httpx.AsyncClient(timeout=None) as client:
                 response = await client.post(url, json=data)
             if response.status_code == 200:
                 return response.json().get("images", [])
@@ -470,7 +470,7 @@ class AvernusClient:
                 "seed": seed,
                 "true_cfg_scale": true_cfg_scale}
         try:
-            async with httpx.AsyncClient(timeout=3600) as client:
+            async with httpx.AsyncClient(timeout=None) as client:
                 response = await client.post(url, json=data)
             if response.status_code == 200:
                 return response.json().get("images", [])
@@ -496,7 +496,7 @@ class AvernusClient:
                 "seed": seed,
                 "true_cfg_scale": true_cfg_scale}
         try:
-            async with httpx.AsyncClient(timeout=3600) as client:
+            async with httpx.AsyncClient(timeout=None) as client:
                 response = await client.post(url, json=data)
             if response.status_code == 200:
                 return response.json().get("images", [])
@@ -522,12 +522,28 @@ class AvernusClient:
                 "seed": seed,
                 "true_cfg_scale": true_cfg_scale}
         try:
-            async with httpx.AsyncClient(timeout=3600) as client:
+            async with httpx.AsyncClient(timeout=None) as client:
                 response = await client.post(url, json=data)
             if response.status_code == 200:
                 return response.json().get("images", [])
             else:
                 print(f"QWEN IMAGE EDIT NUNCHAKU ERROR: {response.status_code}")
+        except Exception as e:
+            print(f"ERROR: {e}")
+            return {"ERROR": str(e)}
+
+    async def realesrgan(self, image, scale=None):
+        """This takes an image and an optional scale of either 2, 4, or 8 and returns an upscaled image"""
+        url = f"http://{self.base_url}/realesrgan_generate"
+        data = {"image": image,
+                "scale": scale}
+        try:
+            async with httpx.AsyncClient(timeout=None) as client:
+                response = await client.post(url, json=data)
+            if response.status_code == 200:
+                return response.json().get("images")
+            else:
+                print(f"REALESRGAN ERROR: {response.status_code}")
         except Exception as e:
             print(f"ERROR: {e}")
             return {"ERROR": str(e)}
@@ -557,7 +573,7 @@ class AvernusClient:
                 "scheduler": scheduler,
                 "seed": seed}
         try:
-            async with httpx.AsyncClient(timeout=3600) as client:
+            async with httpx.AsyncClient(timeout=None) as client:
                 response = await client.post(url, json=data)
             if response.status_code == 200:
                 return response.json().get("images", [])
@@ -587,12 +603,27 @@ class AvernusClient:
                 "scheduler": scheduler,
                 "seed": seed}
         try:
-            async with httpx.AsyncClient(timeout=3600) as client:
+            async with httpx.AsyncClient(timeout=None) as client:
                 response = await client.post(url, json=data)
             if response.status_code == 200:
                 return response.json().get("images", [])
             else:
                 print(f"SDXL INPAINT ERROR: {response.status_code}")
+        except Exception as e:
+            print(f"ERROR: {e}")
+            return {"ERROR": str(e)}
+
+    async def swin2sr(self, image):
+        """This takes an image and returns an upscaled image"""
+        url = f"http://{self.base_url}/swin2sr_generate"
+        data = {"image": image}
+        try:
+            async with httpx.AsyncClient(timeout=None) as client:
+                response = await client.post(url, json=data)
+            if response.status_code == 200:
+                return response.json().get("images")
+            else:
+                print(f"SWIN2SR ERROR: {response.status_code}")
         except Exception as e:
             print(f"ERROR: {e}")
             return {"ERROR": str(e)}
@@ -613,7 +644,7 @@ class AvernusClient:
                 "model_name": model_name,
                 "flow_shift": flow_shift}
         try:
-            async with httpx.AsyncClient(timeout=360000) as client:
+            async with httpx.AsyncClient(timeout=None) as client:
                 response = await client.post(url, json=data)
             if response.status_code == 200:
                 # Save the returned binary video content
@@ -645,7 +676,7 @@ class AvernusClient:
                 "flow_shift": flow_shift,
                 "model_name": model_name}
         try:
-            async with httpx.AsyncClient(timeout=360000) as client:
+            async with httpx.AsyncClient(timeout=None) as client:
                 response = await client.post(url, json=data)
             if response.status_code == 200:
                 # Save the returned binary video content
@@ -683,7 +714,7 @@ class AvernusClient:
             files = {"video": (os.path.basename(video_path), video_bytes, "video/mp4")}
 
         try:
-            async with httpx.AsyncClient(timeout=360000) as client:
+            async with httpx.AsyncClient(timeout=None) as client:
                 response = await client.post(url, data=data, files=files)
 
             if response.status_code == 200 and response.headers.get("content-type") == "video/mp4":

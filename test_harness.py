@@ -9,9 +9,11 @@ from modules.tests import (ACETest,
                            HiDreamTest,
                            LlmChatTest,
                            QwenImageTest, QwenImageInpaintTest, QwenImageI2ITest, QwenImageEditTest,
+                           RealESRGANTest,
                            SDXLControlnetI2ILoraTest, SDXLControlnetI2ITest, SDXLControlnetListTest,
                            SDXLControlnetLoraTest, SDXLControlnetTest, SDXLI2ILoraTest, SDXLI2ITest, SDXLInpaintTest,
                            SDXLIPAdapterTest, SDXLLoraListTest, SDXLLoraTest, SDXLTest, SDXLSchedulerListTest,
+                           Swin2SRTest,
                            WANTest, WANI2VTest)
 start_time = time.time()
 
@@ -54,7 +56,10 @@ start_time = time.time()
 
 #hidream = HiDreamTest("HIDREAM")
 
-chroma = ChromaTest("CHROMA")
+#chroma = ChromaTest("CHROMA")
+
+#realesrgan = RealESRGANTest("REALESRGAN")
+#swin2sr = Swin2SRTest("SWIN2SR")
 
 end_time = time.time()
 elapsed_time = end_time - start_time

@@ -13,9 +13,12 @@ from modules.pydantic_models import (ACEStepRequest,
                                      LLMRequest, LLMResponse,
                                      QwenImageRequest, QwenImageInpaintRequest, QwenImageLoraListResponse,
                                      QwenImageResponse, QwenImageEditPlusRequest,
-                                     SDXLInpaintRequest, SDXLRequest, SDXLResponse, SDXLLoraListResponse,
+                                     RealESRGANResponse, RealESRGANRequest,
+                                     SDXLInpaintRequest, SDXLRequest, SDXLResponse,
+                                     SDXLLoraListResponse,
                                      SDXLControlnetListResponse, SDXLSchedulerListResponse,
                                      StatusResponse,
+                                     Swin2SRResponse, Swin2SRRequest,
                                      WanTI2VRequest, WanVACERequest)
 from modules.utils import (ServerManager, return_loras, forward_post_request, setup_logging,
                            cleanup_and_stream)
@@ -444,6 +447,27 @@ async def qwen_image_edit_plus_nunchaku_generate(data: QwenImageEditPlusRequest 
             return {"status": False,
                     "status_message": str(e)}
 
+@avernus.post("/realesrgan_generate", response_model=RealESRGANResponse)
+async def realesrgan_generate(data: RealESRGANRequest = Body(...)):
+    """Upscales an image based on user input"""
+    logger.info("realesrgan request received")
+    async with pipeline_lock:
+        await server_manager.set_pipeline("realesrgan", data.scale)
+        url = "http://127.0.0.1:6970/realesrgan_generate"
+        try:
+            result = await forward_post_request(url, data)
+            if result["status"] is True:
+                return result
+            else:
+                logger.info(f"Generation Error: {result['status_message']}")
+                server_manager.kill_pipeline()
+                return {"status": False,
+                        "status_message": result["status_message"]}
+        except Exception as e:
+            server_manager.kill_pipeline()
+            return {"status": False,
+                    "status_message": str(e)}
+
 @avernus.get("/status", response_model=StatusResponse)
 async def status():
     """ This returns Ok when hit"""
@@ -485,6 +509,27 @@ async def sdxl_inpaint_generate(data: SDXLInpaintRequest = Body(...)):
     async with pipeline_lock:
         await server_manager.set_pipeline("sdxl_inpaint", data.model_name)
         url = "http://127.0.0.1:6970/sdxl_inpaint_generate"
+        try:
+            result = await forward_post_request(url, data)
+            if result["status"] is True:
+                return result
+            else:
+                logger.info(f"Generation Error: {result['status_message']}")
+                server_manager.kill_pipeline()
+                return {"status": False,
+                        "status_message": result["status_message"]}
+        except Exception as e:
+            server_manager.kill_pipeline()
+            return {"status": False,
+                    "status_message": str(e)}
+
+@avernus.post("/swin2sr_generate", response_model=Swin2SRResponse)
+async def swin2sr_generate(data: Swin2SRRequest = Body(...)):
+    """Upscales an image based on user input"""
+    logger.info("swin2sr request received")
+    async with pipeline_lock:
+        await server_manager.set_pipeline("swin2sr")
+        url = "http://127.0.0.1:6970/swin2sr_generate"
         try:
             result = await forward_post_request(url, data)
             if result["status"] is True:
