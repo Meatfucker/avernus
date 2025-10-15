@@ -4,13 +4,13 @@ from fastapi import FastAPI, Body
 import numpy as np
 from PIL import Image
 import torch
-from transformers import AutoImageProcessor, Swin2SRForImageSuperResolution
+from transformers import Swin2SRForImageSuperResolution, Swin2SRImageProcessor
 
 from pydantic_models import Swin2SRRequest, Swin2SRResponse
 from utils import base64_to_image, image_to_base64
 
 PIPELINE: Swin2SRForImageSuperResolution
-PROCESSOR: AutoImageProcessor
+PROCESSOR: Swin2SRImageProcessor
 LOADED: bool = False
 avernus_swin2sr = FastAPI()
 
@@ -19,8 +19,8 @@ def load_swin2sr():
     global PIPELINE
     global PROCESSOR
     try:
-        PROCESSOR = AutoImageProcessor.from_pretrained("caidas/swin2SR-classical-sr-x2-64")
-        PIPELINE = Swin2SRForImageSuperResolution.from_pretrained("caidas/swin2SR-classical-sr-x2-64")
+        PROCESSOR = Swin2SRImageProcessor.from_pretrained("caidas/swin2SR-classical-sr-x2-64")
+        PIPELINE = Swin2SRForImageSuperResolution.from_pretrained("caidas/swin2SR-classical-sr-x2-64").to("cuda")
     except Exception as e:
         print(e)
 
@@ -33,7 +33,8 @@ def generate_swin2sr_image(image):
         LOADED = True
 
     try:
-        inputs = PROCESSOR(image, return_tensors="pt")
+        inputs = PROCESSOR.preprocess(image, return_tensors="pt")
+        inputs.to("cuda")
         with torch.no_grad():
             outputs = PIPELINE(**inputs)
         output = outputs.reconstruction.data.squeeze().float().cpu().clamp_(0, 1).numpy()

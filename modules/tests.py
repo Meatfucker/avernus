@@ -312,8 +312,7 @@ class Swin2SRTest(TimedTest):
     async def run_test(self):
         image = Image.open("tests/mushroom.png")
         image = image_to_base64(image)
-        upscaled_image = await self.client.realesrgan(image=image,
-                                                      scale=8)
+        upscaled_image = await self.client.swin2sr(image=image)
         await base64_image_to_file([upscaled_image], "swin2sr")
 
 class WANTest(TimedTest):
