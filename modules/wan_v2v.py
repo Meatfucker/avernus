@@ -20,7 +20,7 @@ def load_wan_pipeline(model_name="Meatfucker/Wan2.1-T2V-1.3B-nf4-bnb", flow_shif
     PIPELINE = WanVideoToVideoPipeline.from_pretrained(model_name, vae=vae, torch_dtype=torch.bfloat16)
     PIPELINE.scheduler = UniPCMultistepScheduler.from_config(PIPELINE.scheduler.config, flow_shift=flow_shift)
     PIPELINE.enable_model_cpu_offload()
-    PIPELINE.vae.enable_slicing()
+    PIPELINE.vae.enable_tiling()
 
 def get_seed_generators(amount, seed):
     generator = [torch.Generator(device="cuda").manual_seed(seed + i) for i in range(amount)]
@@ -121,7 +121,8 @@ def wan_v2v_generate(prompt: str = Form(...),
             export_to_video(response["video"], tmp_path, fps=24)
             return {"status": True, "path": tmp_path}
         else:
-            return {"status": False, "status_message": response["status_message"]}
+            return {"status": False,
+                    "status_message": str(response["status_message"])}
     except Exception as e:
         return {"status": False, "status_message": str(e)}
 
@@ -134,5 +135,5 @@ async def status():
 if __name__ == "__main__":
     import uvicorn
 
-    uvicorn.run(avernus_wan_v2v, host="0.0.0.0", port=6970)
-    #uvicorn.run(avernus_wan_v2v, host="0.0.0.0", port=6970, log_level="critical")
+    #uvicorn.run(avernus_wan_v2v, host="0.0.0.0", port=6970)
+    uvicorn.run(avernus_wan_v2v, host="0.0.0.0", port=6970, log_level="critical")

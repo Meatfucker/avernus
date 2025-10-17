@@ -22,7 +22,7 @@ def load_wan_pipeline(model_name="Meatfucker/Wan2.1-VACE-1.3B-nf4-bnb", flow_shi
     PIPELINE = WanVACEPipeline.from_pretrained(model_name, vae=vae, torch_dtype=torch.bfloat16).to("cpu")
     PIPELINE.scheduler = UniPCMultistepScheduler.from_config(PIPELINE.scheduler.config, flow_shift=flow_shift)
     PIPELINE.enable_model_cpu_offload()
-    PIPELINE.vae.enable_slicing()
+    PIPELINE.vae.enable_tiling()
 
 def get_seed_generators(amount, seed):
     generator = [torch.Generator(device="cuda").manual_seed(seed + i) for i in range(amount)]
@@ -31,9 +31,6 @@ def get_seed_generators(amount, seed):
 def prepare_i2v_video_and_mask(img: PIL.Image.Image, height: int, width: int, num_frames: int):
     img = img.resize((width, height))
     frames = [img]
-    # Ideally, this should be 127.5 to match original code, but they perform computation on numpy arrays
-    # whereas we are passing PIL images. If you choose to pass numpy arrays, you can set it to 127.5 to
-    # match the original code.
     frames.extend([PIL.Image.new("RGB", (width, height), (128, 128, 128))] * (num_frames - 1))
     mask_black = PIL.Image.new("L", (width, height), 0)
     mask_white = PIL.Image.new("L", (width, height), 255)
@@ -45,9 +42,6 @@ def prepare_flf2v_video_and_mask(first_img: PIL.Image.Image, last_img: PIL.Image
     last_img = last_img.resize((width, height))
     frames = []
     frames.append(first_img)
-    # Ideally, this should be 127.5 to match original code, but they perform computation on numpy arrays
-    # whereas we are passing PIL images. If you choose to pass numpy arrays, you can set it to 127.5 to
-    # match the original code.
     frames.extend([PIL.Image.new("RGB", (width, height), (128, 128, 128))] * (num_frames - 2))
     frames.append(last_img)
     mask_black = PIL.Image.new("L", (width, height), 0)
@@ -58,9 +52,6 @@ def prepare_flf2v_video_and_mask(first_img: PIL.Image.Image, last_img: PIL.Image
 def prepare_v2lf_video_and_mask(img: PIL.Image.Image, height: int, width: int, num_frames: int):
     img = img.resize((width, height))
     frames = []
-    # Ideally, this should be 127.5 to match original code, but they perform computation on numpy arrays
-    # whereas we are passing PIL images. If you choose to pass numpy arrays, you can set it to 127.5 to
-    # match the original code.
     frames.extend([PIL.Image.new("RGB", (width, height), (128, 128, 128))] * (num_frames - 1))
     frames.append(img)
     mask_black = PIL.Image.new("L", (width, height), 0)
@@ -168,7 +159,7 @@ def wan_vace_generate(data: WanVACERequest = Body(...)):
                     "path": tmp_path}
         else:
             return {"status": False,
-                   "status_message": response["status_message"]}
+                   "status_message": str(response["status_message"])}
     except Exception as e:
         return {"status": False,
                 "status_message": str(e)}
@@ -182,5 +173,5 @@ async def status():
 if __name__ == "__main__":
     import uvicorn
 
-    uvicorn.run(avernus_wan_vace, host="0.0.0.0", port=6970)
-    #uvicorn.run(avernus_wan_vace, host="0.0.0.0", port=6970, log_level="critical")
+    #uvicorn.run(avernus_wan_vace, host="0.0.0.0", port=6970)
+    uvicorn.run(avernus_wan_vace, host="0.0.0.0", port=6970, log_level="critical")

@@ -7,6 +7,7 @@ from modules.tests import (ACETest,
                            FluxI2ITest, FluxInpaintTest, FluxIPAdapterTest, FluxKontextTest,
                            FluxLoraI2ITest, FluxLoraListTest, FluxLoraTest, FluxTest,
                            HiDreamTest,
+                           HunyuanVideoTest,
                            LlmChatTest,
                            QwenImageTest, QwenImageInpaintTest, QwenImageI2ITest, QwenImageEditTest,
                            RealESRGANTest,
@@ -60,6 +61,8 @@ start_time = time.time()
 
 #realesrgan = RealESRGANTest("REALESRGAN")
 #swin2sr = Swin2SRTest("SWIN2SR")
+
+hunyuan_t2v = HunyuanVideoTest("HUNYUAN_T2V")
 
 end_time = time.time()
 elapsed_time = end_time - start_time

@@ -8,7 +8,7 @@ from PIL import Image
 
 class TimedTest:
     def __init__(self, test_name):
-        self.client = client = AvernusClient("127.0.0.1", "6969")
+        self.client: AvernusClient = AvernusClient("127.0.0.1", "6969")
         self.test_name = test_name
         self._run_sync()
 
@@ -119,6 +119,14 @@ class HiDreamTest(TimedTest):
     async def run_test(self):
         images = await self.client.hidream_image("laser turtle", batch_size=1)
         await base64_image_to_file(images, "hidream")
+
+class HunyuanVideoTest(TimedTest):
+    async def run_test(self):
+        await self.client.hunyuan_ti2v("An overhead tracking shot of frogs hopping from lilypad to lilypad, the water splashing as they land",
+                                       num_frames=33,
+                                       seed=42,
+                                       width=832,
+                                       height=480)
 
 class LlmChatTest(TimedTest):
     async def run_test(self):

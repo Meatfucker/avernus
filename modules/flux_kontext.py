@@ -131,7 +131,7 @@ def flux_kontext_generate(data: FluxRequest = Body(...)):
             base64_images = [image_to_base64(img) for img in response["images"]]
         else:
             return {"status": False,
-                    "status_message": response["status_message"]}
+                    "status_message": str(response["status_message"])}
     except Exception as e:
         return {"status": False,
                 "status_message": str(e)}

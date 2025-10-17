@@ -109,7 +109,7 @@ def qwen_image_edit_plus_generate(data: QwenImageEditPlusRequest = Body(...)):
             del response
         else:
             return {"status": False,
-                    "status_message": response["status_message"]}
+                    "status_message": str(response["status_message"])}
     except Exception as e:
         return {"status": False,
                 "status_message": str(e)}

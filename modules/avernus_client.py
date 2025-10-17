@@ -217,6 +217,37 @@ class AvernusClient:
             print(f"ERROR: {e}")
             return {"ERROR": str(e)}
 
+    async def hunyuan_ti2v(self, prompt, negative_prompt=None, width=None, height=None, steps=None, num_frames=None,
+                       guidance_scale=None, image=None,  seed=None, model_name=None, flow_shift=None):
+        """This takes a prompt and returns a video"""
+        url = f"http://{self.base_url}/hunyuan_ti2v_generate"
+        data = {"prompt": prompt,
+                "negative_prompt": negative_prompt,
+                "width": width,
+                "height": height,
+                "num_frames": num_frames,
+                "guidance_scale": guidance_scale,
+                "seed": seed,
+                "steps": steps,
+                "image": image,
+                "model_name": model_name,
+                "flow_shift": flow_shift}
+        try:
+            async with httpx.AsyncClient(timeout=None) as client:
+                response = await client.post(url, json=data)
+            if response.status_code == 200:
+                # Save the returned binary video content
+                temp_file = tempfile.NamedTemporaryFile(delete=False, suffix=".mp4")
+                temp_file.write(response.content)
+                temp_file.close()  # Close the file so it can be used elsewhere
+                return temp_file.name
+            else:
+                print(f"HUNYUAN TI2V ERROR: {response.status_code} - {response.text}")
+                return None
+        except Exception as e:
+            print(f"ERROR: {e}")
+            return {"ERROR": str(e)}
+
     async def list_flux_loras(self):
         """Fetches the list of flux LoRA filenames from the server."""
         url = f"http://{self.base_url}/list_flux_loras"

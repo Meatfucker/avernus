@@ -161,7 +161,7 @@ def sdxl_inpaint_generate(data: SDXLInpaintRequest = Body(...)):
             del response
         else:
             return {"status": False,
-                    "status_message": response["status_message"]}
+                    "status_message": str(response["status_message"])}
     except Exception as e:
         return {"status": False,
                 "status_message": str(e)}

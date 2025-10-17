@@ -1,7 +1,11 @@
-from diffusers import (FluxPipeline, FluxFillPipeline, FluxKontextPipeline, FluxPriorReduxPipeline,
+from diffusers import (AutoModel,
+                       ChromaPipeline,
+                       FluxPipeline, FluxFillPipeline, FluxKontextPipeline, FluxPriorReduxPipeline,
+                       HiDreamImagePipeline, HiDreamImageTransformer2DModel,
+                       HunyuanVideoPipeline,
                        QwenImagePipeline, QwenImageEditPipeline, QwenImageEditPlusPipeline, QwenImageTransformer2DModel,
-                       AutoModel, WanImageToVideoPipeline, WanPipeline, WanVACEPipeline, HiDreamImagePipeline,
-                       HiDreamImageTransformer2DModel, ChromaPipeline, WanVACETransformer3DModel)
+                       WanImageToVideoPipeline, WanPipeline, WanVACEPipeline, WanVACETransformer3DModel
+                       )
 from diffusers import BitsAndBytesConfig as DiffusersBitsAndBytesConfig
 from diffusers.quantizers import PipelineQuantizationConfig
 from transformers import BitsAndBytesConfig as TransformersBitsAndBytesConfig
@@ -104,6 +108,81 @@ def quantize_hidream():
     gen_config.return_dict_in_generate = False
     generator.save_pretrained("../models/HiDream-I1-Full")
 
+def quantize_hunyuan_video():
+    print("loading HunyuanVideo")
+    pipeline_quant_config = PipelineQuantizationConfig(
+        quant_backend="bitsandbytes_4bit",
+        quant_kwargs={
+            "load_in_4bit": True,
+            "bnb_4bit_quant_type": "nf4",
+            "bnb_4bit_compute_dtype": torch.bfloat16,
+            "llm_int8_skip_modules": ["norm_out.linear",
+                                      "proj_out",
+                                      "text_embedder",
+                                      "timestep_embedder",
+                                      "x_embedder.proj",
+                                      "single_transformer_blocks.0.attn.norm_k",
+                                      "single_transformer_blocks.0.attn.norm_q",
+                                      "single_transformer_blocks.0.attn.to_k",
+                                      "single_transformer_blocks.0.attn.to_q",
+                                      "single_transformer_blocks.0.attn.to_v",
+                                      "single_transformer_blocks.0.norm.linear",
+                                      "single_transformer_blocks.0.proj_mlp",
+                                      "single_transformer_blocks.0.proj_out",
+                                      "single_transformer_blocks.39.attn.norm_k",
+                                      "single_transformer_blocks.39.attn.norm_q",
+                                      "single_transformer_blocks.39.attn.to_k",
+                                      "single_transformer_blocks.39.attn.to_q",
+                                      "single_transformer_blocks.39.attn.to_v",
+                                      "single_transformer_blocks.39.norm.linear",
+                                      "single_transformer_blocks.39.proj_mlp",
+                                      "single_transformer_blocks.39.proj_out",
+                                      "transformer_blocks.0.attn.add_k_proj",
+                                      "transformer_blocks.0.attn.add_k_proj",
+                                      "transformer_blocks.0.attn.add_q_proj",
+                                      "transformer_blocks.0.attn.add_v_proj",
+                                      "transformer_blocks.0.attn.norm_added_k",
+                                      "transformer_blocks.0.attn.norm_added_q",
+                                      "transformer_blocks.0.attn.norm_k",
+                                      "transformer_blocks.0.attn.norm_q",
+                                      "transformer_blocks.0.attn.to_add_out",
+                                      "transformer_blocks.0.attn.to_k",
+                                      "transformer_blocks.0.attn.to_out.0",
+                                      "transformer_blocks.0.attn.to_q",
+                                      "transformer_blocks.0.attn.to_v",
+                                      "transformer_blocks.0.ff.net.0.proj",
+                                      "transformer_blocks.0.ff.net.2",
+                                      "transformer_blocks.0.ff_context.net.0.proj",
+                                      "transformer_blocks.0.ff_context.net.2",
+                                      "transformer_blocks.0.norm1.linear",
+                                      "transformer_blocks.0.norm1_context.linear",
+                                      "transformer_blocks.19.attn.add_k_proj",
+                                      "transformer_blocks.19.attn.add_k_proj",
+                                      "transformer_blocks.19.attn.add_q_proj",
+                                      "transformer_blocks.19.attn.add_v_proj",
+                                      "transformer_blocks.19.attn.norm_added_k",
+                                      "transformer_blocks.19.attn.norm_added_q",
+                                      "transformer_blocks.19.attn.norm_k",
+                                      "transformer_blocks.19.attn.norm_q",
+                                      "transformer_blocks.19.attn.to_add_out",
+                                      "transformer_blocks.19.attn.to_k",
+                                      "transformer_blocks.19.attn.to_out.0",
+                                      "transformer_blocks.19.attn.to_q",
+                                      "transformer_blocks.19.attn.to_v",
+                                      "transformer_blocks.19.ff.net.0.proj",
+                                      "transformer_blocks.19.ff.net.2",
+                                      "transformer_blocks.19.ff_context.net.0.proj",
+                                      "transformer_blocks.19.ff_context.net.2",
+                                      "transformer_blocks.19.norm1.linear",
+                                      "transformer_blocks.19.norm1_context.linear"]},
+        components_to_quantize="transformer"
+    )
+    generator = HunyuanVideoPipeline.from_pretrained(
+        "hunyuanvideo-community/HunyuanVideo",
+        quantization_config=pipeline_quant_config,
+        torch_dtype=torch.bfloat16,
+    )
+    generator.save_pretrained("../models/HunyuanVideo")
 
 def quantize_qwen_image():
     print("loading QwenImagePipeline")
@@ -746,4 +825,4 @@ def quantize_llm(model_name=None):
         quantization_config=quantization_config)
     generator.save_pretrained("../models/Josiefied-Qwen2.5-14B-Instruct-abliterated-v4")
 
-quantize_wan21_t2v_14b()
+quantize_hunyuan_video()

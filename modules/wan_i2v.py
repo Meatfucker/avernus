@@ -21,7 +21,7 @@ def load_wan_pipeline(model_name="Meatfucker/Wan2.2-TI2V-5B-bnb-nf4", flow_shift
     PIPELINE = WanImageToVideoPipeline.from_pretrained(model_name, vae=vae, torch_dtype=torch.bfloat16).to("cpu")
     PIPELINE.scheduler = UniPCMultistepScheduler.from_config(PIPELINE.scheduler.config, flow_shift=flow_shift)
     PIPELINE.enable_model_cpu_offload()
-    PIPELINE.vae.enable_slicing()
+    PIPELINE.vae.enable_tiling()
 
 def get_seed_generators(amount, seed):
     generator = [torch.Generator(device="cuda").manual_seed(seed + i) for i in range(amount)]
@@ -106,7 +106,7 @@ def wan_ti2v_generate(data: WanTI2VRequest = Body(...)):
                     "path": tmp_path}
         else:
             return {"status": False,
-                   "status_message": response["status_message"]}
+                   "status_message": str(response["status_message"])}
     except Exception as e:
         return {"status": False,
                 "status_message": str(e)}

@@ -49,7 +49,7 @@ def realesrgan_generate(data: RealESRGANRequest = Body(...)):
             del response
         else:
             return {"status": False,
-                    "status_message": response["status_message"]}
+                    "status_message": str(response["status_message"])}
     except Exception as e:
         return {"status": False,
                 "status_message": str(e)}
@@ -64,4 +64,4 @@ async def status():
 
 if __name__ == "__main__":
     import uvicorn
-    uvicorn.run(avernus_realesrgan, host="0.0.0.0", port=6970)
+    uvicorn.run(avernus_realesrgan, host="0.0.0.0", port=6970, log_level="critical")
