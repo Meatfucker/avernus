@@ -3,11 +3,13 @@ from loguru import logger
 
 from modules.tests import (ACETest,
                            CheckStatus,
-                           ChromaTest,
+                           ChromaTest, ChromaI2ITest,
                            FluxI2ITest, FluxInpaintTest, FluxIPAdapterTest, FluxKontextTest,
                            FluxLoraI2ITest, FluxLoraListTest, FluxLoraTest, FluxTest,
+                           FramepackTest,
                            HiDreamTest,
                            HunyuanVideoTest,
+                           ImageGenAuxTest,
                            LlmChatTest,
                            QwenImageTest, QwenImageInpaintTest, QwenImageI2ITest, QwenImageEditTest,
                            RealESRGANTest,
@@ -16,10 +18,42 @@ from modules.tests import (ACETest,
                            SDXLIPAdapterTest, SDXLLoraListTest, SDXLLoraTest, SDXLTest, SDXLSchedulerListTest,
                            Swin2SRTest,
                            WANTest, WANI2VTest)
+
 start_time = time.time()
 
+#ace = ACETest("ACE STEP")
+
 #check_status = CheckStatus("CHECK STATUS")
+
+#chroma = ChromaTest("CHROMA")
+chroma_i2i = ChromaI2ITest("CHROMA_I2I")
+
+#flux_lora_list = FluxLoraListTest("FLUX LORA LIST")
+#flux = FluxTest("FLUX")
+#flux_lora = FluxLoraTest("FLUX LORA")
+#flux_i2i = FluxI2ITest("FLUX I2I")
+#flux_inpaint = FluxInpaintTest("FLUX INPAINT")
+#flux_lora_i2i = FluxLoraI2ITest("FLUX I2I LORA")
+#flux_ipadapter = FluxIPAdapterTest("FLUX IP ADAPTER")
+#flux_kontext_test = FluxKontextTest("FLUX KONTEXT")
+
+#framepack = FramepackTest("FRAMEPACK")
+
+#hidream = HiDreamTest("HIDREAM")
+
+#hunyuan_t2v = HunyuanVideoTest("HUNYUAN_T2V")
+
+#image_gen_aux = ImageGenAuxTest("IMAGE_GEN_AUX")
+
 #llm = LlmChatTest("LLM CHAT")
+
+#qwen = QwenImageTest("QWEN_IMAGE")
+#qwen_i2i = QwenImageI2ITest("QWEN IMAGE I2I")
+#qwen_inpaint = QwenImageInpaintTest("QWEN IMAGE I2I")
+#qwen_edit = QwenImageEditTest("QWEN IMAGE EDIT")
+
+#realesrgan = RealESRGANTest("REALESRGAN")
+
 #sdxl_lora_list = SDXLLoraListTest("SDXL LORA LIST")
 #sdxl_controlnet_list = SDXLControlnetListTest("SDXL CONTROLNET LIST")
 #sdxl_scheduler_list = SDXLSchedulerListTest("SDXL SCHEDULERS LIST")
@@ -36,33 +70,10 @@ start_time = time.time()
 #sdxl_control_i2i = SDXLControlnetI2ITest("SDXL CONTROLNET I2I")
 #sdxl_control_i2i_lora = SDXLControlnetI2ILoraTest("SDXL CONTROLNET I2I LORA")
 
-#flux_lora_list = FluxLoraListTest("FLUX LORA LIST")
-#flux = FluxTest("FLUX")
-#flux_lora = FluxLoraTest("FLUX LORA")
-#flux_i2i = FluxI2ITest("FLUX I2I")
-#flux_inpaint = FluxInpaintTest("FLUX INPAINT")
-#flux_lora_i2i = FluxLoraI2ITest("FLUX I2I LORA")
-#flux_ipadapter = FluxIPAdapterTest("FLUX IP ADAPTER")
-#flux_kontext_test = FluxKontextTest("FLUX KONTEXT")
+#swin2sr = Swin2SRTest("SWIN2SR")
 
 #wan = WANTest("WAN")
 #wan_i2v = WANI2VTest("WAN_I2V")
-
-#qwen = QwenImageTest("QWEN_IMAGE")
-#qwen_i2i = QwenImageI2ITest("QWEN IMAGE I2I")
-#qwen_inpaint = QwenImageInpaintTest("QWEN IMAGE I2I")
-#qwen_edit = QwenImageEditTest("QWEN IMAGE EDIT")
-
-#ace = ACETest("ACE STEP")
-
-#hidream = HiDreamTest("HIDREAM")
-
-#chroma = ChromaTest("CHROMA")
-
-#realesrgan = RealESRGANTest("REALESRGAN")
-#swin2sr = Swin2SRTest("SWIN2SR")
-
-hunyuan_t2v = HunyuanVideoTest("HUNYUAN_T2V")
 
 end_time = time.time()
 elapsed_time = end_time - start_time

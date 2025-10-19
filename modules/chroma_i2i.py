@@ -1,21 +1,21 @@
 from typing import Any
 
-from diffusers import ChromaPipeline
+from diffusers import ChromaImg2ImgPipeline
 from fastapi import FastAPI, Body
 import torch
 
 from pydantic_models import ChromaRequest, ChromaResponse
 from utils import base64_to_image, image_to_base64
 
-PIPELINE: ChromaPipeline
+PIPELINE: ChromaImg2ImgPipeline
 LOADED: bool = False
 dtype = torch.bfloat16
-avernus_chroma = FastAPI()
+avernus_chroma_i2i = FastAPI()
 
 
 def load_chroma_pipeline(model_name="Meatfucker/Chroma1-HD-bnb-nf4"):
     global PIPELINE
-    PIPELINE = ChromaPipeline.from_pretrained(model_name, torch_dtype=dtype).to("cuda")
+    PIPELINE = ChromaImg2ImgPipeline.from_pretrained(model_name, torch_dtype=dtype).to("cuda")
     PIPELINE.enable_model_cpu_offload()
     PIPELINE.vae.enable_slicing()
 
@@ -25,6 +25,7 @@ def get_seed_generators(amount, seed):
 
 
 def generate_chroma(prompt,
+                    image,
                     width,
                     height,
                     steps,
@@ -32,7 +33,8 @@ def generate_chroma(prompt,
                     negative_prompt=None,
                     guidance_scale=None,
                     seed=None,
-                    model_name=None):
+                    model_name=None,
+                    strength=None):
     global PIPELINE
     global LOADED
     if not LOADED:
@@ -43,11 +45,13 @@ def generate_chroma(prompt,
         LOADED = True
     kwargs = {"prompt": prompt,
               "negative_prompt": negative_prompt if negative_prompt is not None else "",
+              "image": image,
               "width": width if width is not None else 1024,
               "height": height if height is not None else 1024,
               "num_inference_steps": steps if steps is not None else 30,
               "num_images_per_prompt": batch_size if batch_size is not None else 4,
-              "guidance_scale": guidance_scale if guidance_scale is not None else 5.0}
+              "guidance_scale": guidance_scale if guidance_scale is not None else 5.0,
+              "strength": strength if strength is not None else 0.9}
     if seed is not None:
         kwargs["generator"] = get_seed_generators(kwargs["num_images_per_prompt"], seed)
     try:
@@ -58,7 +62,7 @@ def generate_chroma(prompt,
         return {"status": False,
                 "status_message": str(e)}
 
-@avernus_chroma.post("/chroma_generate", response_model=ChromaResponse)
+@avernus_chroma_i2i.post("/chroma_generate", response_model=ChromaResponse)
 def chroma_generate(data: ChromaRequest = Body(...)):
     """Generates some number of HiDream images based on user inputs"""
     kwargs: dict[str, Any] = {"prompt": data.prompt,
@@ -68,12 +72,16 @@ def chroma_generate(data: ChromaRequest = Body(...)):
                               "batch_size": data.batch_size}
     if data.negative_prompt:
         kwargs["negative_prompt"] = data.negative_prompt
+    if data.image:
+        kwargs["image"] = base64_to_image(data.image)
     if data.model_name:
         kwargs["model_name"] = data.model_name
     if data.guidance_scale:
         kwargs["guidance_scale"] = data.guidance_scale
     if data.seed:
         kwargs["seed"] = data.seed
+    if data.strength:
+        kwargs["strength"] = data.strength
     try:
         response = generate_chroma(**kwargs)
         if response["status"] is True:
@@ -85,14 +93,14 @@ def chroma_generate(data: ChromaRequest = Body(...)):
         return {"status": False,
                 "status_message": str(e)}
     return {"status": True,
-            "status_message": "Chroma Success",
+            "status_message": "Chroma i2i Success",
             "images": base64_images}
 
-@avernus_chroma.get("/online")
+@avernus_chroma_i2i.get("/online")
 async def status():
     """ This returns True when hit"""
     return True
 
 if __name__ == "__main__":
     import uvicorn
-    uvicorn.run(avernus_chroma, host="0.0.0.0", port=6970, log_level="critical")
+    uvicorn.run(avernus_chroma_i2i, host="0.0.0.0", port=6970, log_level="critical")

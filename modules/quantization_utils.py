@@ -2,16 +2,18 @@ from diffusers import (AutoModel,
                        ChromaPipeline,
                        FluxPipeline, FluxFillPipeline, FluxKontextPipeline, FluxPriorReduxPipeline,
                        HiDreamImagePipeline, HiDreamImageTransformer2DModel,
-                       HunyuanVideoPipeline,
+                       HunyuanVideoPipeline, HunyuanVideoFramepackPipeline, HunyuanVideoFramepackTransformer3DModel,
                        QwenImagePipeline, QwenImageEditPipeline, QwenImageEditPlusPipeline, QwenImageTransformer2DModel,
                        WanImageToVideoPipeline, WanPipeline, WanVACEPipeline, WanVACETransformer3DModel
                        )
 from diffusers import BitsAndBytesConfig as DiffusersBitsAndBytesConfig
 from diffusers.quantizers import PipelineQuantizationConfig
 from transformers import BitsAndBytesConfig as TransformersBitsAndBytesConfig
-from transformers import (Qwen2_5_VLForConditionalGeneration, CLIPTokenizer, CLIPTextModel, T5TokenizerFast,
-                          T5EncoderModel, UMT5EncoderModel, AutoModelForCausalLM, AutoTokenizer, CLIPTextModelWithProjection,
-                          LlamaForCausalLM)
+from transformers import (Qwen2_5_VLForConditionalGeneration,
+                          CLIPTokenizer, CLIPTextModel,  CLIPTextModelWithProjection,
+                          T5TokenizerFast, T5EncoderModel, UMT5EncoderModel,
+                          AutoModelForCausalLM, AutoTokenizer, LlamaForCausalLM,
+                          SiglipImageProcessor, SiglipVisionModel)
 import torch
 
 rank = 32
@@ -20,9 +22,63 @@ dtype = torch.bfloat16
 def quantize_chroma():
     print("loading ChromaPipeline")
     pipeline_quant_config = PipelineQuantizationConfig(
-        quant_backend="bitsandbytes_4bit",
-        quant_kwargs={"load_in_4bit": True, "bnb_4bit_quant_type": "nf4", "bnb_4bit_compute_dtype": torch.bfloat16},
+        quant_backend="bitsandbytes_8bit",
+        quant_kwargs={"load_in_8bit": True,
+                      "bnb_4bit_quant_type": "nf4",
+                      "bnb_4bit_compute_dtype": torch.bfloat16,
+                      "llm_int8_skip_modules": ["context_embedder",
+                                                "proj_out",
+                                                "single_transformer_blocks.0.attn.norm_k",
+                                                "single_transformer_blocks.0.attn.norm_q",
+                                                "single_transformer_blocks.0.attn.to_k",
+                                                "single_transformer_blocks.0.attn.to_q",
+                                                "single_transformer_blocks.0.attn.to_v",
+                                                "single_transformer_blocks.0.proj_mlp",
+                                                "single_transformer_blocks.0.proj_out",
+                                                "single_transformer_blocks.37.attn.norm_k",
+                                                "single_transformer_blocks.37.attn.norm_q",
+                                                "single_transformer_blocks.37.attn.to_k",
+                                                "single_transformer_blocks.37.attn.to_q",
+                                                "single_transformer_blocks.37.attn.to_v",
+                                                "single_transformer_blocks.37.proj_mlp",
+                                                "single_transformer_blocks.37.proj_out",
+                                                "single_transformer_blocks.37.proj_out",
+                                                "transformer_blocks.0.attn.add_k_proj",
+                                                "transformer_blocks.0.attn.add_q_proj",
+                                                "transformer_blocks.0.attn.add_v_proj",
+                                                "transformer_blocks.0.attn.norm_added_k",
+                                                "transformer_blocks.0.attn.norm_added_q",
+                                                "transformer_blocks.0.attn.norm_k",
+                                                "transformer_blocks.0.attn.norm_q",
+                                                "transformer_blocks.0.attn.to_add_out",
+                                                "transformer_blocks.0.attn.to_k",
+                                                "transformer_blocks.0.attn.to_out.0",
+                                                "transformer_blocks.0.attn.to_q",
+                                                "transformer_blocks.0.attn.to_v",
+                                                "transformer_blocks.0.ff.net.0.proj",
+                                                "transformer_blocks.0.ff.net.2",
+                                                "transformer_blocks.0.ff_context.net.0.proj",
+                                                "transformer_blocks.0.ff_context.net.2",
+                                                "transformer_blocks.18.attn.add_k_proj",
+                                                "transformer_blocks.18.attn.add_q_proj",
+                                                "transformer_blocks.18.attn.add_v_proj",
+                                                "transformer_blocks.18.attn.norm_added_k",
+                                                "transformer_blocks.18.attn.norm_added_q",
+                                                "transformer_blocks.18.attn.norm_k",
+                                                "transformer_blocks.18.attn.norm_q",
+                                                "transformer_blocks.18.attn.to_add_out",
+                                                "transformer_blocks.18.attn.to_k",
+                                                "transformer_blocks.18.attn.to_out",
+                                                "transformer_blocks.18.attn.to_q",
+                                                "transformer_blocks.18.attn.to_v",
+                                                "transformer_blocks.18.ff.net.0.proj",
+                                                "transformer_blocks.18.ff.net.2",
+                                                "transformer_blocks.18.ff_context.net.0.proj",
+                                                "transformer_blocks.18.ff_context.net.2",
+                                                "x_embedder"]
+                      },
         components_to_quantize=["transformer", "text_encoder"],
+
     )
     generator = ChromaPipeline.from_pretrained("lodestones/Chroma1-HD",
                                                quantization_config=pipeline_quant_config,
@@ -76,6 +132,90 @@ def quantize_flux():
                                             quantization_config=pipeline_quant_config,
                                             torch_dtype=dtype).to("cuda")
     generator.save_pretrained("../models/Flux.1-dev")
+
+def quantize_framepack_i2v():
+    pipeline_quant_config = PipelineQuantizationConfig(
+        quant_backend="bitsandbytes_4bit",
+        quant_kwargs={
+            "load_in_4bit": True,
+            "bnb_4bit_quant_type": "nf4",
+            "bnb_4bit_compute_dtype": torch.bfloat16,
+            "llm_int8_skip_modules": ["norm_out.linear",
+                                      "proj_out",
+                                      "text_embedder",
+                                      "timestep_embedder",
+                                      "x_embedder.proj",
+                                      "single_transformer_blocks.0.attn.norm_k",
+                                      "single_transformer_blocks.0.attn.norm_q",
+                                      "single_transformer_blocks.0.attn.to_k",
+                                      "single_transformer_blocks.0.attn.to_q",
+                                      "single_transformer_blocks.0.attn.to_v",
+                                      "single_transformer_blocks.0.norm.linear",
+                                      "single_transformer_blocks.0.proj_mlp",
+                                      "single_transformer_blocks.0.proj_out",
+                                      "single_transformer_blocks.39.attn.norm_k",
+                                      "single_transformer_blocks.39.attn.norm_q",
+                                      "single_transformer_blocks.39.attn.to_k",
+                                      "single_transformer_blocks.39.attn.to_q",
+                                      "single_transformer_blocks.39.attn.to_v",
+                                      "single_transformer_blocks.39.norm.linear",
+                                      "single_transformer_blocks.39.proj_mlp",
+                                      "single_transformer_blocks.39.proj_out",
+                                      "transformer_blocks.0.attn.add_k_proj",
+                                      "transformer_blocks.0.attn.add_k_proj",
+                                      "transformer_blocks.0.attn.add_q_proj",
+                                      "transformer_blocks.0.attn.add_v_proj",
+                                      "transformer_blocks.0.attn.norm_added_k",
+                                      "transformer_blocks.0.attn.norm_added_q",
+                                      "transformer_blocks.0.attn.norm_k",
+                                      "transformer_blocks.0.attn.norm_q",
+                                      "transformer_blocks.0.attn.to_add_out",
+                                      "transformer_blocks.0.attn.to_k",
+                                      "transformer_blocks.0.attn.to_out.0",
+                                      "transformer_blocks.0.attn.to_q",
+                                      "transformer_blocks.0.attn.to_v",
+                                      "transformer_blocks.0.ff.net.0.proj",
+                                      "transformer_blocks.0.ff.net.2",
+                                      "transformer_blocks.0.ff_context.net.0.proj",
+                                      "transformer_blocks.0.ff_context.net.2",
+                                      "transformer_blocks.0.norm1.linear",
+                                      "transformer_blocks.0.norm1_context.linear",
+                                      "transformer_blocks.19.attn.add_k_proj",
+                                      "transformer_blocks.19.attn.add_k_proj",
+                                      "transformer_blocks.19.attn.add_q_proj",
+                                      "transformer_blocks.19.attn.add_v_proj",
+                                      "transformer_blocks.19.attn.norm_added_k",
+                                      "transformer_blocks.19.attn.norm_added_q",
+                                      "transformer_blocks.19.attn.norm_k",
+                                      "transformer_blocks.19.attn.norm_q",
+                                      "transformer_blocks.19.attn.to_add_out",
+                                      "transformer_blocks.19.attn.to_k",
+                                      "transformer_blocks.19.attn.to_out.0",
+                                      "transformer_blocks.19.attn.to_q",
+                                      "transformer_blocks.19.attn.to_v",
+                                      "transformer_blocks.19.ff.net.0.proj",
+                                      "transformer_blocks.19.ff.net.2",
+                                      "transformer_blocks.19.ff_context.net.0.proj",
+                                      "transformer_blocks.19.ff_context.net.2",
+                                      "transformer_blocks.19.norm1.linear",
+                                      "transformer_blocks.19.norm1_context.linear"]},
+        components_to_quantize="transformer"
+    )
+    transformer = HunyuanVideoFramepackTransformer3DModel.from_pretrained("lllyasviel/FramePackI2V_HY",
+                                                                          torch_dtype=torch.bfloat16)
+    feature_extractor = SiglipImageProcessor.from_pretrained("black-forest-labs/FLUX.1-Redux-dev",
+                                                             subfolder="feature_extractor")
+    image_encoder = SiglipVisionModel.from_pretrained("black-forest-labs/FLUX.1-Redux-dev",
+                                                      subfolder="image_encoder",
+                                                      torch_dtype=torch.float16)
+
+    generator = HunyuanVideoFramepackPipeline.from_pretrained("hunyuanvideo-community/HunyuanVideo",
+                                                         quantization_config=pipeline_quant_config,
+                                                         transformer=transformer,
+                                                         feature_extractor=feature_extractor,
+                                                         image_encoder=image_encoder,
+                                                         torch_dtype=torch.float16)
+    generator.save_pretrained("../models/FramepackI2V_HY")
 
 def quantize_hidream():
     print("loading HiDreamPipeline")
@@ -825,4 +965,4 @@ def quantize_llm(model_name=None):
         quantization_config=quantization_config)
     generator.save_pretrained("../models/Josiefied-Qwen2.5-14B-Instruct-abliterated-v4")
 
-quantize_hunyuan_video()
+quantize_chroma()

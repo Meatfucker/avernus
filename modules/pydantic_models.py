@@ -15,14 +15,18 @@ class ACEStepRequest(BaseModel):
     omega_scale: Optional[float] = Field(None, example=10.0)
     actual_seeds: Optional[int] = Field(None, example=42)
 
+class ChromaLoraListResponse(BaseModel):
+    loras: List[str] = Field(..., example=["lora1.safetensors", "lora2.safetensors", "lora3.safetensors"])
+
 class ChromaRequest(BaseModel):
     prompt: str = Field(..., example="A big green monster")
+    negative_prompt: Optional[str] = Field(None, example="blurry")
     width: Optional[int] = Field(None, example=1024)
     height: Optional[int] = Field(None, example=1024)
     steps: Optional[int] = Field(None, example=30)
     batch_size: Optional[int] = Field(None, example=4)
     image: Optional[str] = Field(None, example="a9d8fp0sa9dfpasdfllkajsdflkjadslf...")
-    strength: Optional[float] = Field(None, example=0.75)
+    strength: Optional[float] = Field(None, example=0.9)
     guidance_scale: Optional[float] = Field(None, example=5.0)
     seed: Optional[int] = Field(None, example=42)
     model_name: Optional[str] = Field(None, example="Meatfucker/Flux.1-dev-bnb-nf4")
@@ -68,6 +72,19 @@ class FluxRequest(BaseModel):
 class FluxResponse(GenericResponse):
     images: Optional[List[str]] = Field(None, example=["kajsdflsadfsadf....", "lkjdsaflkjsadlkfjsa3423....", "lwerewjrlwkejrwewr..."])
 
+class FramepackRequest(BaseModel):
+    prompt: str = Field(..., example="A big green monster")
+    negative_prompt: Optional[str] = Field(None, example="a blue dog")
+    width: Optional[int] = Field(None, example=1280)
+    height: Optional[int] = Field(None, example=720)
+    steps: Optional[int] = Field(None, example=50)
+    num_frames: Optional[int] = Field(None, example=129)
+    image: Optional[str] = Field(None, example="a9d8fp0sa9dfpasdfllkajsdflkjadslf...")
+    last_image: Optional[str] = Field(None, example="a9d8fp0sa9dfpasdfllkajsdflkjadslf...")
+    guidance_scale: Optional[float] = Field(None, example=6.0)
+    seed: Optional[int] = Field(None, example=42)
+    model_name: Optional[str] = Field(None, example="Meatfucker/HunyuanVideo-bnb-nf4")
+
 class HiDreamRequest(BaseModel):
     prompt: str = Field(..., example="A big green monster")
     width: Optional[int] = Field(None, example=1024)
@@ -93,6 +110,18 @@ class HunyuanTI2VRequest(BaseModel):
     guidance_scale: Optional[float] = Field(None, example=5.0)
     seed: Optional[int] = Field(None, example=42)
     model_name: Optional[str] = Field(None, example="Meatfucker/HunyuanVideo-bnb-nf4")
+
+class ImageGenAuxRequest(BaseModel):
+    image: str = Field(..., example="a9d8fp0sa9dfpasdfllkajsdflkjadslf...")
+    model: Optional[str] = Field(None, example="OzzyGT/DAT_X4")
+    scale: Optional[int] = Field(None, example=4)
+    tiling: Optional[bool] = Field(None, example=True)
+    tile_width: Optional[int] = Field(None, example=768)
+    tile_height: Optional[int] = Field(None, example=768)
+    overlap: Optional[int] = Field(None, example=8)
+
+class ImageGenAuxResponse(GenericResponse):
+    images: Optional[str] = Field(None, example="kajsdflsadfsadf....")
 
 class LLMRequest(BaseModel):
     prompt: str = Field(..., example="Who is the best at hackey sack?")

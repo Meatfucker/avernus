@@ -1,7 +1,7 @@
 from typing import Any
 import tempfile
 
-from diffusers import UniPCMultistepScheduler, HunyuanVideoPipeline
+from diffusers import HunyuanVideoPipeline
 from diffusers.utils import export_to_video
 from fastapi import FastAPI, Body
 import torch
@@ -14,7 +14,7 @@ dtype = torch.bfloat16
 avernus_hunyuan_t2v = FastAPI()
 
 
-def load_hunyuan_pipeline(model_name="./models/HunyuanVideo", flow_shift=3.0):
+def load_hunyuan_pipeline(model_name="Meatfucker/HunyuanVideo-bnb-nf4", flow_shift=3.0):
     global PIPELINE
     PIPELINE = HunyuanVideoPipeline.from_pretrained(model_name, torch_dtype=torch.bfloat16)
     PIPELINE.enable_model_cpu_offload()
@@ -37,7 +37,7 @@ def generate_hunyuan_ti2v(prompt: str,
     global PIPELINE
     global LOADED
     if model_name is None:
-        model_name = "./models/HunyuanVideo"
+        model_name = "Meatfucker/HunyuanVideo-bnb-nf4"
     if not LOADED:
         load_hunyuan_pipeline(model_name, flow_shift)
         LOADED = True

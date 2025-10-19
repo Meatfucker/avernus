@@ -7,10 +7,12 @@ import httpx
 from loguru import logger
 
 from modules.pydantic_models import (ACEStepRequest,
-                                     ChromaRequest, ChromaResponse,
+                                     ChromaRequest, ChromaResponse, ChromaLoraListResponse,
                                      FluxInpaintRequest, FluxRequest, FluxResponse, FluxLoraListResponse,
+                                     FramepackRequest,
                                      HiDreamResponse, HiDreamRequest,
                                      HunyuanTI2VRequest,
+                                     ImageGenAuxRequest, ImageGenAuxResponse,
                                      LLMRequest, LLMResponse,
                                      QwenImageRequest, QwenImageInpaintRequest, QwenImageLoraListResponse,
                                      QwenImageResponse, QwenImageEditPlusRequest,
@@ -58,7 +60,10 @@ async def chroma_generate(data: ChromaRequest = Body(...)):
     """Generates some number of Chroma images based on user inputs"""
     logger.info("chroma_generate request received")
     async with pipeline_lock:
-        await server_manager.set_pipeline("chroma", data.model_name)
+        if data.image is not None:
+            await server_manager.set_pipeline("chroma_i2i", data.model_name)
+        else:
+            await server_manager.set_pipeline("chroma", data.model_name)
         url = "http://127.0.0.1:6970/chroma_generate"
         try:
             result = await forward_post_request(url, data)
@@ -158,6 +163,26 @@ async def flux_kontext_generate(data: FluxRequest = Body(...)):
             return {"status": False,
                     "status_message": str(e)}
 
+@avernus.post("/framepack_generate")
+async def framepack_generate(data: FramepackRequest = Body(...)):
+    logger.info("framepack_generate request received")
+    async with pipeline_lock:
+        await server_manager.set_pipeline("framepack", data.model_name)
+        url = "http://127.0.0.1:6970/framepack_generate"
+        try:
+            result = await forward_post_request(url, data)
+            if result["status"] is True:
+                return StreamingResponse(cleanup_and_stream(result["path"]), media_type="video/mp4")
+            else:
+                logger.error(f"Generation Error: {result['status_message']}")
+                server_manager.kill_pipeline()
+                return {"status": False,
+                        "status_message": result["status_message"]}
+        except Exception as e:
+            server_manager.kill_pipeline()
+            return {"status": False,
+                    "status_message": str(e)}
+
 @avernus.post("/hidream_generate", response_model=HiDreamResponse)
 async def hidream_generate(data: HiDreamRequest = Body(...)):
     """Generates some number of HiDream images based on user inputs"""
@@ -183,10 +208,7 @@ async def hidream_generate(data: HiDreamRequest = Body(...)):
 async def hunyuan_ti2v_generate(data: HunyuanTI2VRequest = Body(...)):
     logger.info("hunyuan_ti2v_generate request received")
     async with pipeline_lock:
-        if data.image is None:
-            await server_manager.set_pipeline("hunyuan_t2v", data.model_name)
-        if data.image is not None:
-            await server_manager.set_pipeline("hunyuan_i2v", data.model_name)
+        await server_manager.set_pipeline("hunyuan_t2v", data.model_name)
         url = "http://127.0.0.1:6970/hunyuan_ti2v_generate"
         try:
             result = await forward_post_request(url, data)
@@ -201,6 +223,39 @@ async def hunyuan_ti2v_generate(data: HunyuanTI2VRequest = Body(...)):
             server_manager.kill_pipeline()
             return {"status": False,
                     "status_message": str(e)}
+
+
+@avernus.post("/image_gen_aux_upscale", response_model=ImageGenAuxResponse)
+async def image_gen_aux_upscale(data: ImageGenAuxRequest = Body(...)):
+    """Upscales an image based on user input"""
+    logger.info("image_gen_aux_upscale request received")
+    async with pipeline_lock:
+        await server_manager.set_pipeline("image_gen_aux_upscale", data.model)
+        url = "http://127.0.0.1:6970/image_gen_aux_upscale"
+        try:
+            result = await forward_post_request(url, data)
+            if result["status"] is True:
+                return result
+            else:
+                logger.error(f"Generation Error: {result['status_message']}")
+                server_manager.kill_pipeline()
+                return {"status": False,
+                        "status_message": result["status_message"]}
+        except Exception as e:
+            server_manager.kill_pipeline()
+            return {"status": False,
+                    "status_message": str(e)}
+
+@avernus.get("/list_chroma_loras", response_model=ChromaLoraListResponse)
+async def list_chroma_loras():
+    """Returns a list of the files located in the flux loras directory"""
+    logger.info("list_chroma_loras request received")
+    try:
+        filenames = return_loras("loras/chroma")
+        return {"loras": filenames}
+    except Exception as e:
+        logger.error(f"list_chroma_loras ERROR: {e}")
+        return {"error": str(e)}
 
 @avernus.get("/list_flux_loras", response_model=FluxLoraListResponse)
 async def list_flux_loras():

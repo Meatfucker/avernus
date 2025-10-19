@@ -45,6 +45,13 @@ class ChromaTest(TimedTest):
         images = await self.client.chroma_image("frog made of yarn", batch_size=1)
         await base64_image_to_file(images, "chroma")
 
+class ChromaI2ITest(TimedTest):
+    async def run_test(self):
+        image = Image.open("tests/mushroom.png")
+        image = image_to_base64(image)
+        images = await self.client.chroma_image("frog made of yarn", image=image, batch_size=1)
+        await base64_image_to_file(images, "chroma_i2i")
+
 class FluxI2ITest(TimedTest):
     async def run_test(self):
         image = Image.open("tests/flux_image_0.png")
@@ -115,6 +122,20 @@ class FluxTest(TimedTest):
         images = await self.client.flux_image("Mucus Balloon", batch_size=1)
         await base64_image_to_file(images, "flux")
 
+class FramepackTest(TimedTest):
+    async def run_test(self):
+        image = Image.open("tests/mushroom.png")
+        image = image_to_base64(image)
+        last_image = Image.open("tests/flux_inpaint_image_0.png")
+        last_image = image_to_base64(last_image)
+        await self.client.framepack("A colorful psychedelic scene of a mushroom with demons crawling on it",
+                                    num_frames=81,
+                                    seed=42,
+                                    width=512,
+                                    height=512,
+                                    image=image,
+                                    last_image=last_image)
+
 class HiDreamTest(TimedTest):
     async def run_test(self):
         images = await self.client.hidream_image("laser turtle", batch_size=1)
@@ -127,6 +148,14 @@ class HunyuanVideoTest(TimedTest):
                                        seed=42,
                                        width=832,
                                        height=480)
+
+class ImageGenAuxTest(TimedTest):
+    async def run_test(self):
+        image = Image.open("tests/mushroom.png")
+        image = image_to_base64(image)
+        upscaled_image = await self.client.image_gen_aux_upscale(image=image, model="OzzyGT/DAT_X4")
+        await base64_image_to_file([upscaled_image], "image_gen_aux")
+
 
 class LlmChatTest(TimedTest):
     async def run_test(self):

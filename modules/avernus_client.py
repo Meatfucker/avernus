@@ -53,11 +53,12 @@ class AvernusClient:
             print(f"status ERROR: {e}")
             return {"ERROR": str(e)}
 
-    async def chroma_image(self, prompt, image=None, model_name=None, lora_name=None, width=None, height=None, steps=None,
-                         batch_size=None, strength=None, seed=None, guidance_scale=None):
+    async def chroma_image(self, prompt, negative_prompt=None, image=None, model_name=None, lora_name=None, width=None,
+                           height=None, steps=None, batch_size=None, strength=None, seed=None, guidance_scale=None):
         """This takes a prompt and optional other variables and returns a list of base64 encoded images"""
         url = f"http://{self.base_url}/chroma_generate"
         data = {"prompt": prompt,
+                "negative_prompt": negative_prompt,
                 "image": image,
                 "model_name": model_name,
                 "lora_name": lora_name,
@@ -194,6 +195,37 @@ class AvernusClient:
             print(f"ERROR: {e}")
             return {"ERROR": str(e)}
 
+    async def framepack(self, prompt, image, negative_prompt=None, width=None, height=None, steps=None, num_frames=None,
+                       guidance_scale=None, last_image=None, seed=None, model_name=None):
+        """This takes a prompt and returns a video"""
+        url = f"http://{self.base_url}/framepack_generate"
+        data = {"prompt": prompt,
+                "negative_prompt": negative_prompt,
+                "width": width,
+                "height": height,
+                "num_frames": num_frames,
+                "guidance_scale": guidance_scale,
+                "seed": seed,
+                "steps": steps,
+                "image": image,
+                "last_image": last_image,
+                "model_name": model_name}
+        try:
+            async with httpx.AsyncClient(timeout=None) as client:
+                response = await client.post(url, json=data)
+            if response.status_code == 200:
+                # Save the returned binary video content
+                temp_file = tempfile.NamedTemporaryFile(delete=False, suffix=".mp4")
+                temp_file.write(response.content)
+                temp_file.close()  # Close the file so it can be used elsewhere
+                return temp_file.name
+            else:
+                print(f"FRAMEPACK ERROR: {response.status_code} - {response.text}")
+                return None
+        except Exception as e:
+            print(f"ERROR: {e}")
+            return {"ERROR": str(e)}
+
     async def hidream_image(self, prompt, model_name=None, width=None, height=None, steps=None, batch_size=None,
                             seed=None, guidance_scale=None):
         """This takes a prompt and optional other variables and returns a list of base64 encoded images"""
@@ -246,6 +278,43 @@ class AvernusClient:
                 return None
         except Exception as e:
             print(f"ERROR: {e}")
+            return {"ERROR": str(e)}
+
+    async def image_gen_aux_upscale(self, image, model=None, scale=None, tiling=None, tile_width=None, tile_height=None, overlap=None):
+        """This takes an image and an optional scale of either 2, 4, or 8 and returns an upscaled image"""
+        url = f"http://{self.base_url}/image_gen_aux_upscale"
+        data = {"image": image,
+                "model": model,
+                "scale": scale,
+                "tiling": tiling,
+                "tile_width": tile_width,
+                "tile_height": tile_height,
+                "overlap": overlap}
+        try:
+            async with httpx.AsyncClient(timeout=None) as client:
+                response = await client.post(url, json=data)
+            if response.status_code == 200:
+                return response.json().get("images")
+            else:
+                print(f"IMAGE_GEN_AUX_UPSCALE ERROR: {response.status_code}")
+        except Exception as e:
+            print(f"ERROR: {e}")
+            return {"ERROR": str(e)}
+
+    async def list_chroma_loras(self):
+        """Fetches the list of flux LoRA filenames from the server."""
+        url = f"http://{self.base_url}/list_chroma_loras"
+
+        try:
+            async with httpx.AsyncClient(timeout=5.0) as client:
+                response = await client.get(url)
+            if response.status_code == 200:
+                return response.json().get("loras", [])
+            else:
+                print(f"LIST CHROMA LORAS ERROR: {response.status_code}, Response: {response.text}")
+                return {"ERROR": response.text}
+        except Exception as e:
+            print(f"list_chroma_loras ERROR: {e}")
             return {"ERROR": str(e)}
 
     async def list_flux_loras(self):
