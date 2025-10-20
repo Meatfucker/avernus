@@ -16,7 +16,7 @@ dtype = torch.bfloat16
 avernus_framepack = FastAPI()
 
 
-def load_framepack_pipeline(model_name: str = "./models/FramepackI2V_HY"):
+def load_framepack_pipeline(model_name: str = "Meatfucker/FramepackI2V_HY-bnb-nf4"):
     global PIPELINE
     PIPELINE = HunyuanVideoFramepackPipeline.from_pretrained(model_name, torch_dtype=torch.bfloat16)
     #apply_group_offloading(PIPELINE.text_encoder_2, onload_device=torch.device("cuda"), offload_type="block_level",
@@ -47,7 +47,7 @@ def generate_framepack(prompt: str,
     global PIPELINE
     global LOADED
     if model_name is None:
-        model_name = "./models/FramepackI2V_HY"
+        model_name = "Meatfucker/FramepackI2V_HY-bnb-nf4"
     if not LOADED:
         load_framepack_pipeline(model_name)
         LOADED = True
