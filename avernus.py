@@ -251,6 +251,7 @@ async def list_chroma_loras():
     """Returns a list of the files located in the flux loras directory"""
     logger.info("list_chroma_loras request received")
     try:
+        os.makedirs("loras/chroma", exist_ok=True)
         filenames = return_loras("loras/chroma")
         return {"loras": filenames}
     except Exception as e:
@@ -262,6 +263,7 @@ async def list_flux_loras():
     """Returns a list of the files located in the flux loras directory"""
     logger.info("list_flux_loras request received")
     try:
+        os.makedirs("loras/flux", exist_ok=True)
         filenames = return_loras("loras/flux")
         return {"loras": filenames}
     except Exception as e:
@@ -273,6 +275,7 @@ async def list_qwen_image_loras():
     """Returns a list of the files located in the qwen_image loras directory"""
     logger.info("list_qwen_image_loras request received")
     try:
+        os.makedirs("loras/qwen_image", exist_ok=True)
         filenames = return_loras("loras/qwen_image")
         return {"loras": filenames}
     except Exception as e:
@@ -294,6 +297,7 @@ async def list_sdxl_loras():
     """Returns a list of the files located in the sdxl loras directory."""
     logger.info("list_sdxl_loras request received")
     try:
+        os.makedirs("loras/sdxl", exist_ok=True)
         filenames = return_loras("loras/sdxl")
         return {"loras": filenames}
     except Exception as e:
