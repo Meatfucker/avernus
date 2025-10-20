@@ -9,7 +9,7 @@ from diffusers import (AutoModel,
 from diffusers import BitsAndBytesConfig as DiffusersBitsAndBytesConfig
 from diffusers.quantizers import PipelineQuantizationConfig
 from transformers import BitsAndBytesConfig as TransformersBitsAndBytesConfig
-from transformers import (Qwen2_5_VLForConditionalGeneration,
+from transformers import (Qwen2_5_VLForConditionalGeneration, Qwen2ForCausalLM,
                           CLIPTokenizer, CLIPTextModel,  CLIPTextModelWithProjection,
                           T5TokenizerFast, T5EncoderModel, UMT5EncoderModel,
                           AutoModelForCausalLM, AutoTokenizer, LlamaForCausalLM,
@@ -952,17 +952,17 @@ def quantize_wan22_i2v_a14b():
     generator.save_pretrained("../models/Wan2.2-I2V-A14B")
 
 def quantize_llm(model_name=None):
-    quantization_config = TransformersBitsAndBytesConfig(
-        load_in_4bit=True,
-        bnb_4bit_compute_dtype=torch.bfloat16,
-        bnb_4bit_quant_type="nf4",
-        bnb_4bit_use_double_quant=True,
-    )
+    quantization_config = TransformersBitsAndBytesConfig(load_in_4bit=True,
+                                                         bnb_4bit_compute_dtype=torch.bfloat16,
+                                                         bnb_4bit_quant_type="nf4")
     if model_name is None:
-        model_name = "Goekdeniz-Guelmez/Josiefied-Qwen2.5-14B-Instruct-abliterated-v4"
+        model_name = "cognitivecomputations/Llama-3-8B-Instruct-abliterated-v2"
     generator = AutoModelForCausalLM.from_pretrained(
         model_name,
-        quantization_config=quantization_config)
-    generator.save_pretrained("../models/Josiefied-Qwen2.5-14B-Instruct-abliterated-v4")
+        quantization_config=quantization_config,
+        dtype=torch.bfloat16)
+    generator.save_pretrained("../models/Llama-3-8B-Instruct-abliterated-v2")
+    tokenizer = AutoTokenizer.from_pretrained("cognitivecomputations/Llama-3-8B-Instruct-abliterated-v2")
+    tokenizer.save_pretrained("../models/Llama-3-8B-Instruct-abliterated-v2")
 
-quantize_chroma()
+quantize_llm()

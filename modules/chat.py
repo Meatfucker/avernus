@@ -12,18 +12,23 @@ avernus_llm = FastAPI()
 def load_pipeline(model_name=None):
     global PIPELINE
     if model_name is None:
-        model_name = "Goekdeniz-Guelmez/Josiefied-Qwen2.5-14B-Instruct-abliterated-v4"
-    PIPELINE = pipeline(task="text-generation",
-                        model=model_name,
-                        model_kwargs={"torch_dtype": torch.bfloat16, "quantization_config": {"load_in_4bit": True, "quant_method": "bitsandbytes"}}
-                        )
+        model_name = "Meatfucker/Josiefied-Qwen2.5-14B-Instruct-abliterated-v4-bnb-nf4"
+    try:
+        PIPELINE = pipeline(task="text-generation",
+                            model=model_name,
+                            model_kwargs={"torch_dtype": torch.bfloat16})
+    except Exception as e:
+        print(f"LOADING EXCEPTION: {e}")
 
 def generate_chat(prompt, model_name, messages=None):
     global PIPELINE
     global LOADED
     if not LOADED:
+        print(model_name)
+        print("loading pipeline")
         load_pipeline(model_name)
         LOADED = True
+        print("pipeline loaded")
     if messages:
         messages.append({"role": "user", "content": prompt})
     else:
@@ -35,7 +40,7 @@ def generate_chat(prompt, model_name, messages=None):
                 "response": response}
     except Exception as e:
         return {"status": False,
-                "status_message": str(e)}
+                "status_message": f"FUNCTION ERROR: {str(e)}"}
 
 @avernus_llm.post("/llm_chat", response_model=LLMResponse)
 def llm_chat(data: LLMRequest = Body(...)):
@@ -53,7 +58,7 @@ def llm_chat(data: LLMRequest = Body(...)):
                     "status_message": str(response["status_message"])}
     except Exception as e:
         return {"status": False,
-                "status_message": str(e)}
+                "status_message": f"API ERROR: {str(e)}, KWARGS:{kwargs}"}
 
 @avernus_llm.get("/online")
 async def status():
