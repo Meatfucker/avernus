@@ -19,12 +19,6 @@ avernus_framepack = FastAPI()
 def load_framepack_pipeline(model_name: str = "Meatfucker/FramepackI2V_HY-bnb-nf4"):
     global PIPELINE
     PIPELINE = HunyuanVideoFramepackPipeline.from_pretrained(model_name, torch_dtype=torch.bfloat16)
-    #apply_group_offloading(PIPELINE.text_encoder_2, onload_device=torch.device("cuda"), offload_type="block_level",
-    #                       num_blocks_per_group=2)
-    #PIPELINE.transformer.enable_group_offload(onload_device=torch.device("cuda"),
-    #                              offload_device=torch.device("cpu"),
-    #                              offload_type="leaf_level",
-    #                              num_blocks_per_group=2)
     PIPELINE.enable_model_cpu_offload()
     PIPELINE.transformer.enable_layerwise_casting(storage_dtype=torch.float8_e4m3fn, compute_dtype=torch.bfloat16)
     PIPELINE.vae.enable_tiling()

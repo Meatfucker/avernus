@@ -26,7 +26,7 @@ start_time = time.time()
 #check_status = CheckStatus("CHECK STATUS")
 
 #chroma = ChromaTest("CHROMA")
-chroma_i2i = ChromaI2ITest("CHROMA_I2I")
+#chroma_i2i = ChromaI2ITest("CHROMA_I2I")
 
 #flux_lora_list = FluxLoraListTest("FLUX LORA LIST")
 #flux = FluxTest("FLUX")
@@ -37,7 +37,7 @@ chroma_i2i = ChromaI2ITest("CHROMA_I2I")
 #flux_ipadapter = FluxIPAdapterTest("FLUX IP ADAPTER")
 #flux_kontext_test = FluxKontextTest("FLUX KONTEXT")
 
-#framepack = FramepackTest("FRAMEPACK")
+framepack = FramepackTest("FRAMEPACK")
 
 #hidream = HiDreamTest("HIDREAM")
 
