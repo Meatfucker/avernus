@@ -349,6 +349,22 @@ class AvernusClient:
             print(f"list_qwen_image_loras ERROR: {e}")
             return {"ERROR": str(e)}
 
+    async def list_sd15_loras(self):
+        """Fetches the list of sdxl LoRA filenames from the server."""
+        url = f"http://{self.base_url}/list_sd15_loras"
+
+        try:
+            async with httpx.AsyncClient(timeout=5.0) as client:
+                response = await client.get(url)
+            if response.status_code == 200:
+                return response.json().get("loras", [])
+            else:
+                print(f"LIST SD15 LORAS ERROR: {response.status_code}, Response: {response.text}")
+                return {"ERROR": response.text}
+        except Exception as e:
+            print(f"list_sd15l_loras ERROR: {e}")
+            return {"ERROR": str(e)}
+
     async def list_sdxl_controlnets(self):
         """Fetches the list of sdxl controlnets from the server."""
         url = f"http://{self.base_url}/list_sdxl_controlnets"
