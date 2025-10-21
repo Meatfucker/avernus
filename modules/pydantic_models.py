@@ -238,6 +238,9 @@ class SD15InpaintRequest(BaseModel):
     scheduler: Optional[str] = Field(None, example="DPMSolverMultistepScheduler")
     seed: Optional[int] = Field(None, example=42)
 
+class SD15LoraListResponse(BaseModel):
+    loras: List[str] = Field(..., example=["lora1.safetensors", "lora2.safetensors", "lora3.safetensors"])
+
 class SDXLControlnetListResponse(BaseModel):
     sdxl_controlnets: List[str] = Field(..., example=["canny", "depth"])
 

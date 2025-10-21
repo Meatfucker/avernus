@@ -17,7 +17,7 @@ from modules.pydantic_models import (ACEStepRequest,
                                      QwenImageRequest, QwenImageInpaintRequest, QwenImageLoraListResponse,
                                      QwenImageResponse, QwenImageEditPlusRequest,
                                      RealESRGANResponse, RealESRGANRequest,
-                                     SD15Response, SD15Request,
+                                     SD15Response, SD15Request,SD15InpaintRequest, SD15LoraListResponse,
                                      SDXLInpaintRequest, SDXLRequest, SDXLResponse, SD15InpaintRequest,
                                      SDXLLoraListResponse,
                                      SDXLControlnetListResponse, SDXLSchedulerListResponse,
@@ -281,6 +281,18 @@ async def list_qwen_image_loras():
         return {"loras": filenames}
     except Exception as e:
         logger.error(f"list_qwen_image_loras ERROR: {e}")
+        return {"error": str(e)}
+
+@avernus.get("/list_sd15_loras", response_model=SD15LoraListResponse)
+async def list_sd15_loras():
+    """Returns a list of the files located in the sdxl loras directory."""
+    logger.info("list_sd15_loras request received")
+    try:
+        os.makedirs("loras/sd15", exist_ok=True)
+        filenames = return_loras("loras/sd15")
+        return {"loras": filenames}
+    except Exception as e:
+        logger.error(f"list_sd15_loras ERROR: {e}")
         return {"error": str(e)}
 
 @avernus.get("/list_sdxl_controlnets", response_model=SDXLControlnetListResponse)
