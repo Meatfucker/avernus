@@ -17,6 +17,7 @@ from modules.pydantic_models import (ACEStepRequest,
                                      QwenImageRequest, QwenImageInpaintRequest, QwenImageLoraListResponse,
                                      QwenImageResponse, QwenImageEditPlusRequest,
                                      RealESRGANResponse, RealESRGANRequest,
+                                     SD15Response, SD15Request,
                                      SDXLInpaintRequest, SDXLRequest, SDXLResponse,
                                      SDXLLoraListResponse,
                                      SDXLControlnetListResponse, SDXLSchedulerListResponse,
@@ -556,6 +557,30 @@ async def status():
     """ This returns Ok when hit"""
     return {"status": str("Ok!"),
             "version": str("0.6.0")}
+
+@avernus.post("/sd15_generate", response_model=SD15Response)
+async def sd15_generate(data: SD15Request = Body(...)):
+    """Generates some number of sdxl images based on user inputs."""
+    logger.info("sd15_generate request received")
+    async with pipeline_lock:
+        if data.image is None:
+            await server_manager.set_pipeline("sd15", data.model_name)
+        if data.image is not None:
+            await server_manager.set_pipeline("sd15_i2i", data.model_name)
+        url = "http://127.0.0.1:6970/sd15_generate"
+        try:
+            result = await forward_post_request(url, data)
+            if result["status"] is True:
+                return result
+            else:
+                logger.error(f"Generation Error: {result['status_message']}")
+                server_manager.kill_pipeline()
+                return {"status": False,
+                        "status_message": result["status_message"]}
+        except Exception as e:
+            server_manager.kill_pipeline()
+            return {"status": False,
+                    "status_message": str(e)}
 
 @avernus.post("/sdxl_generate", response_model=SDXLResponse)
 async def sdxl_generate(data: SDXLRequest = Body(...)):

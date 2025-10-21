@@ -204,6 +204,24 @@ class RealESRGANRequest(BaseModel):
 class RealESRGANResponse(GenericResponse):
     images: Optional[str] = Field(None, example="kajsdflsadfsadf....")
 
+class SD15Request(BaseModel):
+    prompt: str = Field(..., example="A big green monster")
+    negative_prompt: Optional[str] = Field(None, example="a blue dog")
+    model_name: Optional[str] = Field(None, example="some-repo/some-sd-model")
+    width: Optional[int] = Field(None, example=1024)
+    height: Optional[int] = Field(None, example=1024)
+    steps: Optional[int] = Field(None, example=30)
+    batch_size: Optional[int] = Field(None, example=4)
+    lora_name: Optional[Union[str, List[str]]] = Field(None, example="lora_name.safetensors")
+    image: Optional[str] = Field(None, example="a9d8fp0sa9dfpasdfllkajsdflkjadslf...")
+    strength: Optional[float] = Field(None, example=0.75)
+    guidance_scale: Optional[float] = Field(None, example=5.0)
+    scheduler: Optional[str] = Field(None, example="DPMSolverMultistepScheduler")
+    seed: Optional[int] = Field(None, example=42)
+
+class SD15Response(GenericResponse):
+    images: Optional[List[str]] = Field(None, example=["kajsdflsadfsadf....", "lkjdsaflkjsadlkfjsa3423....", "lwerewjrlwkejrwewr..."])
+
 class SDXLControlnetListResponse(BaseModel):
     sdxl_controlnets: List[str] = Field(..., example=["canny", "depth"])
 

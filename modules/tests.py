@@ -211,6 +211,22 @@ class RealESRGANTest(TimedTest):
                                                       scale=8)
         await base64_image_to_file([upscaled_image], "realesrgan")
 
+class SD15Test(TimedTest):
+    async def run_test(self):
+        images = await self.client.sd15_image("turbo taco",
+                                              batch_size=2,
+                                              scheduler="DPMSolverSDEScheduler")
+        await base64_image_to_file(images, "sd15")
+
+class SD15I2ITest(TimedTest):
+    async def run_test(self):
+        image = Image.open("tests/sdxl_image_0.png")
+        image = image_to_base64(image)
+        images = await self.client.sd15_image("warrior princess",
+                                              image=image,
+                                              strength=0.3,
+                                              batch_size=2)
+        await base64_image_to_file(images, "sd15_i2i")
 
 class SDXLControlnetI2ILoraTest(TimedTest):
     async def run_test(self):

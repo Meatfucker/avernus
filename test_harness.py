@@ -13,6 +13,7 @@ from modules.tests import (ACETest,
                            LlmChatTest,
                            QwenImageTest, QwenImageInpaintTest, QwenImageI2ITest, QwenImageEditTest,
                            RealESRGANTest,
+                           SD15Test, SD15I2ITest,
                            SDXLControlnetI2ILoraTest, SDXLControlnetI2ITest, SDXLControlnetListTest,
                            SDXLControlnetLoraTest, SDXLControlnetTest, SDXLI2ILoraTest, SDXLI2ITest, SDXLInpaintTest,
                            SDXLIPAdapterTest, SDXLLoraListTest, SDXLLoraTest, SDXLTest, SDXLSchedulerListTest,
@@ -37,7 +38,7 @@ start_time = time.time()
 #flux_ipadapter = FluxIPAdapterTest("FLUX IP ADAPTER")
 #flux_kontext_test = FluxKontextTest("FLUX KONTEXT")
 
-framepack = FramepackTest("FRAMEPACK")
+#framepack = FramepackTest("FRAMEPACK")
 
 #hidream = HiDreamTest("HIDREAM")
 
@@ -53,6 +54,9 @@ framepack = FramepackTest("FRAMEPACK")
 #qwen_edit = QwenImageEditTest("QWEN IMAGE EDIT")
 
 #realesrgan = RealESRGANTest("REALESRGAN")
+
+sd15 = SD15Test("SD15")
+sd15_i2i = SD15I2ITest("SD15_I2I")
 
 #sdxl_lora_list = SDXLLoraListTest("SDXL LORA LIST")
 #sdxl_controlnet_list = SDXLControlnetListTest("SDXL CONTROLNET LIST")
