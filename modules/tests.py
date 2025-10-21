@@ -228,6 +228,19 @@ class SD15I2ITest(TimedTest):
                                               batch_size=2)
         await base64_image_to_file(images, "sd15_i2i")
 
+class SD15InpaintTest(TimedTest):
+    async def run_test(self):
+        image = Image.open("tests/sdxl_i2i_image_0.png")
+        image = image_to_base64(image)
+        mask_image = Image.open("tests/mask_image.png")
+        mask_image = image_to_base64(mask_image)
+        images = await self.client.sd15_inpaint_image("cartoon",
+                                                      batch_size=2,
+                                                      image=image,
+                                                      mask_image=mask_image,
+                                                      strength=1)
+        await base64_image_to_file(images, "sd15_inpaint")
+
 class SDXLControlnetI2ILoraTest(TimedTest):
     async def run_test(self):
         image = Image.open("tests/sdxl_i2i_image_0.png")

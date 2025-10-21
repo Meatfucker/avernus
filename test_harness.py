@@ -13,7 +13,7 @@ from modules.tests import (ACETest,
                            LlmChatTest,
                            QwenImageTest, QwenImageInpaintTest, QwenImageI2ITest, QwenImageEditTest,
                            RealESRGANTest,
-                           SD15Test, SD15I2ITest,
+                           SD15Test, SD15I2ITest, SD15InpaintTest,
                            SDXLControlnetI2ILoraTest, SDXLControlnetI2ITest, SDXLControlnetListTest,
                            SDXLControlnetLoraTest, SDXLControlnetTest, SDXLI2ILoraTest, SDXLI2ITest, SDXLInpaintTest,
                            SDXLIPAdapterTest, SDXLLoraListTest, SDXLLoraTest, SDXLTest, SDXLSchedulerListTest,
@@ -57,6 +57,7 @@ start_time = time.time()
 
 sd15 = SD15Test("SD15")
 sd15_i2i = SD15I2ITest("SD15_I2I")
+sd15_inpaint = SD15InpaintTest("SD15_INPAINT")
 
 #sdxl_lora_list = SDXLLoraListTest("SDXL LORA LIST")
 #sdxl_controlnet_list = SDXLControlnetListTest("SDXL CONTROLNET LIST")

@@ -18,7 +18,7 @@ from modules.pydantic_models import (ACEStepRequest,
                                      QwenImageResponse, QwenImageEditPlusRequest,
                                      RealESRGANResponse, RealESRGANRequest,
                                      SD15Response, SD15Request,
-                                     SDXLInpaintRequest, SDXLRequest, SDXLResponse,
+                                     SDXLInpaintRequest, SDXLRequest, SDXLResponse, SD15InpaintRequest,
                                      SDXLLoraListResponse,
                                      SDXLControlnetListResponse, SDXLSchedulerListResponse,
                                      StatusResponse,
@@ -568,6 +568,27 @@ async def sd15_generate(data: SD15Request = Body(...)):
         if data.image is not None:
             await server_manager.set_pipeline("sd15_i2i", data.model_name)
         url = "http://127.0.0.1:6970/sd15_generate"
+        try:
+            result = await forward_post_request(url, data)
+            if result["status"] is True:
+                return result
+            else:
+                logger.error(f"Generation Error: {result['status_message']}")
+                server_manager.kill_pipeline()
+                return {"status": False,
+                        "status_message": result["status_message"]}
+        except Exception as e:
+            server_manager.kill_pipeline()
+            return {"status": False,
+                    "status_message": str(e)}
+
+@avernus.post("/sd15_inpaint_generate", response_model=SD15Response)
+async def sd15_inpaint_generate(data: SD15InpaintRequest = Body(...)):
+    """Generates some number of sdxl inpaint images based on user inputs."""
+    logger.info("sd15_inpaint_generate request received")
+    async with pipeline_lock:
+        await server_manager.set_pipeline("sd15_inpaint", data.model_name)
+        url = "http://127.0.0.1:6970/sd15_inpaint_generate"
         try:
             result = await forward_post_request(url, data)
             if result["status"] is True:
