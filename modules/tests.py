@@ -156,6 +156,14 @@ class ImageGenAuxTest(TimedTest):
         upscaled_image = await self.client.image_gen_aux_upscale(image=image, model="OzzyGT/DAT_X4")
         await base64_image_to_file([upscaled_image], "image_gen_aux")
 
+class Kandinsky5Test(TimedTest):
+    async def run_test(self):
+        await self.client.kandinsky5_t2v("An overhead tracking shot of frogs hopping from lilypad to lilypad, the water splashing as they land",
+                                       num_frames=33,
+                                       seed=42,
+                                       width=768,
+                                       height=512)
+
 
 class LlmChatTest(TimedTest):
     async def run_test(self):

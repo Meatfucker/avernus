@@ -68,6 +68,7 @@ def generate_wan_vace(prompt: str,
                       height: int = None,
                       width: int = None,
                       seed: int = None,
+                      steps: int = 50,
                       model_name: str = None,
                       flow_shift = 3.0):
     global PIPELINE
@@ -84,6 +85,7 @@ def generate_wan_vace(prompt: str,
     kwargs["guidance_scale"] = guidance_scale
     kwargs["height"] = height
     kwargs["width"] = width
+    kwargs["num_inference_steps"] = steps
     if seed is not None:
         kwargs["generator"] = get_seed_generators(1, seed)
     if width is not None:

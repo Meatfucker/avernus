@@ -123,6 +123,17 @@ class ImageGenAuxRequest(BaseModel):
 class ImageGenAuxResponse(GenericResponse):
     images: Optional[str] = Field(None, example="kajsdflsadfsadf....")
 
+class KandinskyT2VRequest(BaseModel):
+    prompt: str = Field(..., example="A big green monster")
+    negative_prompt: Optional[str] = Field(None, example="a blue dog")
+    width: Optional[int] = Field(None, example=832)
+    height: Optional[int] = Field(None, example=480)
+    steps: Optional[int] = Field(None, example=50)
+    num_frames: Optional[int] = Field(None, example=81)
+    guidance_scale: Optional[float] = Field(None, example=5.0)
+    seed: Optional[int] = Field(None, example=42)
+    model_name: Optional[str] = Field(None, example="Meatfucker/HunyuanVideo-bnb-nf4")
+
 class LLMRequest(BaseModel):
     prompt: str = Field(..., example="Who is the best at hackey sack?")
     model_name: Optional[str] = Field(None, example="Goekdeniz-Guelmez/Josiefied-Qwen2.5-7B-Instruct-abliterated-v2")

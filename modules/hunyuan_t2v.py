@@ -33,6 +33,7 @@ def generate_hunyuan_ti2v(prompt: str,
                           height: int = None,
                           width: int = None,
                           seed: int = None,
+                          steps: int = 50,
                           model_name: str = None):
     global PIPELINE
     global LOADED
@@ -46,7 +47,8 @@ def generate_hunyuan_ti2v(prompt: str,
                              "num_frames": num_frames,
                              "guidance_scale": guidance_scale,
                              "height": height,
-                             "width": width}
+                             "width": width,
+                             "num_inference_steps": steps}
     if seed is not None:
         kwargs["generator"] = get_seed_generators(1, seed)
     if width is not None:

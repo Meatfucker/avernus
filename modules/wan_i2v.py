@@ -36,6 +36,7 @@ def generate_wan_ti2v(prompt: str,
                       height: int = None,
                       width: int = None,
                       seed: int = None,
+                      steps: int = 50,
                       model_name: str = None):
     global PIPELINE
     global LOADED
@@ -51,6 +52,7 @@ def generate_wan_ti2v(prompt: str,
     kwargs["guidance_scale"] = guidance_scale
     kwargs["height"] = height
     kwargs["width"] = width
+    kwargs["num_inference_steps"] = steps
     if seed is not None:
         kwargs["generator"] = get_seed_generators(1, seed)
     image_width, image_height = resize_by_pixels(image.width, image.height)

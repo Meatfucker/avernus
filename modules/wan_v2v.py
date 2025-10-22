@@ -34,6 +34,7 @@ def generate_wan_v2v(prompt: str,
                      height: int = None,
                      width: int = None,
                      seed: int = None,
+                     steps: int = 50,
                      model_name: str = None):
     try:
         global PIPELINE
@@ -44,6 +45,7 @@ def generate_wan_v2v(prompt: str,
             load_wan_pipeline(model_name, flow_shift)
             LOADED = True
         kwargs:dict[str, Any] = {"prompt": prompt}
+        kwargs["num_inference_steps"] = steps
         if seed is not None:
             kwargs["generator"] = get_seed_generators(1, seed)
         if width is not None:

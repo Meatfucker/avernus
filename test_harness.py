@@ -10,6 +10,7 @@ from modules.tests import (ACETest,
                            HiDreamTest,
                            HunyuanVideoTest,
                            ImageGenAuxTest,
+                           Kandinsky5Test,
                            LlmChatTest,
                            QwenImageTest, QwenImageInpaintTest, QwenImageI2ITest, QwenImageEditTest,
                            RealESRGANTest,
@@ -46,6 +47,8 @@ start_time = time.time()
 
 #image_gen_aux = ImageGenAuxTest("IMAGE_GEN_AUX")
 
+kandinsky5 = Kandinsky5Test("KANDINSKY5_T2V")
+
 #llm = LlmChatTest("LLM CHAT")
 
 #qwen = QwenImageTest("QWEN_IMAGE")
@@ -55,9 +58,9 @@ start_time = time.time()
 
 #realesrgan = RealESRGANTest("REALESRGAN")
 
-sd15 = SD15Test("SD15")
-sd15_i2i = SD15I2ITest("SD15_I2I")
-sd15_inpaint = SD15InpaintTest("SD15_INPAINT")
+#sd15 = SD15Test("SD15")
+#sd15_i2i = SD15I2ITest("SD15_I2I")
+#sd15_inpaint = SD15InpaintTest("SD15_INPAINT")
 
 #sdxl_lora_list = SDXLLoraListTest("SDXL LORA LIST")
 #sdxl_controlnet_list = SDXLControlnetListTest("SDXL CONTROLNET LIST")

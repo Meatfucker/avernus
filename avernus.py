@@ -13,12 +13,13 @@ from modules.pydantic_models import (ACEStepRequest,
                                      HiDreamResponse, HiDreamRequest,
                                      HunyuanTI2VRequest,
                                      ImageGenAuxRequest, ImageGenAuxResponse,
+                                     KandinskyT2VRequest,
                                      LLMRequest, LLMResponse,
                                      QwenImageRequest, QwenImageInpaintRequest, QwenImageLoraListResponse,
                                      QwenImageResponse, QwenImageEditPlusRequest,
                                      RealESRGANResponse, RealESRGANRequest,
-                                     SD15Response, SD15Request,SD15InpaintRequest, SD15LoraListResponse,
-                                     SDXLInpaintRequest, SDXLRequest, SDXLResponse, SD15InpaintRequest,
+                                     SD15Response, SD15Request, SD15InpaintRequest, SD15LoraListResponse,
+                                     SDXLInpaintRequest, SDXLRequest, SDXLResponse,
                                      SDXLLoraListResponse,
                                      SDXLControlnetListResponse, SDXLSchedulerListResponse,
                                      StatusResponse,
@@ -237,6 +238,26 @@ async def image_gen_aux_upscale(data: ImageGenAuxRequest = Body(...)):
             result = await forward_post_request(url, data)
             if result["status"] is True:
                 return result
+            else:
+                logger.error(f"Generation Error: {result['status_message']}")
+                server_manager.kill_pipeline()
+                return {"status": False,
+                        "status_message": result["status_message"]}
+        except Exception as e:
+            server_manager.kill_pipeline()
+            return {"status": False,
+                    "status_message": str(e)}
+
+@avernus.post("/kandinsky5_t2v_generate")
+async def kandinsky5_t2v_generate(data: KandinskyT2VRequest = Body(...)):
+    logger.info("kandinsky5_t2v_generate request received")
+    async with pipeline_lock:
+        await server_manager.set_pipeline("kandinsky5", data.model_name)
+        url = "http://127.0.0.1:6970/kandinsky5_t2v_generate"
+        try:
+            result = await forward_post_request(url, data)
+            if result["status"] is True:
+                return StreamingResponse(cleanup_and_stream(result["path"]), media_type="video/mp4")
             else:
                 logger.error(f"Generation Error: {result['status_message']}")
                 server_manager.kill_pipeline()

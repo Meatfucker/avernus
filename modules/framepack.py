@@ -2,7 +2,6 @@ import tempfile
 from typing import Any
 
 from diffusers import HunyuanVideoFramepackPipeline
-from diffusers.hooks import apply_group_offloading
 from diffusers.utils import export_to_video
 from fastapi import FastAPI, Body
 import torch
@@ -37,6 +36,7 @@ def generate_framepack(prompt: str,
                        height: int = None,
                        width: int = None,
                        seed: int = None,
+                       steps: int = 50,
                        model_name: str = None):
     global PIPELINE
     global LOADED
@@ -52,6 +52,7 @@ def generate_framepack(prompt: str,
     kwargs["guidance_scale"] = guidance_scale
     kwargs["height"] = height
     kwargs["width"] = width
+    kwargs["num_inference_steps"] = steps
     if seed is not None:
         kwargs["generator"] = get_seed_generators(1, seed)
     if width is not None:
