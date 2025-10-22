@@ -41,12 +41,13 @@ def generate_kandinsky5_t2v(prompt: str,
         load_kandinsky5_pipeline(model_name)
         LOADED = True
     kwargs:dict[str, Any] = {"prompt": prompt,
-                             "negative_prompt": negative_prompt if negative_prompt is not None else "",
                              "num_frames": num_frames,
                              "guidance_scale": guidance_scale,
                              "height": height,
                              "width": width,
                              "num_inference_steps": steps}
+    if negative_prompt is not None:
+        kwargs["negative_prompt"] = negative_prompt
     if seed is not None:
         kwargs["generator"] = get_seed_generators(1, seed)
     if width is not None:

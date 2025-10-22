@@ -694,6 +694,37 @@ class AvernusClient:
             print(f"ERROR: {e}")
             return {"ERROR": str(e)}
 
+    async def sana_sprint_image(self, prompt, max_timesteps=None, intermediate_timesteps=None, image=None,
+                                model_name=None, lora_name=None, width=None, height=None, steps=None, batch_size=None,
+                                strength=None, seed=None, guidance_scale=None):
+        """This takes a prompt and optional other variables and returns a list of base64 encoded images"""
+        url = f"http://{self.base_url}/sana_sprint_generate"
+        data = {"prompt": prompt,
+                "max_timesteps": max_timesteps,
+                "intermediate_timesteps": intermediate_timesteps,
+                "image": image,
+                "model_name": model_name,
+                "lora_name": lora_name,
+                "width": width,
+                "height": height,
+                "steps": steps,
+                "batch_size": batch_size,
+                "strength": strength,
+                "seed": seed,
+                "guidance_scale": guidance_scale}
+        if intermediate_timesteps is not None:
+            data["intermediate_timesteps"] = intermediate_timesteps
+        try:
+            async with httpx.AsyncClient(timeout=None) as client:
+                response = await client.post(url, json=data)
+            if response.status_code == 200:
+                return response.json().get("images", [])
+            else:
+                print(f"SANA SPRINT ERROR: {response.status_code}")
+        except Exception as e:
+            print(f"ERROR: {e}")
+            return {"ERROR": str(e)}
+
     async def sd15_image(self, prompt, image=None, negative_prompt=None, model_name=None, lora_name=None, width=None,
                          height=None, steps=None, batch_size=None, guidance_scale=None, strength=None, scheduler=None,
                          seed=None):

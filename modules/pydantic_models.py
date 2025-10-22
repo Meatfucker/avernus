@@ -215,6 +215,23 @@ class RealESRGANRequest(BaseModel):
 class RealESRGANResponse(GenericResponse):
     images: Optional[str] = Field(None, example="kajsdflsadfsadf....")
 
+class SanaSprintRequest(BaseModel):
+    prompt: str = Field(..., example="A big green monster")
+    width: Optional[int] = Field(None, example=1024)
+    height: Optional[int] = Field(None, example=1024)
+    steps: Optional[int] = Field(None, example=30)
+    max_timesteps: Optional[float] = Field(None, example=1.57080)
+    intermediate_timesteps: Optional[float] = Field(None, example=1.3)
+    batch_size: Optional[int] = Field(None, example=4)
+    image: Optional[str] = Field(None, example="a9d8fp0sa9dfpasdfllkajsdflkjadslf...")
+    strength: Optional[float] = Field(None, example=0.9)
+    guidance_scale: Optional[float] = Field(None, example=4.5)
+    seed: Optional[int] = Field(None, example=42)
+    model_name: Optional[str] = Field(None, example="Meatfucker/Flux.1-dev-bnb-nf4")
+
+class SanaSprintResponse(GenericResponse):
+    images: Optional[List[str]] = Field(None, example=["kajsdflsadfsadf....", "lkjdsaflkjsadlkfjsa3423....", "lwerewjrlwkejrwewr..."])
+
 class SD15Request(BaseModel):
     prompt: str = Field(..., example="A big green monster")
     negative_prompt: Optional[str] = Field(None, example="a blue dog")

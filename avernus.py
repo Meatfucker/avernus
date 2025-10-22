@@ -18,6 +18,7 @@ from modules.pydantic_models import (ACEStepRequest,
                                      QwenImageRequest, QwenImageInpaintRequest, QwenImageLoraListResponse,
                                      QwenImageResponse, QwenImageEditPlusRequest,
                                      RealESRGANResponse, RealESRGANRequest,
+                                     SanaSprintRequest, SanaSprintResponse,
                                      SD15Response, SD15Request, SD15InpaintRequest, SD15LoraListResponse,
                                      SDXLInpaintRequest, SDXLRequest, SDXLResponse,
                                      SDXLLoraListResponse,
@@ -585,11 +586,29 @@ async def realesrgan_generate(data: RealESRGANRequest = Body(...)):
             return {"status": False,
                     "status_message": str(e)}
 
-@avernus.get("/status", response_model=StatusResponse)
-async def status():
-    """ This returns Ok when hit"""
-    return {"status": str("Ok!"),
-            "version": str("0.6.0")}
+@avernus.post("/sana_sprint_generate", response_model=SanaSprintResponse)
+async def sana_sprint_generate(data: SanaSprintRequest = Body(...)):
+    """Generates some number of Sana Sprint images based on user inputs"""
+    logger.info("sana_sprint_generate request received")
+    async with pipeline_lock:
+        if data.image is not None:
+            await server_manager.set_pipeline("sana_sprint_i2i", data.model_name)
+        else:
+            await server_manager.set_pipeline("sana_sprint", data.model_name)
+        url = "http://127.0.0.1:6970/sana_sprint_generate"
+        try:
+            result = await forward_post_request(url, data)
+            if result["status"] is True:
+                return result
+            else:
+                logger.error(f"Generation Error: {result['status_message']}")
+                server_manager.kill_pipeline()
+                return {"status": False,
+                        "status_message": result["status_message"]}
+        except Exception as e:
+            server_manager.kill_pipeline()
+            return {"status": False,
+                    "status_message": str(e)}
 
 @avernus.post("/sd15_generate", response_model=SD15Response)
 async def sd15_generate(data: SD15Request = Body(...)):
@@ -684,6 +703,12 @@ async def sdxl_inpaint_generate(data: SDXLInpaintRequest = Body(...)):
             server_manager.kill_pipeline()
             return {"status": False,
                     "status_message": str(e)}
+
+@avernus.get("/status", response_model=StatusResponse)
+async def status():
+    """ This returns Ok when hit"""
+    return {"status": str("Ok!"),
+            "version": str("0.6.0")}
 
 @avernus.post("/swin2sr_generate", response_model=Swin2SRResponse)
 async def swin2sr_generate(data: Swin2SRRequest = Body(...)):

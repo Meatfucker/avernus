@@ -14,6 +14,7 @@ from modules.tests import (ACETest,
                            LlmChatTest,
                            QwenImageTest, QwenImageInpaintTest, QwenImageI2ITest, QwenImageEditTest,
                            RealESRGANTest,
+                           SanaSprintTest, SanaSprintI2ITest,
                            SD15Test, SD15I2ITest, SD15InpaintTest,
                            SDXLControlnetI2ILoraTest, SDXLControlnetI2ITest, SDXLControlnetListTest,
                            SDXLControlnetLoraTest, SDXLControlnetTest, SDXLI2ILoraTest, SDXLI2ITest, SDXLInpaintTest,
@@ -47,7 +48,7 @@ start_time = time.time()
 
 #image_gen_aux = ImageGenAuxTest("IMAGE_GEN_AUX")
 
-kandinsky5 = Kandinsky5Test("KANDINSKY5_T2V")
+#kandinsky5 = Kandinsky5Test("KANDINSKY5_T2V")
 
 #llm = LlmChatTest("LLM CHAT")
 
@@ -57,6 +58,9 @@ kandinsky5 = Kandinsky5Test("KANDINSKY5_T2V")
 #qwen_edit = QwenImageEditTest("QWEN IMAGE EDIT")
 
 #realesrgan = RealESRGANTest("REALESRGAN")
+
+sana_sprint = SanaSprintTest("SANA SPRINT")
+sana_sprint_i2i = SanaSprintI2ITest("SANA SPRINT I2I")
 
 #sd15 = SD15Test("SD15")
 #sd15_i2i = SD15I2ITest("SD15_I2I")

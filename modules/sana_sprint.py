@@ -1,21 +1,21 @@
 from typing import Any
 
-from diffusers import ChromaPipeline
+from diffusers import SanaSprintPipeline
 from fastapi import FastAPI, Body
 import torch
 
-from pydantic_models import ChromaRequest, ChromaResponse
-from utils import base64_to_image, image_to_base64
+from pydantic_models import SanaSprintRequest, SanaSprintResponse
+from utils import image_to_base64
 
-PIPELINE: ChromaPipeline
+PIPELINE: SanaSprintPipeline
 LOADED: bool = False
 dtype = torch.bfloat16
-avernus_chroma = FastAPI()
+avernus_sana_sprint = FastAPI()
 
 
-def load_chroma_pipeline(model_name="Meatfucker/Chroma1-HD-bnb-nf4"):
+def load_sana_sprint_pipeline(model_name="Efficient-Large-Model/Sana_Sprint_1.6B_1024px_diffusers"):
     global PIPELINE
-    PIPELINE = ChromaPipeline.from_pretrained(model_name, torch_dtype=dtype).to("cuda")
+    PIPELINE = SanaSprintPipeline.from_pretrained(model_name, torch_dtype=dtype).to("cuda")
     PIPELINE.enable_model_cpu_offload()
     PIPELINE.vae.enable_slicing()
 
@@ -24,30 +24,34 @@ def get_seed_generators(amount, seed):
     return generator
 
 
-def generate_chroma(prompt,
-                    width,
-                    height,
-                    steps,
-                    batch_size,
-                    negative_prompt=None,
-                    guidance_scale=None,
-                    seed=None,
-                    model_name=None):
+def generate_sana_sprint(prompt,
+                         width,
+                         height,
+                         steps,
+                         batch_size,
+                         guidance_scale=None,
+                         seed=None,
+                         max_timesteps=None,
+                         intermediate_timesteps=None,
+                         model_name=None):
     global PIPELINE
     global LOADED
     if not LOADED:
         if model_name is not None:
-            load_chroma_pipeline(model_name)
+            load_sana_sprint_pipeline(model_name)
         else:
-            load_chroma_pipeline()
+            load_sana_sprint_pipeline()
         LOADED = True
     kwargs = {"prompt": prompt,
-              "negative_prompt": negative_prompt if negative_prompt is not None else "",
               "width": width if width is not None else 1024,
               "height": height if height is not None else 1024,
-              "num_inference_steps": steps if steps is not None else 30,
+              "num_inference_steps": steps if steps is not None else 2,
               "num_images_per_prompt": batch_size if batch_size is not None else 4,
-              "guidance_scale": guidance_scale if guidance_scale is not None else 5.0}
+              "guidance_scale": guidance_scale if guidance_scale is not None else 4.5}
+    if max_timesteps is not None:
+        kwargs["max_timesteps"] = max_timesteps
+    if intermediate_timesteps is not None:
+        kwargs["intermediate_timesteps"] = intermediate_timesteps
     if seed is not None:
         kwargs["generator"] = get_seed_generators(kwargs["num_images_per_prompt"], seed)
     try:
@@ -58,16 +62,18 @@ def generate_chroma(prompt,
         return {"status": False,
                 "status_message": str(e)}
 
-@avernus_chroma.post("/chroma_generate", response_model=ChromaResponse)
-def chroma_generate(data: ChromaRequest = Body(...)):
-    """Generates some number of Chroma images based on user inputs"""
+@avernus_sana_sprint.post("/sana_sprint_generate", response_model=SanaSprintResponse)
+def sana_sprint_generate(data: SanaSprintRequest = Body(...)):
+    """Generates some number of Sana Sprint images based on user inputs"""
     kwargs: dict[str, Any] = {"prompt": data.prompt,
                               "width": data.width,
                               "height": data.height,
                               "steps": data.steps,
                               "batch_size": data.batch_size}
-    if data.negative_prompt:
-        kwargs["negative_prompt"] = data.negative_prompt
+    if data.max_timesteps:
+        kwargs["max_timesteps"] = data.max_timesteps
+    if data.intermediate_timesteps:
+        kwargs["intermediate_timesteps"] = data.intermediate_timesteps
     if data.model_name:
         kwargs["model_name"] = data.model_name
     if data.guidance_scale:
@@ -75,7 +81,7 @@ def chroma_generate(data: ChromaRequest = Body(...)):
     if data.seed:
         kwargs["seed"] = data.seed
     try:
-        response = generate_chroma(**kwargs)
+        response = generate_sana_sprint(**kwargs)
         if response["status"] is True:
             base64_images = [image_to_base64(img) for img in response["images"]]
         else:
@@ -85,14 +91,14 @@ def chroma_generate(data: ChromaRequest = Body(...)):
         return {"status": False,
                 "status_message": str(e)}
     return {"status": True,
-            "status_message": "Chroma Success",
+            "status_message": "Sana Sprint Success",
             "images": base64_images}
 
-@avernus_chroma.get("/online")
+@avernus_sana_sprint.get("/online")
 async def status():
     """ This returns True when hit"""
     return True
 
 if __name__ == "__main__":
     import uvicorn
-    uvicorn.run(avernus_chroma, host="0.0.0.0", port=6970, log_level="critical")
+    uvicorn.run(avernus_sana_sprint, host="0.0.0.0", port=6970, log_level="critical")

@@ -219,6 +219,18 @@ class RealESRGANTest(TimedTest):
                                                       scale=8)
         await base64_image_to_file([upscaled_image], "realesrgan")
 
+class SanaSprintTest(TimedTest):
+    async def run_test(self):
+        images = await self.client.sana_sprint_image("frog made of yarn", batch_size=1)
+        await base64_image_to_file(images, "sana_sprint")
+
+class SanaSprintI2ITest(TimedTest):
+    async def run_test(self):
+        image = Image.open("tests/mushroom.png")
+        image = image_to_base64(image)
+        images = await self.client.sana_sprint_image("frog made of yarn", image=image, batch_size=1)
+        await base64_image_to_file(images, "sana_sprint_i2i")
+
 class SD15Test(TimedTest):
     async def run_test(self):
         images = await self.client.sd15_image("turbo taco",
