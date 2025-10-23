@@ -100,7 +100,6 @@ def generate_flux(prompt,
     PIPELINE.enable_model_cpu_offload() # This has to be after the ip adapter load or else you'll have tensor location problems
     PIPELINE.vae.enable_slicing()
     try:
-        print(kwargs)
         images = PIPELINE(**kwargs).images
         if lora_name is not None:
             PIPELINE.unload_lora_weights()
