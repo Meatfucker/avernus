@@ -56,10 +56,12 @@ def generate_flux_kontext(prompt,
                           steps,
                           batch_size,
                           image,
+                          negative_prompt=None,
                           lora_name=None,
                           ip_adapter_image=None,
                           ip_adapter_strength=None,
                           guidance_scale=None,
+                          true_cfg_scale=None,
                           seed=None):
     global PIPELINE
     global LOADED
@@ -77,10 +79,13 @@ def generate_flux_kontext(prompt,
         kwargs["height"] = height
     else:
         kwargs["height"] = kontext_height
+    if negative_prompt is not None:
+        kwargs["negative_prompt"] = negative_prompt
     kwargs["num_inference_steps"] = steps if steps is not None else 30
     kwargs["num_images_per_prompt"] = batch_size if batch_size is not None else 1
     ip_adapter_strength = ip_adapter_strength if ip_adapter_strength is not None else 0.6
     kwargs["guidance_scale"] = guidance_scale if guidance_scale is not None else 3.5
+    kwargs["true_cfg_scale"] = true_cfg_scale if true_cfg_scale is not None else 1.0
     kwargs["image"] = image
     if seed is not None:
         kwargs["generator"] = get_seed_generators(kwargs["num_images_per_prompt"], seed)
@@ -116,6 +121,8 @@ def flux_kontext_generate(data: FluxRequest = Body(...)):
         kwargs["lora_name"] = [data.lora_name]
     else:
         kwargs["lora_name"] = data.lora_name
+    if data.negative_prompt:
+        kwargs["negative_prompt"] = data.negative_prompt
     if data.image:
         kwargs["image"] = base64_to_image(data.image)
     if data.ip_adapter_image:
@@ -123,6 +130,8 @@ def flux_kontext_generate(data: FluxRequest = Body(...)):
         kwargs["ip_adapter_image"] = base64_to_image(data.ip_adapter_image)
     if data.guidance_scale:
         kwargs["guidance_scale"] = data.guidance_scale
+    if data.true_cfg_scale:
+        kwargs["true_cfg_scale"] = data.true_cfg_scale
     if data.seed:
         kwargs["seed"] = data.seed
     try:

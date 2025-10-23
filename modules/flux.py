@@ -55,12 +55,14 @@ def generate_flux(prompt,
                   height,
                   steps,
                   batch_size,
+                  negative_prompt=None,
                   image=None,
                   strength=None,
                   lora_name=None,
                   ip_adapter_image=None,
                   ip_adapter_strength=None,
                   guidance_scale=None,
+                  true_cfg_scale=None,
                   seed=None,
                   model_name=None):
     global PIPELINE
@@ -78,12 +80,15 @@ def generate_flux(prompt,
     strength = strength if strength is not None else 1.0
     ip_adapter_strength = ip_adapter_strength if ip_adapter_strength is not None else 0.6
     kwargs["guidance_scale"] = guidance_scale if guidance_scale is not None else 3.5
+    kwargs["true_cfg_scale"] = true_cfg_scale if true_cfg_scale is not None else 1.0
     if seed is not None:
         kwargs["generator"] = get_seed_generators(kwargs["num_images_per_prompt"], seed)
     if image is not None:
             kwargs["prompt_embeds"], kwargs["pooled_prompt_embeds"] = get_redux_embeds(image, prompt, strength)
     else:
         kwargs["prompt"] = prompt
+    if negative_prompt is not None:
+        kwargs["negative_prompt"] = negative_prompt
     if ip_adapter_image is not None:
         try:
             load_ip_adapters(ip_adapter_strength)
@@ -95,6 +100,7 @@ def generate_flux(prompt,
     PIPELINE.enable_model_cpu_offload() # This has to be after the ip adapter load or else you'll have tensor location problems
     PIPELINE.vae.enable_slicing()
     try:
+        print(kwargs)
         images = PIPELINE(**kwargs).images
         if lora_name is not None:
             PIPELINE.unload_lora_weights()
@@ -141,6 +147,8 @@ def flux_generate(data: FluxRequest = Body(...)):
         kwargs["lora_name"] = [data.lora_name]
     else:
         kwargs["lora_name"] = data.lora_name
+    if data.negative_prompt:
+        kwargs["negative_prompt"] = data.negative_prompt
     if data.image:
         kwargs["image"] = base64_to_image(data.image)
     if data.model_name:
@@ -150,6 +158,8 @@ def flux_generate(data: FluxRequest = Body(...)):
         kwargs["ip_adapter_image"] = base64_to_image(data.ip_adapter_image)
     if data.guidance_scale:
         kwargs["guidance_scale"] = data.guidance_scale
+    if data.true_cfg_scale:
+        kwargs["true_cfg_scale"] = data.true_cfg_scale
     if data.seed:
         kwargs["seed"] = data.seed
     try:

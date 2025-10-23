@@ -43,11 +43,13 @@ def generate_flux_inpaint(prompt,
                           height,
                           steps,
                           batch_size,
+                          negative_prompt=None,
                           image=None,
                           mask_image=None,
                           strength=None,
                           lora_name=None,
                           guidance_scale=None,
+                          true_cfg_scale=None,
                           seed=None,
                           model_name=None):
     global PIPELINE
@@ -69,6 +71,9 @@ def generate_flux_inpaint(prompt,
     kwargs["mask_image"] = mask_image
     kwargs["padding_mask_crop"] = 32
     kwargs["guidance_scale"] = guidance_scale if guidance_scale is not None else 7.0
+    kwargs["true_cfg_scale"] = true_cfg_scale if true_cfg_scale is not None else 1.0
+    if negative_prompt is not None:
+        kwargs["negative_prompt"] = negative_prompt
     if seed is not None:
         kwargs["generator"] = get_seed_generators(kwargs["num_images_per_prompt"], seed)
     if lora_name is not None:
@@ -91,6 +96,8 @@ def flux_inpaint_generate(data: FluxInpaintRequest = Body(...)):
                               "height": data.height,
                               "steps": data.steps,
                               "batch_size": data.batch_size}
+    if data.negative_prompt:
+        kwargs["negative_prompt"] = data.negative_prompt
     if data.strength:
         kwargs["strength"] = data.strength
     if data.image:
@@ -99,6 +106,8 @@ def flux_inpaint_generate(data: FluxInpaintRequest = Body(...)):
         kwargs["mask_image"] = base64_to_image(data.mask_image)
     if data.guidance_scale:
         kwargs["guidance_scale"] = data.guidance_scale
+    if data.true_cfg_scale:
+        kwargs["true_cfg_scale"] = data.true_cfg_scale
     if isinstance(data.lora_name, str):
         kwargs["lora_name"] = [data.lora_name]
     else:

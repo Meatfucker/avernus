@@ -3,11 +3,9 @@ from typing import Any
 from diffusers import HiDreamImagePipeline
 from fastapi import FastAPI, Body
 import torch
-from transformers import AutoTokenizer, LlamaForCausalLM
-from transformers import BitsAndBytesConfig as TransformersBitsAndBytesConfig
 
 from pydantic_models import HiDreamRequest, HiDreamResponse
-from utils import base64_to_image, image_to_base64
+from utils import image_to_base64
 
 PIPELINE: HiDreamImagePipeline
 LOADED: bool = False
@@ -31,6 +29,7 @@ def generate_hidream(prompt,
                      height,
                      steps,
                      batch_size,
+                     negative_prompt=None,
                      guidance_scale=None,
                      seed=None,
                      model_name=None):
@@ -48,6 +47,8 @@ def generate_hidream(prompt,
               "num_inference_steps": steps if steps is not None else 30,
               "num_images_per_prompt": batch_size if batch_size is not None else 4,
               "guidance_scale": guidance_scale if guidance_scale is not None else 5.0}
+    if negative_prompt is not None:
+        kwargs["negative_prompt"] = negative_prompt
     if seed is not None:
         kwargs["generator"] = get_seed_generators(kwargs["num_images_per_prompt"], seed)
     try:
@@ -66,6 +67,8 @@ def hidream_generate(data: HiDreamRequest = Body(...)):
                               "height": data.height,
                               "steps": data.steps,
                               "batch_size": data.batch_size}
+    if data.negative_prompt:
+        kwargs["negative_prompt"] = data.negative_prompt
     if data.model_name:
         kwargs["model_name"] = data.model_name
     if data.guidance_scale:

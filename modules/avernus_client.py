@@ -108,12 +108,13 @@ class AvernusClient:
             print(f"ERROR: {e}")
             return {"ERROR": str(e)}
 
-    async def flux_image(self, prompt, image=None, model_name=None, lora_name=None, width=None, height=None, steps=None,
-                         batch_size=None, strength=None, ip_adapter_image=None, ip_adapter_strength=None, seed=None,
-                         guidance_scale=None):
+    async def flux_image(self, prompt, negative_prompt=None, image=None, model_name=None, lora_name=None, width=None,
+                         height=None, steps=None, batch_size=None, strength=None, ip_adapter_image=None,
+                         ip_adapter_strength=None, seed=None, guidance_scale=None, true_cfg_scale=None):
         """This takes a prompt and optional other variables and returns a list of base64 encoded images"""
         url = f"http://{self.base_url}/flux_generate"
         data = {"prompt": prompt,
+                "negative_prompt": negative_prompt,
                 "image": image,
                 "model_name": model_name,
                 "lora_name": lora_name,
@@ -125,7 +126,8 @@ class AvernusClient:
                 "ip_adapter_strength": ip_adapter_strength,
                 "ip_adapter_image": ip_adapter_image,
                 "seed": seed,
-                "guidance_scale": guidance_scale}
+                "guidance_scale": guidance_scale,
+                "true_cfg_scale": true_cfg_scale}
         try:
             async with httpx.AsyncClient(timeout=None) as client:
                 response = await client.post(url, json=data)
@@ -137,12 +139,13 @@ class AvernusClient:
             print(f"ERROR: {e}")
             return {"ERROR": str(e)}
 
-    async def flux_inpaint_image(self, prompt, image=None, model_name=None, width=None,
+    async def flux_inpaint_image(self, prompt, negative_prompt=None, image=None, model_name=None, width=None,
                                  height=None, steps=None, batch_size=None, guidance_scale=None, mask_image=None,
-                                 strength=None, lora_name=None, seed=None):
+                                 strength=None, lora_name=None, seed=None, true_cfg_scale=None):
         """This takes a prompt, and optional other variables and returns a list of base64 encoded images"""
         url = f"http://{self.base_url}/flux_inpaint_generate"
         data = {"prompt": prompt,
+                "negative_prompt": negative_prompt,
                 "image": image,
                 "model_name": model_name,
                 "lora_name": lora_name,
@@ -153,7 +156,8 @@ class AvernusClient:
                 "guidance_scale": guidance_scale,
                 "mask_image": mask_image,
                 "strength": strength,
-                "seed": seed}
+                "seed": seed,
+                "true_cfg_scale": true_cfg_scale}
         try:
             async with httpx.AsyncClient(timeout=None) as client:
                 response = await client.post(url, json=data)
@@ -165,12 +169,14 @@ class AvernusClient:
             print(f"ERROR: {e}")
             return {"ERROR": str(e)}
 
-    async def flux_kontext(self, prompt, image=None, model_name=None, lora_name=None, width=None, height=None, steps=None,
-                           batch_size=None, controlnet_image=None, controlnet_processor=None,
-                           ip_adapter_image=None, ip_adapter_strength=None, seed=None, guidance_scale=None):
+    async def flux_kontext(self, prompt, negative_prompt=None, image=None, model_name=None, lora_name=None, width=None,
+                           height=None, steps=None, batch_size=None, controlnet_image=None, controlnet_processor=None,
+                           ip_adapter_image=None, ip_adapter_strength=None, seed=None, guidance_scale=None,
+                           true_cfg_scale=None):
         """This takes a prompt and optional other variables and returns a list of base64 encoded images"""
         url = f"http://{self.base_url}/flux_kontext_generate"
         data = {"prompt": prompt,
+                "negative_prompt": negative_prompt,
                 "image": image,
                 "model_name": model_name,
                 "lora_name": lora_name,
@@ -183,7 +189,8 @@ class AvernusClient:
                 "ip_adapter_strength": ip_adapter_strength,
                 "ip_adapter_image": ip_adapter_image,
                 "seed": seed,
-                "guidance_scale": guidance_scale}
+                "guidance_scale": guidance_scale,
+                "true_cfg_scale": true_cfg_scale}
         try:
             async with httpx.AsyncClient(timeout=None) as client:
                 response = await client.post(url, json=data)
@@ -226,11 +233,12 @@ class AvernusClient:
             print(f"ERROR: {e}")
             return {"ERROR": str(e)}
 
-    async def hidream_image(self, prompt, model_name=None, width=None, height=None, steps=None, batch_size=None,
-                            seed=None, guidance_scale=None):
+    async def hidream_image(self, prompt, negative_prompt=None, model_name=None, width=None, height=None, steps=None,
+                            batch_size=None, seed=None, guidance_scale=None):
         """This takes a prompt and optional other variables and returns a list of base64 encoded images"""
         url = f"http://{self.base_url}/hidream_generate"
         data = {"prompt": prompt,
+                "negative_prompt": negative_prompt,
                 "model_name": model_name,
                 "width": width,
                 "height": height,

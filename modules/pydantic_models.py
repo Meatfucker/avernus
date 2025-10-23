@@ -39,6 +39,7 @@ class FluxControlnetListResponse(BaseModel):
 
 class FluxInpaintRequest(BaseModel):
     prompt: str = Field(..., example="A big green monster")
+    negative_prompt: Optional[str] = Field(None, example="clams")
     model_name: Optional[str] = Field(None, example="some-repo/some-flux-model")
     width: Optional[int] = Field(None, example=1024)
     height: Optional[int] = Field(None, example=1024)
@@ -50,12 +51,14 @@ class FluxInpaintRequest(BaseModel):
     strength: Optional[float] = Field(None, example=0.75)
     guidance_scale: Optional[float] = Field(None, example=5.0)
     seed: Optional[int] = Field(None, example=42)
+    true_cfg_scale: Optional[float] = Field(None, example=1.0)
 
 class FluxLoraListResponse(BaseModel):
     loras: List[str] = Field(..., example=["lora1.safetensors", "lora2.safetensors", "lora3.safetensors"])
 
 class FluxRequest(BaseModel):
     prompt: str = Field(..., example="A big green monster")
+    negative_prompt: Optional[str] = Field(None, example="clams")
     width: Optional[int] = Field(None, example=1024)
     height: Optional[int] = Field(None, example=1024)
     steps: Optional[int] = Field(None, example=30)
@@ -68,6 +71,7 @@ class FluxRequest(BaseModel):
     guidance_scale: Optional[float] = Field(None, example=5.0)
     seed: Optional[int] = Field(None, example=42)
     model_name: Optional[str] = Field(None, example="Meatfucker/Flux.1-dev-bnb-nf4")
+    true_cfg_scale: Optional[float] = Field(None, example=1.0)
 
 class FluxResponse(GenericResponse):
     images: Optional[List[str]] = Field(None, example=["kajsdflsadfsadf....", "lkjdsaflkjsadlkfjsa3423....", "lwerewjrlwkejrwewr..."])
@@ -87,6 +91,7 @@ class FramepackRequest(BaseModel):
 
 class HiDreamRequest(BaseModel):
     prompt: str = Field(..., example="A big green monster")
+    negative_prompt: Optional[str] = Field(None, example="clams")
     width: Optional[int] = Field(None, example=1024)
     height: Optional[int] = Field(None, example=1024)
     steps: Optional[int] = Field(None, example=30)
