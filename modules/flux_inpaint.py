@@ -5,7 +5,7 @@ from diffusers import FluxInpaintPipeline
 from fastapi import FastAPI, Body
 import torch
 
-from pydantic_models import FluxInpaintRequest, FluxResponse
+from pydantic_models import FluxInpaintRequest, ImageResponse
 from utils import base64_to_image, image_to_base64
 
 PIPELINE: FluxInpaintPipeline
@@ -88,7 +88,7 @@ def generate_flux_inpaint(prompt,
         return {"status": False,
                 "status_message": str(e)}
 
-@avernus_flux_inpaint.post("/flux_inpaint_generate", response_model=FluxResponse)
+@avernus_flux_inpaint.post("/flux_inpaint_generate", response_model=ImageResponse)
 def flux_inpaint_generate(data: FluxInpaintRequest = Body(...)):
     """Generates some number of flux inpaint images based on user inputs."""
     kwargs: dict[str, Any] = {"prompt": data.prompt,

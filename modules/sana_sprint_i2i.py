@@ -4,7 +4,7 @@ from diffusers import SanaSprintImg2ImgPipeline
 from fastapi import FastAPI, Body
 import torch
 
-from pydantic_models import SanaSprintRequest, SanaSprintResponse
+from pydantic_models import SanaSprintRequest, ImageResponse
 from utils import image_to_base64, base64_to_image
 
 PIPELINE: SanaSprintImg2ImgPipeline
@@ -66,7 +66,7 @@ def generate_sana_sprint(prompt,
         return {"status": False,
                 "status_message": str(e)}
 
-@avernus_sana_sprint.post("/sana_sprint_generate", response_model=SanaSprintResponse)
+@avernus_sana_sprint.post("/sana_sprint_generate", response_model=ImageResponse)
 def sana_sprint_generate(data: SanaSprintRequest = Body(...)):
     """Generates some number of Sana Sprint images based on user inputs"""
     kwargs: dict[str, Any] = {"prompt": data.prompt,

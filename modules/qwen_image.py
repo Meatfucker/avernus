@@ -5,7 +5,7 @@ from diffusers import QwenImagePipeline
 from fastapi import FastAPI, Body
 import torch
 
-from pydantic_models import QwenImageRequest, QwenImageResponse
+from pydantic_models import QwenImageRequest, ImageResponse
 from utils import image_to_base64
 
 PIPELINE: QwenImagePipeline
@@ -74,7 +74,7 @@ def generate_qwen_image(prompt,
         return {"status": False,
                 "status_message": str(e)}
 
-@avernus_qwen_image.post("/qwen_image_generate", response_model=QwenImageResponse)
+@avernus_qwen_image.post("/qwen_image_generate", response_model=ImageResponse)
 def qwen_image_generate(data: QwenImageRequest = Body(...)):
     """Generates some number of Qwen Image images based on user inputs"""
     kwargs: dict[str, Any] = {"prompt": data.prompt,

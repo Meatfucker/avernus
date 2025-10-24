@@ -4,7 +4,7 @@ from diffusers import ChromaPipeline
 from fastapi import FastAPI, Body
 import torch
 
-from pydantic_models import ChromaRequest, ChromaResponse
+from pydantic_models import ChromaRequest, ImageResponse
 from utils import base64_to_image, image_to_base64
 
 PIPELINE: ChromaPipeline
@@ -58,7 +58,7 @@ def generate_chroma(prompt,
         return {"status": False,
                 "status_message": str(e)}
 
-@avernus_chroma.post("/chroma_generate", response_model=ChromaResponse)
+@avernus_chroma.post("/chroma_generate", response_model=ImageResponse)
 def chroma_generate(data: ChromaRequest = Body(...)):
     """Generates some number of Chroma images based on user inputs"""
     kwargs: dict[str, Any] = {"prompt": data.prompt,

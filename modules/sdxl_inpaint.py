@@ -9,7 +9,7 @@ from diffusers import (StableDiffusionXLInpaintPipeline, DPMSolverMultistepSched
 from fastapi import FastAPI, Body
 import torch
 
-from pydantic_models import SDXLInpaintRequest, SDXLResponse
+from pydantic_models import SDXLInpaintRequest, ImageResponse
 from utils import base64_to_image, image_to_base64
 
 PIPELINE: StableDiffusionXLInpaintPipeline
@@ -126,7 +126,7 @@ def set_scheduler(scheduler):
     except Exception:
         pass
 
-@avernus_sdxl_inpaint.post("/sdxl_inpaint_generate", response_model=SDXLResponse)
+@avernus_sdxl_inpaint.post("/sdxl_inpaint_generate", response_model=ImageResponse)
 def sdxl_inpaint_generate(data: SDXLInpaintRequest = Body(...)):
     """Generates some number of sdxl inpaint images based on user inputs."""
     kwargs: dict[str, Any] = {"prompt": data.prompt,

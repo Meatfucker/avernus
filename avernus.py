@@ -7,21 +7,22 @@ import httpx
 from loguru import logger
 
 from modules.pydantic_models import (ACEStepRequest,
-                                     ChromaRequest, ChromaResponse, ChromaLoraListResponse,
-                                     FluxInpaintRequest, FluxRequest, FluxResponse, FluxLoraListResponse,
+                                     ChromaRequest,
+                                     FluxInpaintRequest, FluxRequest,
                                      FramepackRequest,
-                                     HiDreamResponse, HiDreamRequest,
+                                     HiDreamRequest,
                                      HunyuanTI2VRequest,
+                                     ImageResponse,
                                      ImageGenAuxRequest, ImageGenAuxResponse,
                                      KandinskyT2VRequest,
                                      LLMRequest, LLMResponse,
-                                     QwenImageRequest, QwenImageInpaintRequest, QwenImageLoraListResponse,
-                                     QwenImageResponse, QwenImageEditPlusRequest,
+                                     LoraListResponse,
+                                     LuminaRequest,
+                                     QwenImageRequest, QwenImageInpaintRequest, QwenImageEditPlusRequest,
                                      RealESRGANResponse, RealESRGANRequest,
-                                     SanaSprintRequest, SanaSprintResponse,
-                                     SD15Response, SD15Request, SD15InpaintRequest, SD15LoraListResponse,
-                                     SDXLInpaintRequest, SDXLRequest, SDXLResponse,
-                                     SDXLLoraListResponse,
+                                     SanaSprintRequest,
+                                     SD15Request, SD15InpaintRequest,
+                                     SDXLInpaintRequest, SDXLRequest,
                                      SDXLControlnetListResponse, SDXLSchedulerListResponse,
                                      StatusResponse,
                                      Swin2SRResponse, Swin2SRRequest,
@@ -58,7 +59,7 @@ async def ace_generate(data: ACEStepRequest = Body(...)):
             return {"status": False,
                     "status_message": str(e)}
 
-@avernus.post("/chroma_generate", response_model=ChromaResponse)
+@avernus.post("/chroma_generate", response_model=ImageResponse)
 async def chroma_generate(data: ChromaRequest = Body(...)):
     """Generates some number of Chroma images based on user inputs"""
     logger.info("chroma_generate request received")
@@ -82,7 +83,7 @@ async def chroma_generate(data: ChromaRequest = Body(...)):
             return {"status": False,
                     "status_message": str(e)}
 
-@avernus.post("/flux_generate", response_model=FluxResponse)
+@avernus.post("/flux_generate", response_model=ImageResponse)
 async def flux_generate(data: FluxRequest = Body(...)):
     """Generates some number of Flux images based on user inputs"""
     logger.info("flux_generate request received")
@@ -103,7 +104,7 @@ async def flux_generate(data: FluxRequest = Body(...)):
             return {"status": False,
                     "status_message": str(e)}
 
-@avernus.post("/flux_inpaint_generate", response_model=FluxResponse)
+@avernus.post("/flux_inpaint_generate", response_model=ImageResponse)
 async def flux_inpaint_generate(data: FluxInpaintRequest = Body(...)):
     """Generates some number of flux inpaint images based on user inputs."""
     logger.info("flux_inpaint_generate request received")
@@ -124,7 +125,7 @@ async def flux_inpaint_generate(data: FluxInpaintRequest = Body(...)):
             return {"status": False,
                     "status_message": str(e)}
 
-@avernus.post("/flux_fill_generate", response_model=FluxResponse)
+@avernus.post("/flux_fill_generate", response_model=ImageResponse)
 async def flux_fill_generate(data: FluxInpaintRequest = Body(...)):
     """Generates some number of flux fill images based on user inputs."""
     logger.info("flux_fill_generate request received")
@@ -145,7 +146,7 @@ async def flux_fill_generate(data: FluxInpaintRequest = Body(...)):
             return {"status": False,
                     "status_message": str(e)}
 
-@avernus.post("/flux_kontext_generate", response_model=FluxResponse)
+@avernus.post("/flux_kontext_generate", response_model=ImageResponse)
 async def flux_kontext_generate(data: FluxRequest = Body(...)):
     """Generates some number of Flux Kontext images based on user inputs"""
     logger.info("flux_kontext_generate request received")
@@ -186,7 +187,7 @@ async def framepack_generate(data: FramepackRequest = Body(...)):
             return {"status": False,
                     "status_message": str(e)}
 
-@avernus.post("/hidream_generate", response_model=HiDreamResponse)
+@avernus.post("/hidream_generate", response_model=ImageResponse)
 async def hidream_generate(data: HiDreamRequest = Body(...)):
     """Generates some number of HiDream images based on user inputs"""
     logger.info("hidream_generate request received")
@@ -269,7 +270,7 @@ async def kandinsky5_t2v_generate(data: KandinskyT2VRequest = Body(...)):
             return {"status": False,
                     "status_message": str(e)}
 
-@avernus.get("/list_chroma_loras", response_model=ChromaLoraListResponse)
+@avernus.get("/list_chroma_loras", response_model=LoraListResponse)
 async def list_chroma_loras():
     """Returns a list of the files located in the flux loras directory"""
     logger.info("list_chroma_loras request received")
@@ -281,7 +282,7 @@ async def list_chroma_loras():
         logger.error(f"list_chroma_loras ERROR: {e}")
         return {"error": str(e)}
 
-@avernus.get("/list_flux_loras", response_model=FluxLoraListResponse)
+@avernus.get("/list_flux_loras", response_model=LoraListResponse)
 async def list_flux_loras():
     """Returns a list of the files located in the flux loras directory"""
     logger.info("list_flux_loras request received")
@@ -293,7 +294,7 @@ async def list_flux_loras():
         logger.error(f"list_flux_loras ERROR: {e}")
         return {"error": str(e)}
 
-@avernus.get("/list_qwen_image_loras", response_model=QwenImageLoraListResponse)
+@avernus.get("/list_qwen_image_loras", response_model=LoraListResponse)
 async def list_qwen_image_loras():
     """Returns a list of the files located in the qwen_image loras directory"""
     logger.info("list_qwen_image_loras request received")
@@ -305,7 +306,7 @@ async def list_qwen_image_loras():
         logger.error(f"list_qwen_image_loras ERROR: {e}")
         return {"error": str(e)}
 
-@avernus.get("/list_sd15_loras", response_model=SD15LoraListResponse)
+@avernus.get("/list_sd15_loras", response_model=LoraListResponse)
 async def list_sd15_loras():
     """Returns a list of the files located in the sdxl loras directory."""
     logger.info("list_sd15_loras request received")
@@ -327,7 +328,7 @@ async def list_sdxl_controlnets():
         logger.error(f"list_sdxl_controlnets ERROR: {e}")
         return {"error": str(e)}
 
-@avernus.get("/list_sdxl_loras", response_model=SDXLLoraListResponse)
+@avernus.get("/list_sdxl_loras", response_model=LoraListResponse)
 async def list_sdxl_loras():
     """Returns a list of the files located in the sdxl loras directory."""
     logger.info("list_sdxl_loras request received")
@@ -385,7 +386,28 @@ async def llm_chat(data: LLMRequest = Body(...)):
             return {"status": False,
                     "status_message": str(e)}
 
-@avernus.post("/qwen_image_generate", response_model=QwenImageResponse)
+@avernus.post("/lumina2_generate", response_model=ImageResponse)
+async def lumina2_generate(data: LuminaRequest = Body(...)):
+    """Generates some number of Lumina2 images based on user inputs"""
+    logger.info("lumina2_generate request received")
+    async with pipeline_lock:
+        await server_manager.set_pipeline("lumina2", data.model_name)
+        url = "http://127.0.0.1:6970/lumina2_generate"
+        try:
+            result = await forward_post_request(url, data)
+            if result["status"] is True:
+                return result
+            else:
+                logger.error(f"Generation Error: {result['status_message']}")
+                server_manager.kill_pipeline()
+                return {"status": False,
+                        "status_message": result["status_message"]}
+        except Exception as e:
+            server_manager.kill_pipeline()
+            return {"status": False,
+                    "status_message": str(e)}
+
+@avernus.post("/qwen_image_generate", response_model=ImageResponse)
 async def qwen_image_generate(data: QwenImageRequest = Body(...)):
     """Generates some number of Qwen Image images based on user inputs"""
     async with pipeline_lock:
@@ -411,7 +433,7 @@ async def qwen_image_generate(data: QwenImageRequest = Body(...)):
             return {"status": False,
                     "status_message": str(e)}
 
-@avernus.post("/qwen_image_nunchaku_generate", response_model=QwenImageResponse)
+@avernus.post("/qwen_image_nunchaku_generate", response_model=ImageResponse)
 async def qwen_image_nunchaku_generate(data: QwenImageRequest = Body(...)):
     """Generates some number of Qwen Image Nunchaku images based on user inputs"""
     async with pipeline_lock:
@@ -437,7 +459,7 @@ async def qwen_image_nunchaku_generate(data: QwenImageRequest = Body(...)):
             return {"status": False,
                     "status_message": str(e)}
 
-@avernus.post("/qwen_image_inpaint_generate", response_model=QwenImageResponse)
+@avernus.post("/qwen_image_inpaint_generate", response_model=ImageResponse)
 async def qwen_image_inpaint_generate(data: QwenImageInpaintRequest = Body(...)):
     """Generates some number of qwen image inpaint images based on user inputs."""
     logger.info("qwen_image_inpaint_generate request received")
@@ -458,7 +480,7 @@ async def qwen_image_inpaint_generate(data: QwenImageInpaintRequest = Body(...))
             return {"status": False,
                     "status_message": str(e)}
 
-@avernus.post("/qwen_image_inpaint_nunchaku_generate", response_model=QwenImageResponse)
+@avernus.post("/qwen_image_inpaint_nunchaku_generate", response_model=ImageResponse)
 async def qwen_image_inpaint_nunchaku_generate(data: QwenImageInpaintRequest = Body(...)):
     """Generates some number of qwen image inpaint images based on user inputs."""
     logger.info("qwen_image_inpaint_nunchaku_generate request received")
@@ -480,7 +502,7 @@ async def qwen_image_inpaint_nunchaku_generate(data: QwenImageInpaintRequest = B
                     "status_message": str(e)}
 
 
-@avernus.post("/qwen_image_edit_generate", response_model=QwenImageResponse)
+@avernus.post("/qwen_image_edit_generate", response_model=ImageResponse)
 async def qwen_image_edit_generate(data: QwenImageRequest = Body(...)):
     """Generates some number of Qwen Image Edit images based on user inputs"""
     logger.info("qwen_image_edit_generate request received")
@@ -501,7 +523,7 @@ async def qwen_image_edit_generate(data: QwenImageRequest = Body(...)):
             return {"status": False,
                     "status_message": str(e)}
 
-@avernus.post("/qwen_image_edit_nunchaku_generate", response_model=QwenImageResponse)
+@avernus.post("/qwen_image_edit_nunchaku_generate", response_model=ImageResponse)
 async def qwen_image_edit_nunchaku_generate(data: QwenImageRequest = Body(...)):
     """Generates some number of Qwen Image Edit images based on user inputs"""
     logger.info("qwen_image_edit_nunchaku_generate request received")
@@ -523,7 +545,7 @@ async def qwen_image_edit_nunchaku_generate(data: QwenImageRequest = Body(...)):
                     "status_message": str(e)}
 
 
-@avernus.post("/qwen_image_edit_plus_generate", response_model=QwenImageResponse)
+@avernus.post("/qwen_image_edit_plus_generate", response_model=ImageResponse)
 async def qwen_image_edit_plus_generate(data: QwenImageEditPlusRequest = Body(...)):
     """Generates some number of Qwen Image Edit images based on user inputs"""
     logger.info("qwen_image_edit_generate request received")
@@ -544,7 +566,7 @@ async def qwen_image_edit_plus_generate(data: QwenImageEditPlusRequest = Body(..
             return {"status": False,
                     "status_message": str(e)}
 
-@avernus.post("/qwen_image_edit_plus_nunchaku_generate", response_model=QwenImageResponse)
+@avernus.post("/qwen_image_edit_plus_nunchaku_generate", response_model=ImageResponse)
 async def qwen_image_edit_plus_nunchaku_generate(data: QwenImageEditPlusRequest = Body(...)):
     """Generates some number of Qwen Image Edit images based on user inputs"""
     logger.info("qwen_image_edit_generate request received")
@@ -586,7 +608,7 @@ async def realesrgan_generate(data: RealESRGANRequest = Body(...)):
             return {"status": False,
                     "status_message": str(e)}
 
-@avernus.post("/sana_sprint_generate", response_model=SanaSprintResponse)
+@avernus.post("/sana_sprint_generate", response_model=ImageResponse)
 async def sana_sprint_generate(data: SanaSprintRequest = Body(...)):
     """Generates some number of Sana Sprint images based on user inputs"""
     logger.info("sana_sprint_generate request received")
@@ -610,7 +632,7 @@ async def sana_sprint_generate(data: SanaSprintRequest = Body(...)):
             return {"status": False,
                     "status_message": str(e)}
 
-@avernus.post("/sd15_generate", response_model=SD15Response)
+@avernus.post("/sd15_generate", response_model=ImageResponse)
 async def sd15_generate(data: SD15Request = Body(...)):
     """Generates some number of sdxl images based on user inputs."""
     logger.info("sd15_generate request received")
@@ -634,7 +656,7 @@ async def sd15_generate(data: SD15Request = Body(...)):
             return {"status": False,
                     "status_message": str(e)}
 
-@avernus.post("/sd15_inpaint_generate", response_model=SD15Response)
+@avernus.post("/sd15_inpaint_generate", response_model=ImageResponse)
 async def sd15_inpaint_generate(data: SD15InpaintRequest = Body(...)):
     """Generates some number of sdxl inpaint images based on user inputs."""
     logger.info("sd15_inpaint_generate request received")
@@ -655,7 +677,7 @@ async def sd15_inpaint_generate(data: SD15InpaintRequest = Body(...)):
             return {"status": False,
                     "status_message": str(e)}
 
-@avernus.post("/sdxl_generate", response_model=SDXLResponse)
+@avernus.post("/sdxl_generate", response_model=ImageResponse)
 async def sdxl_generate(data: SDXLRequest = Body(...)):
     """Generates some number of sdxl images based on user inputs."""
     logger.info("sdxl_generate request received")
@@ -683,7 +705,7 @@ async def sdxl_generate(data: SDXLRequest = Body(...)):
             return {"status": False,
                     "status_message": str(e)}
 
-@avernus.post("/sdxl_inpaint_generate", response_model=SDXLResponse)
+@avernus.post("/sdxl_inpaint_generate", response_model=ImageResponse)
 async def sdxl_inpaint_generate(data: SDXLInpaintRequest = Body(...)):
     """Generates some number of sdxl inpaint images based on user inputs."""
     logger.info("sdxl_inpaint_generate request received")

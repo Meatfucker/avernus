@@ -7,7 +7,7 @@ from nunchaku.models.transformers.transformer_qwenimage import NunchakuQwenImage
 from nunchaku.utils import get_precision
 import torch
 
-from pydantic_models import QwenImageRequest, QwenImageResponse
+from pydantic_models import QwenImageRequest, ImageResponse
 from utils import base64_to_image, image_to_base64
 
 PIPELINE: QwenImageImg2ImgPipeline
@@ -87,7 +87,7 @@ def generate_qwen_image(prompt,
         return {"status": False,
                 "status_message": str(e)}
 
-@avernus_qwen_image.post("/qwen_image_i2i_nunchaku_generate", response_model=QwenImageResponse)
+@avernus_qwen_image.post("/qwen_image_i2i_nunchaku_generate", response_model=ImageResponse)
 def qwen_image_nunchaku_generate(data: QwenImageRequest = Body(...)):
     """Generates some number of Qwen Image images based on user inputs"""
     kwargs: dict[str, Any] = {"prompt": data.prompt,

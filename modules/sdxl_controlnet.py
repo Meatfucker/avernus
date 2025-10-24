@@ -13,7 +13,7 @@ from PIL import Image
 import torch
 from transformers import pipeline as transformers_pipeline
 
-from pydantic_models import SDXLResponse, SDXLRequest
+from pydantic_models import ImageResponse, SDXLRequest
 from utils import base64_to_image, image_to_base64
 
 PIPELINE: StableDiffusionXLControlNetPipeline
@@ -196,7 +196,7 @@ def get_depth_image(image):
     del pipe
     return depth_image
 
-@avernus_sdxl_controlnet.post("/sdxl_generate", response_model=SDXLResponse)
+@avernus_sdxl_controlnet.post("/sdxl_generate", response_model=ImageResponse)
 def sdxl_generate(data: SDXLRequest = Body(...)):
     """Generates some number of sdxl images based on user inputs."""
     kwargs: dict[str, Any] = {"prompt": data.prompt,

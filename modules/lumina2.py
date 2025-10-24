@@ -1,21 +1,27 @@
 from typing import Any
 
-from diffusers import HiDreamImagePipeline
+from diffusers import Lumina2Pipeline, Lumina2Transformer2DModel
 from fastapi import FastAPI, Body
 import torch
 
-from pydantic_models import HiDreamRequest, ImageResponse
+from pydantic_models import LuminaRequest, ImageResponse
 from utils import image_to_base64
 
-PIPELINE: HiDreamImagePipeline
+PIPELINE: Lumina2Pipeline
 LOADED: bool = False
 dtype = torch.bfloat16
-avernus_hidream = FastAPI()
+avernus_lumina2 = FastAPI()
 
 
-def load_hidream_pipeline(model_name="Meatfucker/HiDream-I1-Full-bnb-nf4"):
+def load_lumina2_pipeline(model_name="Alpha-VLLM/Lumina-Image-2.0"):
     global PIPELINE
-    PIPELINE = HiDreamImagePipeline.from_pretrained(model_name, torch_dtype=dtype).to("cuda")
+    if model_name.endswith("safetensors"):
+        transformer = Lumina2Transformer2DModel.from_single_file(model_name, torch_dtype=dtype)
+        PIPELINE = Lumina2Pipeline.from_pretrained("Alpha-VLLM/Lumina-Image-2.0",
+                                                   transformer=transformer,
+                                                   torch_dtype=dtype).to("cuda")
+    else:
+        PIPELINE = Lumina2Pipeline.from_pretrained(model_name, torch_dtype=dtype).to("cuda")
     PIPELINE.enable_model_cpu_offload()
     PIPELINE.vae.enable_slicing()
 
@@ -24,22 +30,18 @@ def get_seed_generators(amount, seed):
     return generator
 
 
-def generate_hidream(prompt,
+def generate_lumina2(prompt,
                      width,
                      height,
                      steps,
                      batch_size,
-                     negative_prompt=None,
                      guidance_scale=None,
                      seed=None,
-                     model_name=None):
+                     model_name="Alpha-VLLM/Lumina-Image-2.0"):
     global PIPELINE
     global LOADED
     if not LOADED:
-        if model_name is not None:
-            load_hidream_pipeline(model_name)
-        else:
-            load_hidream_pipeline()
+        load_lumina2_pipeline(model_name)
         LOADED = True
     kwargs = {"prompt": prompt,
               "width": width if width is not None else 1024,
@@ -47,8 +49,6 @@ def generate_hidream(prompt,
               "num_inference_steps": steps if steps is not None else 30,
               "num_images_per_prompt": batch_size if batch_size is not None else 4,
               "guidance_scale": guidance_scale if guidance_scale is not None else 5.0}
-    if negative_prompt is not None:
-        kwargs["negative_prompt"] = negative_prompt
     if seed is not None:
         kwargs["generator"] = get_seed_generators(kwargs["num_images_per_prompt"], seed)
     try:
@@ -59,16 +59,14 @@ def generate_hidream(prompt,
         return {"status": False,
                 "status_message": str(e)}
 
-@avernus_hidream.post("/hidream_generate", response_model=ImageResponse)
-def hidream_generate(data: HiDreamRequest = Body(...)):
-    """Generates some number of HiDream images based on user inputs"""
+@avernus_lumina2.post("/lumina2_generate", response_model=ImageResponse)
+def lumina2_generate(data: LuminaRequest = Body(...)):
+    """Generates some number of Lumina2 images based on user inputs"""
     kwargs: dict[str, Any] = {"prompt": data.prompt,
                               "width": data.width,
                               "height": data.height,
                               "steps": data.steps,
                               "batch_size": data.batch_size}
-    if data.negative_prompt:
-        kwargs["negative_prompt"] = data.negative_prompt
     if data.model_name:
         kwargs["model_name"] = data.model_name
     if data.guidance_scale:
@@ -76,7 +74,7 @@ def hidream_generate(data: HiDreamRequest = Body(...)):
     if data.seed:
         kwargs["seed"] = data.seed
     try:
-        response = generate_hidream(**kwargs)
+        response = generate_lumina2(**kwargs)
         if response["status"] is True:
             base64_images = [image_to_base64(img) for img in response["images"]]
         else:
@@ -86,14 +84,16 @@ def hidream_generate(data: HiDreamRequest = Body(...)):
         return {"status": False,
                 "status_message": str(e)}
     return {"status": True,
-            "status_message": "HiDream Success",
+            "status_message": "Lumina2 Success",
             "images": base64_images}
 
-@avernus_hidream.get("/online")
+@avernus_lumina2.get("/online")
 async def status():
     """ This returns True when hit"""
     return True
 
 if __name__ == "__main__":
     import uvicorn
-    uvicorn.run(avernus_hidream, host="0.0.0.0", port=6970, log_level="critical")
+
+    uvicorn.run(avernus_lumina2, host="0.0.0.0", port=6970)
+    #uvicorn.run(avernus_lumina2, host="0.0.0.0", port=6970, log_level="critical")

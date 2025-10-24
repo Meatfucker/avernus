@@ -15,9 +15,6 @@ class ACEStepRequest(BaseModel):
     omega_scale: Optional[float] = Field(None, example=10.0)
     actual_seeds: Optional[int] = Field(None, example=42)
 
-class ChromaLoraListResponse(BaseModel):
-    loras: List[str] = Field(..., example=["lora1.safetensors", "lora2.safetensors", "lora3.safetensors"])
-
 class ChromaRequest(BaseModel):
     prompt: str = Field(..., example="A big green monster")
     negative_prompt: Optional[str] = Field(None, example="blurry")
@@ -30,9 +27,6 @@ class ChromaRequest(BaseModel):
     guidance_scale: Optional[float] = Field(None, example=5.0)
     seed: Optional[int] = Field(None, example=42)
     model_name: Optional[str] = Field(None, example="Meatfucker/Flux.1-dev-bnb-nf4")
-
-class ChromaResponse(GenericResponse):
-    images: Optional[List[str]] = Field(None, example=["kajsdflsadfsadf....", "lkjdsaflkjsadlkfjsa3423....", "lwerewjrlwkejrwewr..."])
 
 class FluxControlnetListResponse(BaseModel):
     flux_controlnets: List[str] = Field(..., example=["canny", "depth"])
@@ -53,9 +47,6 @@ class FluxInpaintRequest(BaseModel):
     seed: Optional[int] = Field(None, example=42)
     true_cfg_scale: Optional[float] = Field(None, example=1.0)
 
-class FluxLoraListResponse(BaseModel):
-    loras: List[str] = Field(..., example=["lora1.safetensors", "lora2.safetensors", "lora3.safetensors"])
-
 class FluxRequest(BaseModel):
     prompt: str = Field(..., example="A big green monster")
     negative_prompt: Optional[str] = Field(None, example="clams")
@@ -72,9 +63,6 @@ class FluxRequest(BaseModel):
     seed: Optional[int] = Field(None, example=42)
     model_name: Optional[str] = Field(None, example="Meatfucker/Flux.1-dev-bnb-nf4")
     true_cfg_scale: Optional[float] = Field(None, example=1.0)
-
-class FluxResponse(GenericResponse):
-    images: Optional[List[str]] = Field(None, example=["kajsdflsadfsadf....", "lkjdsaflkjsadlkfjsa3423....", "lwerewjrlwkejrwewr..."])
 
 class FramepackRequest(BaseModel):
     prompt: str = Field(..., example="A big green monster")
@@ -100,9 +88,6 @@ class HiDreamRequest(BaseModel):
     seed: Optional[int] = Field(None, example=42)
     model_name: Optional[str] = Field(None, example="Meatfucker/Flux.1-dev-bnb-nf4")
 
-class HiDreamResponse(GenericResponse):
-    images: Optional[List[str]] = Field(None, example=["kajsdflsadfsadf....", "lkjdsaflkjsadlkfjsa3423....", "lwerewjrlwkejrwewr..."])
-
 class HunyuanTI2VRequest(BaseModel):
     prompt: str = Field(..., example="A big green monster")
     negative_prompt: Optional[str] = Field(None, example="a blue dog")
@@ -115,6 +100,9 @@ class HunyuanTI2VRequest(BaseModel):
     guidance_scale: Optional[float] = Field(None, example=5.0)
     seed: Optional[int] = Field(None, example=42)
     model_name: Optional[str] = Field(None, example="Meatfucker/HunyuanVideo-bnb-nf4")
+
+class ImageResponse(GenericResponse):
+    images: Optional[List[str]] = Field(None, example=["kajsdflsadfsadf....", "lkjdsaflkjsadlkfjsa3423....", "lwerewjrlwkejrwewr..."])
 
 class ImageGenAuxRequest(BaseModel):
     image: str = Field(..., example="a9d8fp0sa9dfpasdfllkajsdflkjadslf...")
@@ -147,14 +135,19 @@ class LLMRequest(BaseModel):
 class LLMResponse(GenericResponse):
     response: Optional[str] = Field(None, example="Hi Im online and how can I help you?")
 
-class MultiModalLLMRequest(BaseModel):
-    prompt: str = Field(..., example="Who is the best at hackey sack?")
-    model_name: Optional[str] = Field(None, example="Goekdeniz-Guelmez/Josiefied-Qwen2.5-7B-Instruct-abliterated-v2")
-    messages: Optional[List[Dict]] = Field(None, example=[{"role": "user", "content": "Hello"}, {"role": "assistant", "content": "Hi there, how may I assist you?"}])
-    image: Optional[str] = Field(None, example="a9d8fp0sa9dfpasdfllkajsdflkjadslf...")
+class LoraListResponse(BaseModel):
+    loras: List[str] = Field(..., example=["lora1.safetensors", "lora2.safetensors", "lora3.safetensors"])
 
-class MultiModalLLMResponse(BaseModel):
-    response: str = Field(..., example="Hi Im online and how can I help you?")
+class LuminaRequest(BaseModel):
+    prompt: str = Field(..., example="A big green monster")
+    negative_prompt: Optional[str] = Field(None, example="clams")
+    width: Optional[int] = Field(None, example=1024)
+    height: Optional[int] = Field(None, example=1024)
+    steps: Optional[int] = Field(None, example=30)
+    batch_size: Optional[int] = Field(None, example=4)
+    guidance_scale: Optional[float] = Field(None, example=5.0)
+    seed: Optional[int] = Field(None, example=42)
+    model_name: Optional[str] = Field(None, example="Meatfucker/Flux.1-dev-bnb-nf4")
 
 class QwenImageInpaintRequest(BaseModel):
     prompt: str = Field(..., example="A big green monster")
@@ -170,9 +163,6 @@ class QwenImageInpaintRequest(BaseModel):
     strength: Optional[float] = Field(None, example=0.75)
     true_cfg_scale: Optional[float] = Field(None, example=4.0)
     seed: Optional[int] = Field(None, example=42)
-
-class QwenImageLoraListResponse(BaseModel):
-    loras: List[str] = Field(..., example=["lora1.safetensors", "lora2.safetensors", "lora3.safetensors"])
 
 class QwenImageRequest(BaseModel):
     prompt: str = Field(..., example="A big green monster")
@@ -201,9 +191,6 @@ class QwenImageEditPlusRequest(BaseModel):
     strength: Optional[float] = Field(None, example=0.75)
     true_cfg_scale: Optional[float] = Field(None, example=1.0)
     seed: Optional[int] = Field(None, example=42)
-
-class QwenImageResponse(GenericResponse):
-    images: Optional[List[str]] = Field(None, example=["kajsdflsadfsadf....", "lkjdsaflkjsadlkfjsa3423....", "lwerewjrlwkejrwewr..."])
 
 class RAGRequest(BaseModel):
     prompt: str = Field(..., example="What is answer to life, the universe, and everything")
@@ -234,9 +221,6 @@ class SanaSprintRequest(BaseModel):
     seed: Optional[int] = Field(None, example=42)
     model_name: Optional[str] = Field(None, example="Meatfucker/Flux.1-dev-bnb-nf4")
 
-class SanaSprintResponse(GenericResponse):
-    images: Optional[List[str]] = Field(None, example=["kajsdflsadfsadf....", "lkjdsaflkjsadlkfjsa3423....", "lwerewjrlwkejrwewr..."])
-
 class SD15Request(BaseModel):
     prompt: str = Field(..., example="A big green monster")
     negative_prompt: Optional[str] = Field(None, example="a blue dog")
@@ -251,9 +235,6 @@ class SD15Request(BaseModel):
     guidance_scale: Optional[float] = Field(None, example=7.5)
     scheduler: Optional[str] = Field(None, example="DPMSolverMultistepScheduler")
     seed: Optional[int] = Field(None, example=42)
-
-class SD15Response(GenericResponse):
-    images: Optional[List[str]] = Field(None, example=["kajsdflsadfsadf....", "lkjdsaflkjsadlkfjsa3423....", "lwerewjrlwkejrwewr..."])
 
 class SD15InpaintRequest(BaseModel):
     prompt: str = Field(..., example="A big green monster")
@@ -270,9 +251,6 @@ class SD15InpaintRequest(BaseModel):
     guidance_scale: Optional[float] = Field(None, example=7.5)
     scheduler: Optional[str] = Field(None, example="DPMSolverMultistepScheduler")
     seed: Optional[int] = Field(None, example=42)
-
-class SD15LoraListResponse(BaseModel):
-    loras: List[str] = Field(..., example=["lora1.safetensors", "lora2.safetensors", "lora3.safetensors"])
 
 class SDXLControlnetListResponse(BaseModel):
     sdxl_controlnets: List[str] = Field(..., example=["canny", "depth"])
@@ -293,9 +271,6 @@ class SDXLInpaintRequest(BaseModel):
     scheduler: Optional[str] = Field(None, example="DPMSolverMultistepScheduler")
     seed: Optional[int] = Field(None, example=42)
 
-class SDXLLoraListResponse(BaseModel):
-    loras: List[str] = Field(..., example=["lora1.safetensors", "lora2.safetensors", "lora3.safetensors"])
-
 class SDXLRequest(BaseModel):
     prompt: str = Field(..., example="A big green monster")
     negative_prompt: Optional[str] = Field(None, example="a blue dog")
@@ -315,9 +290,6 @@ class SDXLRequest(BaseModel):
     guidance_scale: Optional[float] = Field(None, example=5.0)
     scheduler: Optional[str] = Field(None, example="DPMSolverMultistepScheduler")
     seed: Optional[int] = Field(None, example=42)
-
-class SDXLResponse(GenericResponse):
-    images: Optional[List[str]] = Field(None, example=["kajsdflsadfsadf....", "lkjdsaflkjsadlkfjsa3423....", "lwerewjrlwkejrwewr..."])
 
 class SDXLSchedulerListResponse(BaseModel):
     schedulers: List[str] = Field(..., example=["DPMSolverMultistepScheduler", "EulerAncestralDiscreteScheduler", "LMSDiscreteScheduler"])

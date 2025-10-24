@@ -12,6 +12,7 @@ from modules.tests import (ACETest,
                            ImageGenAuxTest,
                            Kandinsky5Test,
                            LlmChatTest,
+                           Lumina2Test, Lumina2SingleFileTest,
                            QwenImageTest, QwenImageInpaintTest, QwenImageI2ITest, QwenImageEditTest,
                            RealESRGANTest,
                            SanaSprintTest, SanaSprintI2ITest,
@@ -52,6 +53,9 @@ start_time = time.time()
 
 #llm = LlmChatTest("LLM CHAT")
 
+lumina2 = Lumina2Test("LUMINA2")
+lumina2_single = Lumina2SingleFileTest("LUMINA2_SINGLE_FILE")
+
 #qwen = QwenImageTest("QWEN_IMAGE")
 #qwen_i2i = QwenImageI2ITest("QWEN IMAGE I2I")
 #qwen_inpaint = QwenImageInpaintTest("QWEN IMAGE I2I")
@@ -59,8 +63,8 @@ start_time = time.time()
 
 #realesrgan = RealESRGANTest("REALESRGAN")
 
-sana_sprint = SanaSprintTest("SANA SPRINT")
-sana_sprint_i2i = SanaSprintI2ITest("SANA SPRINT I2I")
+#sana_sprint = SanaSprintTest("SANA SPRINT")
+#sana_sprint_i2i = SanaSprintI2ITest("SANA SPRINT I2I")
 
 #sd15 = SD15Test("SD15")
 #sd15_i2i = SD15I2ITest("SD15_I2I")

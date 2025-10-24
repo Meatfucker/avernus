@@ -9,7 +9,7 @@ from diffusers import (StableDiffusionImg2ImgPipeline, DPMSolverMultistepSchedul
 from fastapi import FastAPI, Body
 import torch
 
-from pydantic_models import SD15Request, SD15Response
+from pydantic_models import SD15Request, ImageResponse
 from utils import base64_to_image, image_to_base64
 
 PIPELINE: StableDiffusionImg2ImgPipeline
@@ -127,7 +127,7 @@ def set_scheduler(scheduler):
     except Exception:
         pass
 
-@avernus_sd15.post("/sd15_generate", response_model=SD15Response)
+@avernus_sd15.post("/sd15_generate", response_model=ImageResponse)
 def sd15_generate(data: SD15Request = Body(...)):
     """Generates some number of sdxl images based on user inputs."""
     kwargs: dict[str, Any] = {"prompt": data.prompt,

@@ -6,7 +6,7 @@ from diffusers.quantizers import PipelineQuantizationConfig
 from fastapi import FastAPI, Body
 import torch
 
-from pydantic_models import FluxRequest, FluxResponse
+from pydantic_models import FluxRequest, ImageResponse
 from utils import base64_to_image, image_to_base64, resize_by_pixels
 
 PIPELINE: FluxKontextPipeline
@@ -109,7 +109,7 @@ def generate_flux_kontext(prompt,
         return {"status": False,
                 "status_message": str(e)}
 
-@avernus_flux_kontext.post("/flux_kontext_generate", response_model=FluxResponse)
+@avernus_flux_kontext.post("/flux_kontext_generate", response_model=ImageResponse)
 def flux_kontext_generate(data: FluxRequest = Body(...)):
     """Generates some number of Flux Kontext images based on user inputs"""
     kwargs: dict[str, Any] = {"prompt": data.prompt,

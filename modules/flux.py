@@ -7,7 +7,7 @@ from fastapi import FastAPI, Body
 import torch
 from transformers import CLIPTextModel, CLIPTokenizer, T5EncoderModel, T5TokenizerFast
 
-from pydantic_models import FluxRequest, FluxResponse
+from pydantic_models import FluxRequest, ImageResponse
 from utils import base64_to_image, image_to_base64
 
 PIPELINE: FluxPipeline
@@ -134,7 +134,7 @@ def get_redux_embeds(image, prompt, strength):
     gc.collect()
     return redux_embeds, redux_pooled_embeds
 
-@avernus_flux.post("/flux_generate", response_model=FluxResponse)
+@avernus_flux.post("/flux_generate", response_model=ImageResponse)
 def flux_generate(data: FluxRequest = Body(...)):
     """Generates some number of Flux images based on user inputs"""
     kwargs: dict[str, Any] = {"prompt": data.prompt,
