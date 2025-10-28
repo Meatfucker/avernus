@@ -15,6 +15,17 @@ class ACEStepRequest(BaseModel):
     omega_scale: Optional[float] = Field(None, example=10.0)
     actual_seeds: Optional[int] = Field(None, example=42)
 
+class AuraFlowRequest(BaseModel):
+    prompt: str = Field(..., example="A big green monster")
+    negative_prompt: Optional[str] = Field(None, example="clams")
+    width: Optional[int] = Field(None, example=1024)
+    height: Optional[int] = Field(None, example=1024)
+    steps: Optional[int] = Field(None, example=30)
+    batch_size: Optional[int] = Field(None, example=4)
+    guidance_scale: Optional[float] = Field(None, example=5.0)
+    seed: Optional[int] = Field(None, example=42)
+    model_name: Optional[str] = Field(None, example="fal/AuraFlow")
+
 class ChromaRequest(BaseModel):
     prompt: str = Field(..., example="A big green monster")
     negative_prompt: Optional[str] = Field(None, example="blurry")
@@ -137,6 +148,19 @@ class LLMResponse(GenericResponse):
 
 class LoraListResponse(BaseModel):
     loras: List[str] = Field(..., example=["lora1.safetensors", "lora2.safetensors", "lora3.safetensors"])
+
+class LTXTI2VRequest(BaseModel):
+    prompt: str = Field(..., example="A big green monster")
+    negative_prompt: Optional[str] = Field(None, example="a blue dog")
+    width: Optional[int] = Field(None, example=832)
+    height: Optional[int] = Field(None, example=480)
+    steps: Optional[int] = Field(None, example=50)
+    num_frames: Optional[int] = Field(None, example=81)
+    frame_rate: Optional[int] = Field(None, example=25)
+    image: Optional[str] = Field(None, example="a9d8fp0sa9dfpasdfllkajsdflkjadslf...")
+    guidance_scale: Optional[float] = Field(None, example=5.0)
+    seed: Optional[int] = Field(None, example=42)
+    model_name: Optional[str] = Field(None, example="Wan-AI/Wan2.2-TI2V-5B-Diffusers")
 
 class LuminaRequest(BaseModel):
     prompt: str = Field(..., example="A big green monster")

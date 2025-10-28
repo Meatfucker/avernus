@@ -2,6 +2,7 @@ import time
 from loguru import logger
 
 from modules.tests import (ACETest,
+                           AuraflowTest,
                            CheckStatus,
                            ChromaTest, ChromaI2ITest,
                            FluxI2ITest, FluxInpaintTest, FluxIPAdapterTest, FluxKontextTest,
@@ -12,6 +13,7 @@ from modules.tests import (ACETest,
                            ImageGenAuxTest,
                            Kandinsky5Test,
                            LlmChatTest,
+                           LTXTest,
                            Lumina2Test, Lumina2SingleFileTest,
                            QwenImageTest, QwenImageInpaintTest, QwenImageI2ITest, QwenImageEditTest,
                            RealESRGANTest,
@@ -26,6 +28,8 @@ from modules.tests import (ACETest,
 start_time = time.time()
 
 #ace = ACETest("ACE STEP")
+
+#auraflow = AuraflowTest("AURAFLOW")
 
 #check_status = CheckStatus("CHECK STATUS")
 
@@ -53,8 +57,10 @@ start_time = time.time()
 
 #llm = LlmChatTest("LLM CHAT")
 
-lumina2 = Lumina2Test("LUMINA2")
-lumina2_single = Lumina2SingleFileTest("LUMINA2_SINGLE_FILE")
+ltx = LTXTest("LTX")
+
+#lumina2 = Lumina2Test("LUMINA2")
+#lumina2_single = Lumina2SingleFileTest("LUMINA2_SINGLE_FILE")
 
 #qwen = QwenImageTest("QWEN_IMAGE")
 #qwen_i2i = QwenImageI2ITest("QWEN IMAGE I2I")

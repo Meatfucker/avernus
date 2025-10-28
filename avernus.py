@@ -7,6 +7,7 @@ import httpx
 from loguru import logger
 
 from modules.pydantic_models import (ACEStepRequest,
+                                     AuraFlowRequest,
                                      ChromaRequest,
                                      FluxInpaintRequest, FluxRequest,
                                      FramepackRequest,
@@ -17,6 +18,7 @@ from modules.pydantic_models import (ACEStepRequest,
                                      KandinskyT2VRequest,
                                      LLMRequest, LLMResponse,
                                      LoraListResponse,
+                                     LTXTI2VRequest,
                                      LuminaRequest,
                                      QwenImageRequest, QwenImageInpaintRequest, QwenImageEditPlusRequest,
                                      RealESRGANResponse, RealESRGANRequest,
@@ -49,6 +51,27 @@ async def ace_generate(data: ACEStepRequest = Body(...)):
             result = await forward_post_request(url, data)
             if result["status"] is True:
                 return StreamingResponse(open(result["path"], "rb"), media_type="audio/wav")
+            else:
+                logger.error(f"Generation Error: {result['status_message']}")
+                server_manager.kill_pipeline()
+                return {"status": False,
+                        "status_message": result["status_message"]}
+        except Exception as e:
+            server_manager.kill_pipeline()
+            return {"status": False,
+                    "status_message": str(e)}
+
+@avernus.post("/auraflow_generate", response_model=ImageResponse)
+async def auraflow_generate(data: AuraFlowRequest = Body(...)):
+    """Generates some number of Auraflow images based on user inputs"""
+    logger.info("auraflow_generate request received")
+    async with pipeline_lock:
+        await server_manager.set_pipeline("auraflow", data.model_name)
+        url = "http://127.0.0.1:6970/auraflow_generate"
+        try:
+            result = await forward_post_request(url, data)
+            if result["status"] is True:
+                return result
             else:
                 logger.error(f"Generation Error: {result['status_message']}")
                 server_manager.kill_pipeline()
@@ -376,6 +399,29 @@ async def llm_chat(data: LLMRequest = Body(...)):
             result = await forward_post_request(url, data)
             if result["status"] is True:
                 return result
+            else:
+                logger.error(f"Generation Error: {result['status_message']}")
+                server_manager.kill_pipeline()
+                return {"status": False,
+                        "status_message": result["status_message"]}
+        except Exception as e:
+            server_manager.kill_pipeline()
+            return {"status": False,
+                    "status_message": str(e)}
+
+@avernus.post("/ltx_ti2v_generate")
+async def ltx_ti2v_generate(data: LTXTI2VRequest = Body(...)):
+    logger.info("ltx_ti2v_generate request received")
+    async with pipeline_lock:
+        if data.image is None:
+            await server_manager.set_pipeline("ltx", data.model_name)
+        if data.image is not None:
+            await server_manager.set_pipeline("ltx_i2v", data.model_name)
+        url = "http://127.0.0.1:6970/ltx_ti2v_generate"
+        try:
+            result = await forward_post_request(url, data)
+            if result["status"] is True:
+                return StreamingResponse(cleanup_and_stream(result["path"]), media_type="video/mp4")
             else:
                 logger.error(f"Generation Error: {result['status_message']}")
                 server_manager.kill_pipeline()

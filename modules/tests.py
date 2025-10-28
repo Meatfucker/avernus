@@ -35,6 +35,11 @@ class ACETest(TimedTest):
     async def run_test(self):
         await self.client.ace_music(prompt="jazz, bass, techno", lyrics="inst")
 
+class AuraflowTest(TimedTest):
+    async def run_test(self):
+        images = await self.client.auraflow_image("laser turtle", batch_size=1)
+        await base64_image_to_file(images, "auraflow")
+
 class CheckStatus(TimedTest):
     async def run_test(self):
         status = await self.client.check_status()
@@ -174,6 +179,14 @@ class LlmChatTest(TimedTest):
                                          messages)
         logger.success(response)
 
+class LTXTest(TimedTest):
+    async def run_test(self):
+        await self.client.ltx_ti2v("An overhead tracking shot of frogs hopping from lilypad to lilypad, the water splashing as they land",
+                                   num_frames=33,
+                                   seed=42,
+                                   width=704,
+                                   height=512)
+
 class Lumina2Test(TimedTest):
     async def run_test(self):
         images = await self.client.lumina2_image("laser turtle", batch_size=1)
@@ -181,7 +194,9 @@ class Lumina2Test(TimedTest):
 
 class Lumina2SingleFileTest(TimedTest):
     async def run_test(self):
-        images = await self.client.lumina2_image("laser turtle", batch_size=1, model_name="https://huggingface.co/neta-art/Neta-Lumina/blob/main/neta-lumina-v1.0-all-in-one.safetensors")
+        images = await self.client.lumina2_image("laser turtle",
+                                                 batch_size=1,
+                                                 model_name="https://huggingface.co/neta-art/Neta-Lumina/blob/main/neta-lumina-v1.0-all-in-one.safetensors")
         await base64_image_to_file(images, "lumina2_single")
 
 class QwenImageTest(TimedTest):
