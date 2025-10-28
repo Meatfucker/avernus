@@ -17,6 +17,8 @@ avernus_kandinsky5_t2v = FastAPI()
 def load_kandinsky5_pipeline(model_name="ai-forever/Kandinsky-5.0-T2V-Lite-sft-5s-Diffusers"):
     global PIPELINE
     PIPELINE = Kandinsky5T2VPipeline.from_pretrained(model_name, torch_dtype=torch.bfloat16)
+    PIPELINE.transformer.set_attention_backend("flex")
+    PIPELINE.transformer.compile(mode="max-autotune-no-cudagraphs", dynamic=True)
     PIPELINE.enable_model_cpu_offload()
     PIPELINE.vae.enable_tiling()
 
