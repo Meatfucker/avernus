@@ -1,3 +1,4 @@
+import os
 from typing import Any
 import tempfile
 
@@ -8,6 +9,7 @@ import torch
 
 from pydantic_models import KandinskyT2VRequest
 
+os.environ["HF_ENABLE_PARALLEL_LOADING"] = "yes"
 PIPELINE: Kandinsky5T2VPipeline
 LOADED: bool = False
 dtype = torch.bfloat16

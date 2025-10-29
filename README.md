@@ -22,13 +22,6 @@ Start via `start_avernus.sh` or `start_avernus.bat` depending on your operating 
 
 # TODO:
 
-- add hidream support
 - Add svg model endpoint
 - Add LLM chat templates
-- Make api responsive while processing gen
-- add model picker to flux
-- LTX Support
 - 3d model model support
-- hunyuan support
-- chroma support
-- change to new vae slicing call
