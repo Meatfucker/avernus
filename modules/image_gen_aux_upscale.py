@@ -3,7 +3,7 @@ from typing import Any
 from fastapi import FastAPI, Body
 from image_gen_aux import UpscaleWithModel
 
-from pydantic_models import ImageGenAuxRequest, ImageGenAuxResponse
+from pydantic_models import ImageGenAuxRequest, ImageResponse
 from utils import base64_to_image, image_to_base64
 
 PIPELINE: UpscaleWithModel
@@ -46,7 +46,7 @@ def generate_upscaler_image(image, model="OzzyGT/DAT_X4", scale=None, tiling=Non
         return {"status": False,
                 "status_message": str(e)}
 
-@avernus_image_gen_aux_upscale.post("/image_gen_aux_upscale", response_model=ImageGenAuxResponse)
+@avernus_image_gen_aux_upscale.post("/image_gen_aux_upscale", response_model=ImageResponse)
 def image_gen_aux_upscale(data: ImageGenAuxRequest = Body(...)):
     """Generates an upscaled image using image_gen_aux"""
     print("request recieved")
@@ -76,7 +76,7 @@ def image_gen_aux_upscale(data: ImageGenAuxRequest = Body(...)):
                 "status_message": str(e)}
     return {"status": True,
             "status_message": "image_gen_aux Upscaler Success",
-            "images": base64_image}
+            "images": [base64_image]}
 
 
 @avernus_image_gen_aux_upscale.get("/online")

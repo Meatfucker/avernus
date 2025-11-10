@@ -9,7 +9,7 @@ import sys
 from typing import Optional
 import subprocess
 
-from fastapi.responses import StreamingResponse
+from fastapi.responses import StreamingResponse, FileResponse
 import httpx
 from loguru import logger
 import torch
@@ -215,4 +215,4 @@ def cleanup_and_stream(tmp_path):
     with open(tmp_path, "rb") as f:
         yield from f
     os.remove(tmp_path)  # Remove temp file after streaming
-    return StreamingResponse(cleanup_and_stream(tmp_path), media_type="video/mp4")
+    return FileResponse(cleanup_and_stream(tmp_path), media_type="video/mp4")

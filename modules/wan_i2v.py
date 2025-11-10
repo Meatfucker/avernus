@@ -21,7 +21,7 @@ def load_wan_pipeline(model_name="Meatfucker/Wan2.2-TI2V-5B-bnb-nf4", flow_shift
     PIPELINE = WanImageToVideoPipeline.from_pretrained(model_name, vae=vae, torch_dtype=torch.bfloat16).to("cpu")
     PIPELINE.scheduler = UniPCMultistepScheduler.from_config(PIPELINE.scheduler.config, flow_shift=flow_shift)
     PIPELINE.enable_model_cpu_offload()
-    PIPELINE.vae.enable_tiling()
+    PIPELINE.vae.enable_slicing()
 
 def get_seed_generators(amount, seed):
     generator = [torch.Generator(device="cuda").manual_seed(seed + i) for i in range(amount)]
@@ -64,6 +64,8 @@ def generate_wan_ti2v(prompt: str,
         kwargs["height"] = height
     else:
         kwargs["height"] = image_height
+    kwargs["width"] = int(round(kwargs["width"] / 16) * 16)
+    kwargs["height"] = int(round(kwargs["width"] / 16) * 16)
     kwargs["image"] = image
     try:
         output = PIPELINE(**kwargs).frames[0]

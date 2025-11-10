@@ -63,6 +63,9 @@ def generate_wan_ti2v(prompt: str,
         kwargs["height"] = height
     else:
         kwargs["height"] = 480
+
+    kwargs["width"] = int(round(kwargs["width"] / 16) * 16)
+    kwargs["height"] = int(round(kwargs["width"] / 16) * 16)
     try:
         output = PIPELINE(**kwargs).frames[0]
         return {"status": True,

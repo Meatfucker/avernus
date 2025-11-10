@@ -39,6 +39,21 @@ class ChromaRequest(BaseModel):
     seed: Optional[int] = Field(None, example=42)
     model_name: Optional[str] = Field(None, example="Meatfucker/Flux.1-dev-bnb-nf4")
 
+class ChronoEditRequest(BaseModel):
+    prompt: str = Field(..., example="A big green monster")
+    negative_prompt: Optional[str] = Field(None, example="a red dog")
+    model_name: Optional[str] = Field(None, example="some-repo/some-chronoedit-model")
+    width: Optional[int] = Field(None, example=1024)
+    height: Optional[int] = Field(None, example=1024)
+    steps: Optional[int] = Field(None, example=50)
+    batch_size: Optional[int] = Field(None, example=4)
+    lora_name: Optional[Union[str, List[str]]] = Field(None, example="lora_name.safetensors")
+    image: Optional[str] = Field(None, example="a9d8fp0sa9dfpasdfllkajsdflkjadslf...")
+    flow_shift: Optional[float] = Field(None, example=2.0)
+    guidance_scale: Optional[float] = Field(None, example=1.0)
+    seed: Optional[int] = Field(None, example=42)
+    num_frames: Optional[int] = Field(None, example=5)
+
 class FluxControlnetListResponse(BaseModel):
     flux_controlnets: List[str] = Field(..., example=["canny", "depth"])
 
@@ -124,9 +139,6 @@ class ImageGenAuxRequest(BaseModel):
     tile_height: Optional[int] = Field(None, example=768)
     overlap: Optional[int] = Field(None, example=8)
 
-class ImageGenAuxResponse(GenericResponse):
-    images: Optional[str] = Field(None, example="kajsdflsadfsadf....")
-
 class KandinskyT2VRequest(BaseModel):
     prompt: str = Field(..., example="A big green monster")
     negative_prompt: Optional[str] = Field(None, example="a blue dog")
@@ -146,7 +158,7 @@ class LLMRequest(BaseModel):
 class LLMResponse(GenericResponse):
     response: Optional[str] = Field(None, example="Hi Im online and how can I help you?")
 
-class LoraListResponse(BaseModel):
+class LoraListResponse(GenericResponse):
     loras: List[str] = Field(..., example=["lora1.safetensors", "lora2.safetensors", "lora3.safetensors"])
 
 class LTXTI2VRequest(BaseModel):
@@ -228,9 +240,6 @@ class RealESRGANRequest(BaseModel):
     image: str = Field(..., example="a9d8fp0sa9dfpasdfllkajsdflkjadslf...")
     scale: Optional[int] = Field(None, example=4)
 
-class RealESRGANResponse(GenericResponse):
-    images: Optional[str] = Field(None, example="kajsdflsadfsadf....")
-
 class SanaSprintRequest(BaseModel):
     prompt: str = Field(..., example="A big green monster")
     width: Optional[int] = Field(None, example=1024)
@@ -276,7 +285,7 @@ class SD15InpaintRequest(BaseModel):
     scheduler: Optional[str] = Field(None, example="DPMSolverMultistepScheduler")
     seed: Optional[int] = Field(None, example=42)
 
-class SDXLControlnetListResponse(BaseModel):
+class SDXLControlnetListResponse(GenericResponse):
     sdxl_controlnets: List[str] = Field(..., example=["canny", "depth"])
 
 class SDXLInpaintRequest(BaseModel):
@@ -315,18 +324,15 @@ class SDXLRequest(BaseModel):
     scheduler: Optional[str] = Field(None, example="DPMSolverMultistepScheduler")
     seed: Optional[int] = Field(None, example=42)
 
-class SDXLSchedulerListResponse(BaseModel):
+class SDXLSchedulerListResponse(GenericResponse):
     schedulers: List[str] = Field(..., example=["DPMSolverMultistepScheduler", "EulerAncestralDiscreteScheduler", "LMSDiscreteScheduler"])
 
 class StatusResponse(BaseModel):
-    status: str = Field(..., example="Ok!")
+    status: bool = Field(..., example=True)
     version: str = Field(..., example="0.2.0")
 
 class Swin2SRRequest(BaseModel):
     image: str = Field(..., example="a9d8fp0sa9dfpasdfllkajsdflkjadslf...")
-
-class Swin2SRResponse(GenericResponse):
-    images: Optional[str] = Field(None, example="kajsdflsadfsadf....")
 
 class WanTI2VRequest(BaseModel):
     prompt: str = Field(..., example="A big green monster")

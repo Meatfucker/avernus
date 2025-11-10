@@ -14,6 +14,9 @@ from transformers import (Qwen2_5_VLForConditionalGeneration, Qwen2ForCausalLM,
                           T5TokenizerFast, T5EncoderModel, UMT5EncoderModel,
                           AutoModelForCausalLM, AutoTokenizer, LlamaForCausalLM,
                           SiglipImageProcessor, SiglipVisionModel)
+
+from ChronoEdit.chronoedit_diffusers.transformer_chronoedit import ChronoEditTransformer3DModel
+from ChronoEdit.chronoedit_diffusers.pipeline_chronoedit import ChronoEditPipeline
 import torch
 
 rank = 32
@@ -84,6 +87,83 @@ def quantize_chroma():
                                                quantization_config=pipeline_quant_config,
                                                torch_dtype=dtype).to("cuda")
     generator.save_pretrained("../models/Chroma1-HD")
+
+def quantize_chronoedit():
+    print("loading ChronoEditPipeline")
+    model_name = "nvidia/ChronoEdit-14B-Diffusers"
+    transformer_quantization_config = TransformersBitsAndBytesConfig(
+        load_in_4bit=True,
+        bnb_4bit_quant_type="nf4",
+        llm_int8_skip_modules=["time_embedder",
+                               "timesteps_proj",
+                               "time_proj",
+                               "norm_out",
+                               "proj_out",
+                               "blocks.0.attn1.norm_k",
+                               "blocks.0.attn1.norm_q",
+                               "blocks.0.attn1.to_k",
+                               "blocks.0.attn1.to_out.0",
+                               "blocks.0.attn1.to_q",
+                               "blocks.0.attn1.to_v",
+                               "blocks.0.attn2.add_k_proj",
+                               "blocks.0.attn2.add_v_proj",
+                               "blocks.0.attn2.norm_added_q",
+                               "blocks.0.attn2.norm_k",
+                               "blocks.0.attn2.norm_q",
+                               "blocks.0.attn2.to_k",
+                               "blocks.0.attn2.to_out.0",
+                               "blocks.0.attn2.to_q",
+                               "blocks.0.attn2.to_v",
+                               "blocks.0.ffn.net.0.proj",
+                               "blocks.0.ffn.net.2",
+                               "blocks.0.norm2",
+                               "blocks.0.scale_shift_table",
+                               "blocks.39.attn1.norm_k",
+                               "blocks.39.attn1.norm_q",
+                               "blocks.39.attn1.to_k",
+                               "blocks.39.attn1.to_out.0",
+                               "blocks.39.attn1.to_q",
+                               "blocks.39.attn1.to_v",
+                               "blocks.39.attn2.add_k_proj",
+                               "blocks.39.attn2.add_v_proj",
+                               "blocks.39.attn2.norm_added_k",
+                               "blocks.39.attn2.norm_added_q",
+                               "blocks.39.attn2.norm_k",
+                               "blocks.39.attn2.norm_q",
+                               "blocks.39.attn2.to_k",
+                               "blocks.39.attn2.to_out.0",
+                               "blocks.39.attn2.to_q",
+                               "blocks.39.attn2.to_v",
+                               "blocks.39.ffn.net.0.proj",
+                               "blocks.39.ffn.net.2",
+                               "blocks.39.norm2",
+                               "blocks.39.scale_shift_table"
+                               ],
+    )
+    text_encoder_quantization_config = TransformersBitsAndBytesConfig(
+        load_in_4bit=True,
+        bnb_4bit_quant_type="nf4",
+        bnb_4bit_compute_dtype=torch.bfloat16,
+    )
+    text_encoder = UMT5EncoderModel.from_pretrained(model_name,
+                                                    subfolder="text_encoder",
+                                                    torch_dtype=torch.bfloat16,
+                                                    quantization_config=text_encoder_quantization_config
+                                                    )
+
+    vae = AutoModel.from_pretrained(model_name, subfolder="vae", torch_dtype=torch.float32)
+    transformer = ChronoEditTransformer3DModel.from_pretrained(model_name,
+                                            subfolder="transformer",
+                                            torch_dtype=torch.bfloat16,
+                                            quantization_config=transformer_quantization_config
+                                            )
+    generator = ChronoEditPipeline.from_pretrained(model_name,
+                                                        vae=vae,
+                                                        transformer=transformer,
+                                                        text_encoder=text_encoder,
+                                                        torch_dtype=torch.bfloat16
+                                                        )
+    generator.save_pretrained("../models/ChronoEdit")
 
 def quantize_flux_kontext():
     print("loading FluxKontextPipeline")
@@ -362,15 +442,17 @@ def quantize_qwen_image():
                                "proj_out"
                                 ],
     )
-    transformer = QwenImageTransformer2DModel.from_pretrained(
-        "Qwen/Qwen-Image",
-        subfolder="transformer",
-        quantization_config=quantization_config,
-        torch_dtype=dtype,
-    )
-    transformer = transformer.to("cpu")
+    #transformer = QwenImageTransformer2DModel.from_pretrained(
+    #    "Qwen/Qwen-Image",
+    #    subfolder="transformer",
+    #    quantization_config=quantization_config,
+    #    torch_dtype=dtype,
+    #)
+    #transformer = transformer.to("cpu")
     quantization_config = TransformersBitsAndBytesConfig(
-        load_in_8bit=True)
+        load_in_4bit=True,
+        bnb_4bit_quant_type="nf4",
+        bnb_4bit_compute_dtype=torch.bfloat16,)
 
     text_encoder = Qwen2_5_VLForConditionalGeneration.from_pretrained(
         "Qwen/Qwen-Image",
@@ -380,7 +462,7 @@ def quantize_qwen_image():
     )
 
     generator = QwenImagePipeline.from_pretrained("Qwen/Qwen-Image",
-                                                  transformer=transformer,
+                                                  #transformer=transformer,
                                                   text_encoder=text_encoder,
                                                   torch_dtype=dtype)
     generator.save_pretrained("../models/Qwen-Image")
@@ -965,4 +1047,4 @@ def quantize_llm(model_name=None):
     tokenizer = AutoTokenizer.from_pretrained("cognitivecomputations/Llama-3-8B-Instruct-abliterated-v2")
     tokenizer.save_pretrained("../models/Llama-3-8B-Instruct-abliterated-v2")
 
-quantize_llm()
+quantize_qwen_image()

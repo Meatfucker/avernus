@@ -2,32 +2,32 @@ import asyncio
 import os
 
 from fastapi import FastAPI, Body, Form, UploadFile, File
-from fastapi.responses import StreamingResponse, JSONResponse
+from fastapi.responses import StreamingResponse, JSONResponse, FileResponse
 import httpx
 from loguru import logger
 
 from modules.pydantic_models import (ACEStepRequest,
                                      AuraFlowRequest,
                                      ChromaRequest,
-                                     FluxInpaintRequest, FluxRequest,
+                                     ChronoEditRequest, FluxInpaintRequest, FluxRequest,
                                      FramepackRequest,
                                      HiDreamRequest,
                                      HunyuanTI2VRequest,
                                      ImageResponse,
-                                     ImageGenAuxRequest, ImageGenAuxResponse,
+                                     ImageGenAuxRequest,
                                      KandinskyT2VRequest,
                                      LLMRequest, LLMResponse,
                                      LoraListResponse,
                                      LTXTI2VRequest,
                                      LuminaRequest,
                                      QwenImageRequest, QwenImageInpaintRequest, QwenImageEditPlusRequest,
-                                     RealESRGANResponse, RealESRGANRequest,
+                                     RealESRGANRequest,
                                      SanaSprintRequest,
                                      SD15Request, SD15InpaintRequest,
                                      SDXLInpaintRequest, SDXLRequest,
                                      SDXLControlnetListResponse, SDXLSchedulerListResponse,
                                      StatusResponse,
-                                     Swin2SRResponse, Swin2SRRequest,
+                                     Swin2SRRequest,
                                      WanTI2VRequest, WanVACERequest)
 from modules.utils import (ServerManager, return_loras, forward_post_request, setup_logging,
                            cleanup_and_stream)
@@ -50,7 +50,9 @@ async def ace_generate(data: ACEStepRequest = Body(...)):
         try:
             result = await forward_post_request(url, data)
             if result["status"] is True:
-                return StreamingResponse(open(result["path"], "rb"), media_type="audio/wav")
+                response = FileResponse(result["path"], media_type="audio/wav")
+                response.headers["X-Status"] = str(result["status"])
+                return response
             else:
                 logger.error(f"Generation Error: {result['status_message']}")
                 server_manager.kill_pipeline()
@@ -92,6 +94,27 @@ async def chroma_generate(data: ChromaRequest = Body(...)):
         else:
             await server_manager.set_pipeline("chroma", data.model_name)
         url = "http://127.0.0.1:6970/chroma_generate"
+        try:
+            result = await forward_post_request(url, data)
+            if result["status"] is True:
+                return result
+            else:
+                logger.error(f"Generation Error: {result['status_message']}")
+                server_manager.kill_pipeline()
+                return {"status": False,
+                        "status_message": result["status_message"]}
+        except Exception as e:
+            server_manager.kill_pipeline()
+            return {"status": False,
+                    "status_message": str(e)}
+
+@avernus.post("/chronoedit_generate", response_model=ImageResponse)
+async def chronoedit_generate(data: ChronoEditRequest = Body(...)):
+    """Generates some number of ChronoEdit images based on user inputs"""
+    logger.info("chronoedit_generate request received")
+    async with pipeline_lock:
+        await server_manager.set_pipeline("chronoedit", data.model_name)
+        url = "http://127.0.0.1:6970/chronoedit_generate"
         try:
             result = await forward_post_request(url, data)
             if result["status"] is True:
@@ -199,7 +222,9 @@ async def framepack_generate(data: FramepackRequest = Body(...)):
         try:
             result = await forward_post_request(url, data)
             if result["status"] is True:
-                return StreamingResponse(cleanup_and_stream(result["path"]), media_type="video/mp4")
+                response = FileResponse(result["path"], media_type="video/mp4")
+                response.headers["X-Status"] = str(result["status"])
+                return response
             else:
                 logger.error(f"Generation Error: {result['status_message']}")
                 server_manager.kill_pipeline()
@@ -240,7 +265,9 @@ async def hunyuan_ti2v_generate(data: HunyuanTI2VRequest = Body(...)):
         try:
             result = await forward_post_request(url, data)
             if result["status"] is True:
-                return StreamingResponse(cleanup_and_stream(result["path"]), media_type="video/mp4")
+                response = FileResponse(result["path"], media_type="video/mp4")
+                response.headers["X-Status"] = str(result["status"])
+                return response
             else:
                 logger.error(f"Generation Error: {result['status_message']}")
                 server_manager.kill_pipeline()
@@ -252,7 +279,7 @@ async def hunyuan_ti2v_generate(data: HunyuanTI2VRequest = Body(...)):
                     "status_message": str(e)}
 
 
-@avernus.post("/image_gen_aux_upscale", response_model=ImageGenAuxResponse)
+@avernus.post("/image_gen_aux_upscale", response_model=ImageResponse)
 async def image_gen_aux_upscale(data: ImageGenAuxRequest = Body(...)):
     """Upscales an image based on user input"""
     logger.info("image_gen_aux_upscale request received")
@@ -282,7 +309,9 @@ async def kandinsky5_t2v_generate(data: KandinskyT2VRequest = Body(...)):
         try:
             result = await forward_post_request(url, data)
             if result["status"] is True:
-                return StreamingResponse(cleanup_and_stream(result["path"]), media_type="video/mp4")
+                response = FileResponse(result["path"], media_type="video/mp4")
+                response.headers["X-Status"] = str(result["status"])
+                return response
             else:
                 logger.error(f"Generation Error: {result['status_message']}")
                 server_manager.kill_pipeline()
@@ -300,10 +329,12 @@ async def list_chroma_loras():
     try:
         os.makedirs("loras/chroma", exist_ok=True)
         filenames = return_loras("loras/chroma")
-        return {"loras": filenames}
+        return {"loras": filenames,
+                "status": True}
     except Exception as e:
         logger.error(f"list_chroma_loras ERROR: {e}")
-        return {"error": str(e)}
+        return {"error": str(e),
+                "status": False}
 
 @avernus.get("/list_flux_loras", response_model=LoraListResponse)
 async def list_flux_loras():
@@ -312,10 +343,12 @@ async def list_flux_loras():
     try:
         os.makedirs("loras/flux", exist_ok=True)
         filenames = return_loras("loras/flux")
-        return {"loras": filenames}
+        return {"loras": filenames,
+                "status": True}
     except Exception as e:
         logger.error(f"list_flux_loras ERROR: {e}")
-        return {"error": str(e)}
+        return {"error": str(e),
+                "status": False}
 
 @avernus.get("/list_qwen_image_loras", response_model=LoraListResponse)
 async def list_qwen_image_loras():
@@ -324,10 +357,12 @@ async def list_qwen_image_loras():
     try:
         os.makedirs("loras/qwen_image", exist_ok=True)
         filenames = return_loras("loras/qwen_image")
-        return {"loras": filenames}
+        return {"loras": filenames,
+                "status": True}
     except Exception as e:
         logger.error(f"list_qwen_image_loras ERROR: {e}")
-        return {"error": str(e)}
+        return {"error": str(e),
+                "status": False}
 
 @avernus.get("/list_sd15_loras", response_model=LoraListResponse)
 async def list_sd15_loras():
@@ -336,20 +371,24 @@ async def list_sd15_loras():
     try:
         os.makedirs("loras/sd15", exist_ok=True)
         filenames = return_loras("loras/sd15")
-        return {"loras": filenames}
+        return {"loras": filenames,
+                "status": True}
     except Exception as e:
         logger.error(f"list_sd15_loras ERROR: {e}")
-        return {"error": str(e)}
+        return {"error": str(e),
+                "status": False}
 
 @avernus.get("/list_sdxl_controlnets", response_model=SDXLControlnetListResponse)
 async def list_sdxl_controlnets():
     """Returns a list of available sdxl controlnets"""
     logger.info("list_sdxl_controlnets request received")
     try:
-        return {"sdxl_controlnets": ["depth", "canny"]}
+        return {"sdxl_controlnets": ["depth", "canny"],
+                "status": True}
     except Exception as e:
         logger.error(f"list_sdxl_controlnets ERROR: {e}")
-        return {"error": str(e)}
+        return {"status_message": str(e),
+                "status": False}
 
 @avernus.get("/list_sdxl_loras", response_model=LoraListResponse)
 async def list_sdxl_loras():
@@ -358,34 +397,38 @@ async def list_sdxl_loras():
     try:
         os.makedirs("loras/sdxl", exist_ok=True)
         filenames = return_loras("loras/sdxl")
-        return {"loras": filenames}
+        return {"loras": filenames,
+                "status": True}
     except Exception as e:
         logger.error(f"list_sdxl_loras ERROR: {e}")
-        return {"error": str(e)}
+        return {"error": str(e),
+                "status": False}
 
 @avernus.get("/list_sdxl_schedulers", response_model=SDXLSchedulerListResponse)
 async def list_sdxl_schedulers():
     """Returns a list of sdxl schedulers."""
     logger.info("list_sdxl_schedulers request received")
     try:
-        schedulers = {"schedulers": ["DPMSolverSinglestepScheduler",
-                                     "DDIMScheduler",
-                                     "DDPMScheduler",
-                                     "PNDMScheduler",
-                                     "LMSDiscreteScheduler",
-                                     "EulerDiscreteScheduler",
-                                     "HeunDiscreteScheduler",
-                                     "EulerAncestralDiscreteScheduler",
-                                     "DPMSolverMultistepScheduler",
-                                     "KDPM2DiscreteScheduler",
-                                     "KDPM2AncestralDiscreteScheduler",
-                                     "DEISMultistepScheduler",
-                                     "UniPCMultistepScheduler",
-                                     "DPMSolverSDEScheduler"]}
-        return schedulers
+        schedulers = ["DPMSolverSinglestepScheduler",
+                      "DDIMScheduler",
+                      "DDPMScheduler",
+                      "PNDMScheduler",
+                      "LMSDiscreteScheduler",
+                      "EulerDiscreteScheduler",
+                      "HeunDiscreteScheduler",
+                      "EulerAncestralDiscreteScheduler",
+                      "DPMSolverMultistepScheduler",
+                      "KDPM2DiscreteScheduler",
+                      "KDPM2AncestralDiscreteScheduler",
+                      "DEISMultistepScheduler",
+                      "UniPCMultistepScheduler",
+                      "DPMSolverSDEScheduler"]
+        return {"schedulers": schedulers,
+                "status": True}
     except Exception as e:
         logger.error(f"list_sdxl_loras ERROR: {e}")
-        return {"error": str(e)}
+        return {"status_message": str(e),
+                "status": False}
 
 @avernus.post("/llm_chat", response_model=LLMResponse)
 async def llm_chat(data: LLMRequest = Body(...)):
@@ -421,7 +464,9 @@ async def ltx_ti2v_generate(data: LTXTI2VRequest = Body(...)):
         try:
             result = await forward_post_request(url, data)
             if result["status"] is True:
-                return StreamingResponse(cleanup_and_stream(result["path"]), media_type="video/mp4")
+                response = FileResponse(result["path"], media_type="video/mp4")
+                response.headers["X-Status"] = str(result["status"])
+                return response
             else:
                 logger.error(f"Generation Error: {result['status_message']}")
                 server_manager.kill_pipeline()
@@ -633,7 +678,7 @@ async def qwen_image_edit_plus_nunchaku_generate(data: QwenImageEditPlusRequest 
             return {"status": False,
                     "status_message": str(e)}
 
-@avernus.post("/realesrgan_generate", response_model=RealESRGANResponse)
+@avernus.post("/realesrgan_generate", response_model=ImageResponse)
 async def realesrgan_generate(data: RealESRGANRequest = Body(...)):
     """Upscales an image based on user input"""
     logger.info("realesrgan request received")
@@ -775,10 +820,10 @@ async def sdxl_inpaint_generate(data: SDXLInpaintRequest = Body(...)):
 @avernus.get("/status", response_model=StatusResponse)
 async def status():
     """ This returns Ok when hit"""
-    return {"status": str("Ok!"),
-            "version": str("0.6.0")}
+    return {"status": True,
+            "version": str("0.7.0")}
 
-@avernus.post("/swin2sr_generate", response_model=Swin2SRResponse)
+@avernus.post("/swin2sr_generate", response_model=ImageResponse)
 async def swin2sr_generate(data: Swin2SRRequest = Body(...)):
     """Upscales an image based on user input"""
     logger.info("swin2sr request received")
@@ -811,7 +856,9 @@ async def wan_ti2v_generate(data: WanTI2VRequest = Body(...)):
         try:
             result = await forward_post_request(url, data)
             if result["status"] is True:
-                return StreamingResponse(cleanup_and_stream(result["path"]), media_type="video/mp4")
+                response = FileResponse(result["path"], media_type="video/mp4")
+                response.headers["X-Status"] = str(result["status"])
+                return response
             else:
                 logger.error(f"Generation Error: {result['status_message']}")
                 server_manager.kill_pipeline()
@@ -831,7 +878,9 @@ async def wan_vace_generate(data: WanVACERequest = Body(...)):
         try:
             result = await forward_post_request(url, data)
             if result["status"] is True:
-                return StreamingResponse(cleanup_and_stream(result["path"]), media_type="video/mp4")
+                response = FileResponse(result["path"], media_type="video/mp4")
+                response.headers["X-Status"] = str(result["status"])
+                return response
             else:
                 logger.error(f"Generation Error: {result['status_message']}")
                 server_manager.kill_pipeline()
@@ -882,7 +931,9 @@ async def wan_v2v_generate(
             result_json = result.json()
 
             if result_json["status"] is True:
-                return StreamingResponse(cleanup_and_stream(result_json["path"]), media_type="video/mp4")
+                response = FileResponse(result_json["path"], media_type="video/mp4")
+                response.headers["X-Status"] = str(result_json["status"])
+                return response
             else:
                 logger.error(f"Generation Error: {result_json['status_message']}")
                 server_manager.kill_pipeline()

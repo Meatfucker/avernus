@@ -13,11 +13,11 @@ dtype = torch.bfloat16
 avernus_chroma_i2i = FastAPI()
 
 
-def load_chroma_pipeline(model_name="Meatfucker/Chroma1-HD-bnb-nf4"):
+def load_chroma_pipeline(model_name="Meatfucker/Chroma1-HD-bnb-int8"):
     global PIPELINE
     PIPELINE = ChromaImg2ImgPipeline.from_pretrained(model_name, torch_dtype=dtype).to("cuda")
     PIPELINE.enable_model_cpu_offload()
-    PIPELINE.vae.enable_slicing()
+    PIPELINE.vae.enable_tiling()
 
 def get_seed_generators(amount, seed):
     generator = [torch.Generator(device="cuda").manual_seed(seed + i) for i in range(amount)]

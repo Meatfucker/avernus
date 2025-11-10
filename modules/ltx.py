@@ -14,8 +14,7 @@ LOADED: bool = False
 dtype = torch.bfloat16
 avernus_ltx = FastAPI()
 
-
-def load_ltx_pipeline(model_name="Lightricks/LTX-Video-0.9.8-dev"):
+def load_ltx_pipeline(model_name="Lightricks/LTX-Video"):
     global PIPELINE
     transformer = LTXVideoTransformer3DModel.from_pretrained(model_name,
                                                              subfolder="transformer",
@@ -46,7 +45,7 @@ def generate_ltx_ti2v(prompt: str,
     global PIPELINE
     global LOADED
     if model_name is None:
-        model_name = "Lightricks/LTX-Video-0.9.8-dev"
+        model_name = "Lightricks/LTX-Video"
     if not LOADED:
         load_ltx_pipeline(model_name)
         LOADED = True

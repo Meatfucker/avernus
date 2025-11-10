@@ -4,7 +4,8 @@ from loguru import logger
 from modules.tests import (ACETest,
                            AuraflowTest,
                            CheckStatus,
-                           ChromaTest, ChromaI2ITest,
+                           ChromaTest, ChromaI2ITest, ChromaLoraListTest,
+                           ChronoEditTest,
                            FluxI2ITest, FluxInpaintTest, FluxIPAdapterTest, FluxKontextTest,
                            FluxLoraI2ITest, FluxLoraListTest, FluxLoraTest, FluxTest,
                            FramepackTest,
@@ -15,10 +16,10 @@ from modules.tests import (ACETest,
                            LlmChatTest,
                            LTXTest,
                            Lumina2Test, Lumina2SingleFileTest,
-                           QwenImageTest, QwenImageInpaintTest, QwenImageI2ITest, QwenImageEditTest,
+                           QwenImageTest, QwenImageInpaintTest, QwenImageI2ITest, QwenImageEditTest, QwenImageLoraListTest,
                            RealESRGANTest,
                            SanaSprintTest, SanaSprintI2ITest,
-                           SD15Test, SD15I2ITest, SD15InpaintTest,
+                           SD15Test, SD15I2ITest, SD15InpaintTest, SD15LoraListTest,
                            SDXLControlnetI2ILoraTest, SDXLControlnetI2ITest, SDXLControlnetListTest,
                            SDXLControlnetLoraTest, SDXLControlnetTest, SDXLI2ILoraTest, SDXLI2ITest, SDXLInpaintTest,
                            SDXLIPAdapterTest, SDXLLoraListTest, SDXLLoraTest, SDXLTest, SDXLSchedulerListTest,
@@ -31,10 +32,13 @@ start_time = time.time()
 
 #auraflow = AuraflowTest("AURAFLOW")
 
-#check_status = CheckStatus("CHECK STATUS")
+check_status = CheckStatus("CHECK STATUS")
 
 #chroma = ChromaTest("CHROMA")
 #chroma_i2i = ChromaI2ITest("CHROMA_I2I")
+#chroma_lora_list = ChromaLoraListTest("CHROMA LORA LIST")
+
+#chronoedit = ChronoEditTest("CHRONOEDIT")
 
 #flux_lora_list = FluxLoraListTest("FLUX LORA LIST")
 #flux = FluxTest("FLUX")
@@ -66,6 +70,7 @@ ltx = LTXTest("LTX")
 #qwen_i2i = QwenImageI2ITest("QWEN IMAGE I2I")
 #qwen_inpaint = QwenImageInpaintTest("QWEN IMAGE I2I")
 #qwen_edit = QwenImageEditTest("QWEN IMAGE EDIT")
+#qwen_lora_list = QwenImageLoraListTest("QWEN IMAGE LORA LIST")
 
 #realesrgan = RealESRGANTest("REALESRGAN")
 
@@ -75,6 +80,7 @@ ltx = LTXTest("LTX")
 #sd15 = SD15Test("SD15")
 #sd15_i2i = SD15I2ITest("SD15_I2I")
 #sd15_inpaint = SD15InpaintTest("SD15_INPAINT")
+#sd15_lora_list = SD15LoraListTest("SD15 LORA LIST")
 
 #sdxl_lora_list = SDXLLoraListTest("SDXL LORA LIST")
 #sdxl_controlnet_list = SDXLControlnetListTest("SDXL CONTROLNET LIST")

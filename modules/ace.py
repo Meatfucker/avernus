@@ -1,14 +1,12 @@
 from typing import Any
 
 from fastapi import FastAPI, Body
-from fastapi.responses import StreamingResponse
 
 from acestep.pipeline_ace_step import ACEStepPipeline
 from pydantic_models import ACEStepRequest
 
 PIPELINE: ACEStepPipeline
 LOADED: bool = False
-
 avernus_ace = FastAPI()
 
 

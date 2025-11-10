@@ -6,7 +6,7 @@ from PIL import Image
 import torch
 from transformers import Swin2SRForImageSuperResolution, Swin2SRImageProcessor
 
-from pydantic_models import Swin2SRRequest, Swin2SRResponse
+from pydantic_models import Swin2SRRequest, ImageResponse
 from utils import base64_to_image, image_to_base64
 
 PIPELINE: Swin2SRForImageSuperResolution
@@ -47,7 +47,7 @@ def generate_swin2sr_image(image):
         return {"status": False,
                 "status_message": str(e)}
 
-@avernus_swin2sr.post("/swin2sr_generate", response_model=Swin2SRResponse)
+@avernus_swin2sr.post("/swin2sr_generate", response_model=ImageResponse)
 def swin2sr_generate(data: Swin2SRRequest = Body(...)):
     """Generates an upscaled image using Swin2SR"""
     kwargs: dict[str, Any] = {"image": base64_to_image(data.image)}
@@ -65,7 +65,7 @@ def swin2sr_generate(data: Swin2SRRequest = Body(...)):
                 "status_message": str(e)}
     return {"status": True,
             "status_message": "Swin2SR Success",
-            "images": base64_image}
+            "images": [base64_image]}
 
 @avernus_swin2sr.get("/online")
 async def status():

@@ -18,8 +18,6 @@ def load_flux_kontext_pipeline():
     global PIPELINE
     PIPELINE = FluxKontextPipeline.from_pretrained("Meatfucker/Flux.1-Kontext-dev-bnb-nf4",
                                                     torch_dtype=dtype).to("cuda")
-    PIPELINE.enable_model_cpu_offload()
-    PIPELINE.vae.enable_slicing()
 
 def get_seed_generators(amount, seed):
     generator = [torch.Generator(device="cuda").manual_seed(seed + i) for i in range(amount)]
@@ -98,7 +96,7 @@ def generate_flux_kontext(prompt,
     if lora_name is not None:
         load_flux_loras(lora_name)
     PIPELINE.enable_model_cpu_offload() # This has to be after the ip adapter load or else you'll have tensor location problems
-    PIPELINE.enable_vae_slicing()
+    PIPELINE.vae.enable_slicing()
     try:
         images = PIPELINE(**kwargs).images
         if lora_name is not None:

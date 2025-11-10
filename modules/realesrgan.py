@@ -3,7 +3,7 @@ from typing import Any
 from fastapi import FastAPI, Body
 import torch
 
-from pydantic_models import RealESRGANRequest, RealESRGANResponse
+from pydantic_models import RealESRGANRequest, ImageResponse
 from RealESRGAN import RealESRGAN
 from utils import base64_to_image, image_to_base64
 
@@ -36,7 +36,7 @@ def generate_realesrgan_image(image, scale=4):
         return {"status": False,
                 "status_message": str(e)}
 
-@avernus_realesrgan.post("/realesrgan_generate", response_model=RealESRGANResponse)
+@avernus_realesrgan.post("/realesrgan_generate", response_model=ImageResponse)
 def realesrgan_generate(data: RealESRGANRequest = Body(...)):
     """Generates an upscaled image using RealESRGAN"""
     kwargs: dict[str, Any] = {"image": base64_to_image(data.image),
@@ -55,7 +55,7 @@ def realesrgan_generate(data: RealESRGANRequest = Body(...)):
                 "status_message": str(e)}
     return {"status": True,
             "status_message": "Real-ESRGAN Success",
-            "images": base64_image}
+            "images": [base64_image]}
 
 @avernus_realesrgan.get("/online")
 async def status():
