@@ -40,7 +40,7 @@ class TimedTest:
 
 class ACETest(TimedTest):
     async def run_test(self):
-        response = await self.client.ace_music(prompt="jazz, bass, techno", lyrics="inst", audio_duration=99999999999999)
+        response = await self.client.ace_music(prompt="jazz, bass, techno", lyrics="inst", audio_duration=30)
         return response["status"]
 
 class AuraflowTest(TimedTest):
