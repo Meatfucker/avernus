@@ -177,7 +177,7 @@ class FramepackTest(TimedTest):
                                                image=image,
                                                last_image=last_image)
         temp_file = tempfile.NamedTemporaryFile(delete=False, suffix=".mp4")
-        temp_file.write(response)
+        temp_file.write(response["video"])
         temp_file.close()
         print(temp_file.name)
         return response["status"]

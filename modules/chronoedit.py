@@ -1,8 +1,6 @@
 import os
 from typing import Any
 
-
-from diffusers import AutoencoderKLWan
 from diffusers.schedulers import UniPCMultistepScheduler
 from fastapi import FastAPI, Body
 import numpy as np
@@ -12,18 +10,12 @@ from transformers import CLIPVisionModel
 
 from ChronoEdit.chronoedit_diffusers.pipeline_chronoedit import ChronoEditPipeline
 from pydantic_models import ChronoEditRequest, ImageResponse
-from utils import base64_to_image, image_to_base64, resize_by_pixels
+from utils import base64_to_image, image_to_base64
 
 PIPELINE: ChronoEditPipeline
 LOADED: bool = False
 dtype = torch.bfloat16
 avernus_chronoedit = FastAPI()
-
-RESOLUTION_PRESETS = {
-    "480p": 480 * 832,
-    "720p": 720 * 1280,
-    "1080p": 1080 * 1920,
-}
 
 def calculate_dimensions(image, mod_value):
     """
@@ -40,30 +32,17 @@ def calculate_dimensions(image, mod_value):
 
     # Calculate dimensions maintaining aspect ratio
     aspect_ratio = image.height / image.width
-    calculated_height = (
-        round(np.sqrt(target_area * aspect_ratio)) // mod_value * mod_value
-    )
-    calculated_width = (
-        round(np.sqrt(target_area / aspect_ratio)) // mod_value * mod_value
-    )
+    calculated_height = (round(np.sqrt(target_area * aspect_ratio)) // mod_value * mod_value)
+    calculated_width = (round(np.sqrt(target_area / aspect_ratio)) // mod_value * mod_value)
 
     return calculated_width, calculated_height
 
-def load_chronoedit_pipeline(model_name="./models/ChronoEdit", flow_shift=2.0):
+def load_chronoedit_pipeline(model_name="Meatfucker/ChronoEdit-bnb-nf4", flow_shift=2.0):
     global PIPELINE
     image_encoder = CLIPVisionModel.from_pretrained(model_name, subfolder="image_encoder", torch_dtype=torch.float32)
-#    vae = AutoencoderKLWan.from_pretrained(model_name, subfolder="vae", torch_dtype=dtype)
-#    transformer = ChronoEditTransformer3DModel.from_pretrained(model_name, subfolder="transformer", torch_dtype=dtype)
-#    PIPELINE = ChronoEditPipeline.from_pretrained(model_name,
-#                                                  image_encoder=image_encoder,
-#                                                  transformer=transformer,
-#                                                  vae=vae,
-#                                                  torch_dtype=dtype)
     PIPELINE = ChronoEditPipeline.from_pretrained(model_name, image_encoder=image_encoder, torch_dtype=dtype)
     PIPELINE.scheduler = UniPCMultistepScheduler.from_config(PIPELINE.scheduler.config, flow_shift=flow_shift)
     PIPELINE.enable_model_cpu_offload()
-    #PIPELINE.vae.enable_slicing()
-    #PIPELINE.to("cuda")
 
 def get_seed_generators(amount, seed):
     generator = [torch.Generator(device="cuda").manual_seed(seed + i) for i in range(amount)]
@@ -95,7 +74,7 @@ def generate_chronoedit_image(prompt,
                               guidance_scale=None,
                               flow_shift=2.0,
                               num_frames=None,
-                              model_name="./models/ChronoEdit",
+                              model_name="Meatfucker/ChronoEdit-bnb-nf4",
                               seed=None):
     try:
         global PIPELINE
@@ -117,14 +96,9 @@ def generate_chronoedit_image(prompt,
         if seed is not None:
             kwargs["generator"] = get_seed_generators(kwargs["num_images_per_prompt"], seed)
         kwargs["image"] = image
-        if width is not None:
-            kwargs["width"] = width
-        else:
-            kwargs["width"] = chronoedit_image_width
-        if height is not None:
-            kwargs["height"] = height
-        else:
-            kwargs["height"] = chronoedit_image_height
+        kwargs["width"] = width
+        kwargs["height"] = height
+
         if lora_name is not None:
             load_chronoedit_loras(lora_name)
 
@@ -190,5 +164,5 @@ async def status():
 
 if __name__ == "__main__":
     import uvicorn
-    uvicorn.run(avernus_chronoedit, host="0.0.0.0", port=6970)
-    #uvicorn.run(avernus_chronoedit, host="0.0.0.0", port=6970, log_level="critical")
+    #uvicorn.run(avernus_chronoedit, host="0.0.0.0", port=6970)
+    uvicorn.run(avernus_chronoedit, host="0.0.0.0", port=6970, log_level="critical")
