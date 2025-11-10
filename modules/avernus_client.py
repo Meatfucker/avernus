@@ -277,7 +277,7 @@ class AvernusClient:
                 status_header = response.headers.get("x-status")
             if response.status_code == 200:
                 return {"status": status_header,
-                        "video": response}
+                        "video": response.content}
             else:
                 print(f"FRAMEPACK ERROR: {response.status_code} - {response.text}")
                 return None
