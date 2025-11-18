@@ -1,5 +1,4 @@
 import gc
-import os
 from typing import Any
 
 from diffusers import FluxPriorReduxPipeline, FluxPipeline
@@ -8,7 +7,7 @@ import torch
 from transformers import CLIPTextModel, CLIPTokenizer, T5EncoderModel, T5TokenizerFast
 
 from pydantic_models import FluxRequest, ImageResponse
-from utils import base64_to_image, image_to_base64
+from utils import base64_to_image, image_to_base64, get_seed_generators, load_loras
 
 PIPELINE: FluxPipeline
 LOADED: bool = False
@@ -20,10 +19,6 @@ def load_flux_pipeline(model_name="Meatfucker/Flux.1-dev-bnb-nf4"):
     global PIPELINE
     PIPELINE = FluxPipeline.from_pretrained(model_name, torch_dtype=dtype).to("cuda")
 
-def get_seed_generators(amount, seed):
-    generator = [torch.Generator(device="cuda").manual_seed(seed + i) for i in range(amount)]
-    return generator
-
 def load_ip_adapters(strength):
     global PIPELINE
     try:
@@ -34,21 +29,6 @@ def load_ip_adapters(strength):
 
     except Exception as e:
         print(e)
-
-def load_flux_loras(lora_name):
-    global PIPELINE
-    try:
-        lora_list = []
-        for lora in lora_name:
-            try:
-                lora_name = os.path.splitext(lora)[0]
-                PIPELINE.load_lora_weights(f"./loras/flux/{lora}", adapter_name=lora_name)
-                lora_list.append(lora_name)
-            except Exception as e:
-                print(f"FLUX LORA ERROR: {e}")
-        PIPELINE.set_adapters(lora_list)
-    except Exception:
-        pass
 
 def generate_flux(prompt,
                   width,
@@ -96,7 +76,7 @@ def generate_flux(prompt,
         except Exception:
             pass
     if lora_name is not None:
-        load_flux_loras(lora_name)
+        PIPELINE = load_loras(PIPELINE, "flux", lora_name)
     PIPELINE.enable_model_cpu_offload() # This has to be after the ip adapter load or else you'll have tensor location problems
     PIPELINE.vae.enable_slicing()
     try:

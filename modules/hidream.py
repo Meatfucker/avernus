@@ -5,7 +5,7 @@ from fastapi import FastAPI, Body
 import torch
 
 from pydantic_models import HiDreamRequest, ImageResponse
-from utils import image_to_base64
+from utils import image_to_base64, get_seed_generators, load_loras
 
 PIPELINE: HiDreamImagePipeline
 LOADED: bool = False
@@ -19,11 +19,6 @@ def load_hidream_pipeline(model_name="Meatfucker/HiDream-I1-Full-bnb-nf4"):
     PIPELINE.enable_model_cpu_offload()
     PIPELINE.vae.enable_slicing()
 
-def get_seed_generators(amount, seed):
-    generator = [torch.Generator(device="cuda").manual_seed(seed + i) for i in range(amount)]
-    return generator
-
-
 def generate_hidream(prompt,
                      width,
                      height,
@@ -32,7 +27,8 @@ def generate_hidream(prompt,
                      negative_prompt=None,
                      guidance_scale=None,
                      seed=None,
-                     model_name=None):
+                     model_name=None,
+                     lora_name=None):
     global PIPELINE
     global LOADED
     if not LOADED:
@@ -51,6 +47,8 @@ def generate_hidream(prompt,
         kwargs["negative_prompt"] = negative_prompt
     if seed is not None:
         kwargs["generator"] = get_seed_generators(kwargs["num_images_per_prompt"], seed)
+    if lora_name is not None:
+        PIPELINE = load_loras(PIPELINE, "hidream", lora_name)
     try:
         images = PIPELINE(**kwargs).images
         return {"status": True,
@@ -75,6 +73,8 @@ def hidream_generate(data: HiDreamRequest = Body(...)):
         kwargs["guidance_scale"] = data.guidance_scale
     if data.seed:
         kwargs["seed"] = data.seed
+    if data.lora_name:
+        kwargs["lora_name"] = data.lora_name
     try:
         response = generate_hidream(**kwargs)
         if response["status"] is True:

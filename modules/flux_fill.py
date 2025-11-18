@@ -6,7 +6,7 @@ from fastapi import FastAPI, Body
 import torch
 
 from pydantic_models import FluxInpaintRequest, ImageResponse
-from utils import base64_to_image, image_to_base64
+from utils import base64_to_image, image_to_base64, get_seed_generators, load_loras
 
 PIPELINE: FluxFillPipeline
 LOADED: bool = False
@@ -19,25 +19,6 @@ def load_flux_fill_pipeline():
                                                  torch_dtype=dtype).to("cuda")
     PIPELINE.enable_model_cpu_offload()
     PIPELINE.vae.enable_slicing()
-
-def get_seed_generators(amount, seed):
-    generator = [torch.Generator(device="cuda").manual_seed(seed + i) for i in range(amount)]
-    return generator
-
-def load_flux_loras(lora_name):
-    global PIPELINE
-    try:
-        lora_list = []
-        for lora in lora_name:
-            try:
-                lora_name = os.path.splitext(lora)[0]
-                PIPELINE.load_lora_weights(f"./loras/flux/{lora}", adapter_name=lora_name)
-                lora_list.append(lora_name)
-            except Exception as e:
-                print(f"FLUX LORA ERROR: {e}")
-        PIPELINE.set_adapters(lora_list)
-    except Exception:
-        pass
 
 def generate_flux_fill(prompt,
                        width,
@@ -73,7 +54,7 @@ def generate_flux_fill(prompt,
     if seed is not None:
         kwargs["generator"] = get_seed_generators(kwargs["num_images_per_prompt"], seed)
     if lora_name is not None:
-        load_flux_loras(lora_name)
+        PIPELINE = load_loras(PIPELINE, "flux", lora_name)
     try:
         images = PIPELINE(**kwargs).images
         if lora_name is not None:

@@ -39,7 +39,7 @@ class AvernusClient:
             return {"ERROR": str(e)}
 
     async def auraflow_image(self, prompt, negative_prompt=None, model_name=None, width=None, height=None, steps=None,
-                            batch_size=None, seed=None, guidance_scale=None):
+                            batch_size=None, seed=None, guidance_scale=None, lora_name=None):
         """This takes a prompt and optional other variables and returns a list of base64 encoded images"""
         url = f"http://{self.base_url}/auraflow_generate"
         data = {"prompt": prompt,
@@ -50,7 +50,8 @@ class AvernusClient:
                 "steps": steps,
                 "batch_size": batch_size,
                 "seed": seed,
-                "guidance_scale": guidance_scale}
+                "guidance_scale": guidance_scale,
+                "lora_name": lora_name}
         try:
             async with httpx.AsyncClient(timeout=None) as client:
                 response = await client.post(url, json=data)
@@ -257,7 +258,7 @@ class AvernusClient:
             return {"ERROR": str(e)}
 
     async def framepack(self, prompt, image, negative_prompt=None, width=None, height=None, steps=None, num_frames=None,
-                       guidance_scale=None, last_image=None, seed=None, model_name=None):
+                       guidance_scale=None, last_image=None, seed=None, model_name=None, lora_name=None):
         """This takes a prompt and returns a video"""
         url = f"http://{self.base_url}/framepack_generate"
         data = {"prompt": prompt,
@@ -270,7 +271,8 @@ class AvernusClient:
                 "steps": steps,
                 "image": image,
                 "last_image": last_image,
-                "model_name": model_name}
+                "model_name": model_name,
+                "lora_name": lora_name}
         try:
             async with httpx.AsyncClient(timeout=None) as client:
                 response = await client.post(url, json=data)
@@ -286,7 +288,7 @@ class AvernusClient:
             return {"ERROR": str(e)}
 
     async def hidream_image(self, prompt, negative_prompt=None, model_name=None, width=None, height=None, steps=None,
-                            batch_size=None, seed=None, guidance_scale=None):
+                            batch_size=None, seed=None, guidance_scale=None, lora_name=None):
         """This takes a prompt and optional other variables and returns a list of base64 encoded images"""
         url = f"http://{self.base_url}/hidream_generate"
         data = {"prompt": prompt,
@@ -297,7 +299,8 @@ class AvernusClient:
                 "steps": steps,
                 "batch_size": batch_size,
                 "seed": seed,
-                "guidance_scale": guidance_scale}
+                "guidance_scale": guidance_scale,
+                "lora_name": lora_name}
         try:
             async with httpx.AsyncClient(timeout=None) as client:
                 response = await client.post(url, json=data)
@@ -310,7 +313,7 @@ class AvernusClient:
             return {"ERROR": str(e)}
 
     async def hunyuan_ti2v(self, prompt, negative_prompt=None, width=None, height=None, steps=None, num_frames=None,
-                       guidance_scale=None, image=None,  seed=None, model_name=None, flow_shift=None):
+                       guidance_scale=None, image=None,  seed=None, model_name=None, flow_shift=None, lora_name=None):
         """This takes a prompt and returns a video"""
         url = f"http://{self.base_url}/hunyuan_ti2v_generate"
         data = {"prompt": prompt,
@@ -323,7 +326,8 @@ class AvernusClient:
                 "steps": steps,
                 "image": image,
                 "model_name": model_name,
-                "flow_shift": flow_shift}
+                "flow_shift": flow_shift,
+                "lora_name": lora_name}
         try:
             async with httpx.AsyncClient(timeout=None) as client:
                 response = await client.post(url, json=data)
@@ -360,7 +364,7 @@ class AvernusClient:
             return {"ERROR": str(e)}
 
     async def kandinsky5_t2v(self, prompt, negative_prompt=None, width=None, height=None, steps=None, num_frames=None,
-                       guidance_scale=None, seed=None, model_name=None):
+                       guidance_scale=None, seed=None, model_name=None, lora_name=None):
         """This takes a prompt and returns a video"""
         url = f"http://{self.base_url}/kandinsky5_t2v_generate"
         data = {"prompt": prompt,
@@ -371,7 +375,8 @@ class AvernusClient:
                 "guidance_scale": guidance_scale,
                 "seed": seed,
                 "steps": steps,
-                "model_name": model_name}
+                "model_name": model_name,
+                "lora_name": lora_name}
         try:
             async with httpx.AsyncClient(timeout=None) as client:
                 response = await client.post(url, json=data)
@@ -517,7 +522,7 @@ class AvernusClient:
             return {"ERROR": str(e)}
 
     async def ltx_ti2v(self, prompt, negative_prompt=None, width=None, height=None, steps=None, num_frames=None,
-                       guidance_scale=None, image=None,  seed=None, model_name=None, frame_rate=None):
+                       guidance_scale=None, image=None,  seed=None, model_name=None, frame_rate=None, lora_name=None):
         """This takes a prompt and returns a video"""
         url = f"http://{self.base_url}/ltx_ti2v_generate"
         data = {"prompt": prompt,
@@ -530,7 +535,8 @@ class AvernusClient:
                 "steps": steps,
                 "image": image,
                 "model_name": model_name,
-                "frame_rate": frame_rate}
+                "frame_rate": frame_rate,
+                "lora_name": lora_name}
         try:
             async with httpx.AsyncClient(timeout=None) as client:
                 response = await client.post(url, json=data)
@@ -546,7 +552,7 @@ class AvernusClient:
             return {"ERROR": str(e)}
 
     async def lumina2_image(self, prompt, negative_prompt=None, model_name=None, width=None, height=None, steps=None,
-                            batch_size=None, seed=None, guidance_scale=None):
+                            batch_size=None, seed=None, guidance_scale=None, lora_name=None):
         """This takes a prompt and optional other variables and returns a list of base64 encoded images"""
         url = f"http://{self.base_url}/lumina2_generate"
         data = {"prompt": prompt,
@@ -557,7 +563,8 @@ class AvernusClient:
                 "steps": steps,
                 "batch_size": batch_size,
                 "seed": seed,
-                "guidance_scale": guidance_scale}
+                "guidance_scale": guidance_scale,
+                "lora_name": lora_name}
         try:
             async with httpx.AsyncClient(timeout=None) as client:
                 response = await client.post(url, json=data)
@@ -974,7 +981,7 @@ class AvernusClient:
             return {"ERROR": str(e)}
 
     async def wan_ti2v(self, prompt, negative_prompt=None, width=None, height=None, steps=None, num_frames=None,
-                       guidance_scale=None, image=None,  seed=None, model_name=None, flow_shift=None):
+                       guidance_scale=None, image=None,  seed=None, model_name=None, flow_shift=None, lora_name=None):
         """This takes a prompt and returns a video"""
         url = f"http://{self.base_url}/wan_ti2v_generate"
         data = {"prompt": prompt,
@@ -987,7 +994,8 @@ class AvernusClient:
                 "steps": steps,
                 "image": image,
                 "model_name": model_name,
-                "flow_shift": flow_shift}
+                "flow_shift": flow_shift,
+                "lora_name": lora_name}
         try:
             async with httpx.AsyncClient(timeout=None) as client:
                 response = await client.post(url, json=data)
@@ -1003,7 +1011,8 @@ class AvernusClient:
             return {"ERROR": str(e)}
 
     async def wan_vace(self, prompt, negative_prompt=None, width=None, height=None, steps=None, num_frames=None,
-                       guidance_scale=None, first_frame=None, last_frame=None, flow_shift=None, seed=None, model_name=None):
+                       guidance_scale=None, first_frame=None, last_frame=None, flow_shift=None, seed=None,
+                       model_name=None, lora_name=None):
         """This takes a prompt and returns a video"""
         url = f"http://{self.base_url}/wan_vace_generate"
         data = {"prompt": prompt,
@@ -1017,7 +1026,8 @@ class AvernusClient:
                 "first_frame": first_frame,
                 "last_frame": last_frame,
                 "flow_shift": flow_shift,
-                "model_name": model_name}
+                "model_name": model_name,
+                "lora_name": lora_name}
         try:
             async with httpx.AsyncClient(timeout=None) as client:
                 response = await client.post(url, json=data)
@@ -1033,7 +1043,7 @@ class AvernusClient:
             return {"ERROR": str(e)}
 
     async def wan_v2v(self, prompt, negative_prompt=None, width=None, height=None, steps=None,
-                      guidance_scale=None, seed=None, model_name=None, video_path=None, flow_shift=None):
+                      guidance_scale=None, seed=None, model_name=None, video_path=None, flow_shift=None, lora_name=None):
         """This takes a prompt and (optionally) a video, and returns a generated video."""
         url = f"http://{self.base_url}/wan_v2v_generate"
         data = {
@@ -1045,8 +1055,8 @@ class AvernusClient:
             "seed": seed,
             "steps": steps,
             "model_name": model_name,
-            "flow_shift": flow_shift
-        }
+            "flow_shift": flow_shift,
+            "lora_name": lora_name}
         data = {k: str(v) for k, v in data.items() if v is not None}
         files = None
         if video_path:

@@ -1,4 +1,3 @@
-import os
 from typing import Any
 
 from diffusers import QwenImageInpaintPipeline
@@ -8,7 +7,7 @@ from nunchaku.utils import get_precision
 import torch
 
 from pydantic_models import QwenImageInpaintRequest, ImageResponse
-from utils import base64_to_image, image_to_base64
+from utils import base64_to_image, image_to_base64, get_seed_generators, load_loras
 
 PIPELINE: QwenImageInpaintPipeline
 LOADED: bool = False
@@ -26,25 +25,6 @@ def load_qwen_image_pipeline():
                                                         torch_dtype=dtype)
     PIPELINE.enable_model_cpu_offload()
     PIPELINE.vae.enable_slicing()
-
-def get_seed_generators(amount, seed):
-    generator = [torch.Generator(device="cuda").manual_seed(seed + i) for i in range(amount)]
-    return generator
-
-def load_qwen_loras(lora_name):
-    global PIPELINE
-    try:
-        lora_list = []
-        for lora in lora_name:
-            try:
-                lora_name = os.path.splitext(lora)[0]
-                PIPELINE.load_lora_weights(f"loras/qwen/{lora}", adapter_name=lora_name)
-                lora_list.append(lora_name)
-            except Exception:
-                pass
-        PIPELINE.set_adapters(lora_list)
-    except Exception:
-        pass
 
 def generate_qwen_image(prompt,
                         width,
@@ -79,7 +59,7 @@ def generate_qwen_image(prompt,
     kwargs["mask_image"] = mask_image
     kwargs["padding_mask_crop"] = 32
     if lora_name is not None:
-        load_qwen_loras(lora_name)
+        PIPELINE = load_loras(PIPELINE, "qwen_image", lora_name)
     try:
         images = PIPELINE(**kwargs).images
         if lora_name is not None:

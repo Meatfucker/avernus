@@ -8,6 +8,7 @@ from fastapi import FastAPI, Body
 import torch
 
 from pydantic_models import KandinskyT2VRequest
+from utils import get_seed_generators, load_loras
 
 os.environ["HF_ENABLE_PARALLEL_LOADING"] = "yes"
 PIPELINE: Kandinsky5T2VPipeline
@@ -24,10 +25,6 @@ def load_kandinsky5_pipeline(model_name="ai-forever/Kandinsky-5.0-T2V-Lite-sft-5
     PIPELINE.enable_model_cpu_offload()
     PIPELINE.vae.enable_tiling()
 
-def get_seed_generators(amount, seed):
-    generator = [torch.Generator(device="cuda").manual_seed(seed + i) for i in range(amount)]
-    return generator
-
 def generate_kandinsky5_t2v(prompt: str,
                             negative_prompt: str = None,
                             num_frames: int = 121,
@@ -36,7 +33,8 @@ def generate_kandinsky5_t2v(prompt: str,
                             width: int = None,
                             seed: int = None,
                             model_name: str = None,
-                            steps = 50):
+                            steps = 50,
+                            lora_name = None):
     global PIPELINE
     global LOADED
     if model_name is None:
@@ -63,6 +61,8 @@ def generate_kandinsky5_t2v(prompt: str,
         kwargs["height"] = height
     else:
         kwargs["height"] = 512
+    if lora_name is not None:
+        PIPELINE = load_loras(PIPELINE, "kandinsky5", lora_name)
     try:
         output = PIPELINE(**kwargs).frames[0]
 
@@ -92,6 +92,8 @@ def kandinsky5_t2v_generate(data: KandinskyT2VRequest = Body(...)):
         kwargs["seed"] = data.seed
     if data.model_name:
         kwargs["model_name"] = data.model_name
+    if data.lora_name:
+        kwargs["lora_name"] = data.lora_name
     try:
         response = generate_kandinsky5_t2v(**kwargs)
         if response["status"] is True:

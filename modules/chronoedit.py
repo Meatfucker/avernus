@@ -10,7 +10,7 @@ from transformers import CLIPVisionModel
 
 from ChronoEdit.chronoedit_diffusers.pipeline_chronoedit import ChronoEditPipeline
 from pydantic_models import ChronoEditRequest, ImageResponse
-from utils import base64_to_image, image_to_base64
+from utils import base64_to_image, image_to_base64, get_seed_generators, load_loras
 
 PIPELINE: ChronoEditPipeline
 LOADED: bool = False
@@ -43,25 +43,6 @@ def load_chronoedit_pipeline(model_name="Meatfucker/ChronoEdit-bnb-nf4", flow_sh
     PIPELINE = ChronoEditPipeline.from_pretrained(model_name, image_encoder=image_encoder, torch_dtype=dtype)
     PIPELINE.scheduler = UniPCMultistepScheduler.from_config(PIPELINE.scheduler.config, flow_shift=flow_shift)
     PIPELINE.enable_model_cpu_offload()
-
-def get_seed_generators(amount, seed):
-    generator = [torch.Generator(device="cuda").manual_seed(seed + i) for i in range(amount)]
-    return generator
-
-def load_chronoedit_loras(lora_name):
-    global PIPELINE
-    try:
-        lora_list = []
-        for lora in lora_name:
-            try:
-                lora_name = os.path.splitext(lora)[0]
-                PIPELINE.load_lora_weights(f"loras/chronoedit/{lora}", adapter_name=lora_name)
-                lora_list.append(lora_name)
-            except Exception:
-                pass
-        PIPELINE.set_adapters(lora_list)
-    except Exception:
-        pass
 
 def generate_chronoedit_image(prompt,
                               width,
@@ -98,9 +79,8 @@ def generate_chronoedit_image(prompt,
         kwargs["image"] = image
         kwargs["width"] = width
         kwargs["height"] = height
-
         if lora_name is not None:
-            load_chronoedit_loras(lora_name)
+            PIPELINE = load_loras(PIPELINE, "chronoedit", lora_name)
 
         frames = PIPELINE(**kwargs).frames
         images = []

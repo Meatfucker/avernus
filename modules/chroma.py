@@ -5,7 +5,7 @@ from fastapi import FastAPI, Body
 import torch
 
 from pydantic_models import ChromaRequest, ImageResponse
-from utils import base64_to_image, image_to_base64
+from utils import image_to_base64, get_seed_generators, load_loras
 
 PIPELINE: ChromaPipeline
 LOADED: bool = False
@@ -19,11 +19,6 @@ def load_chroma_pipeline(model_name="Meatfucker/Chroma1-HD-bnb-int8"):
     PIPELINE.enable_model_cpu_offload()
     PIPELINE.vae.enable_tiling()
 
-def get_seed_generators(amount, seed):
-    generator = [torch.Generator(device="cuda").manual_seed(seed + i) for i in range(amount)]
-    return generator
-
-
 def generate_chroma(prompt,
                     width,
                     height,
@@ -32,7 +27,8 @@ def generate_chroma(prompt,
                     negative_prompt=None,
                     guidance_scale=None,
                     seed=None,
-                    model_name=None):
+                    model_name=None,
+                    lora_name=None):
     global PIPELINE
     global LOADED
     if not LOADED:
@@ -50,6 +46,8 @@ def generate_chroma(prompt,
               "guidance_scale": guidance_scale if guidance_scale is not None else 5.0}
     if seed is not None:
         kwargs["generator"] = get_seed_generators(kwargs["num_images_per_prompt"], seed)
+    if lora_name is not None:
+        PIPELINE = load_loras(PIPELINE, "chroma", lora_name)
     try:
         images = PIPELINE(**kwargs).images
         return {"status": True,
@@ -74,6 +72,8 @@ def chroma_generate(data: ChromaRequest = Body(...)):
         kwargs["guidance_scale"] = data.guidance_scale
     if data.seed:
         kwargs["seed"] = data.seed
+    if data.lora_name:
+        kwargs["lora_name"] = data.lora_name
     try:
         response = generate_chroma(**kwargs)
         if response["status"] is True:

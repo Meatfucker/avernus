@@ -5,7 +5,7 @@ from fastapi import FastAPI, Body
 import torch
 
 from pydantic_models import AuraFlowRequest, ImageResponse
-from utils import image_to_base64
+from utils import image_to_base64, get_seed_generators, load_loras
 
 PIPELINE: AuraFlowPipeline
 LOADED: bool = False
@@ -15,14 +15,9 @@ avernus_auraflow = FastAPI()
 
 def load_auraflow_pipeline(model_name="fal/AuraFlow"):
     global PIPELINE
-    PIPELINE = AuraFlowPipeline.from_pretrained(model_name, torch_dtype=dtype).to("cuda")
+    PIPELINE = AuraFlowPipeline.from_pretrained(model_name, torch_dtype=dtype, safety_checker=None).to("cuda")
     PIPELINE.enable_model_cpu_offload()
     PIPELINE.vae.enable_slicing()
-
-def get_seed_generators(amount, seed):
-    generator = [torch.Generator(device="cuda").manual_seed(seed + i) for i in range(amount)]
-    return generator
-
 
 def generate_auraflow(prompt,
                       width,
@@ -32,7 +27,8 @@ def generate_auraflow(prompt,
                       negative_prompt=None,
                       guidance_scale=None,
                       seed=None,
-                      model_name="fal/AuraFlow"):
+                      model_name="fal/AuraFlow",
+                      lora_name=None):
     global PIPELINE
     global LOADED
     if not LOADED:
@@ -48,6 +44,8 @@ def generate_auraflow(prompt,
         kwargs["negative_prompt"] = negative_prompt
     if seed is not None:
         kwargs["generator"] = get_seed_generators(kwargs["num_images_per_prompt"], seed)
+    if lora_name is not None:
+        PIPELINE = load_loras(PIPELINE, "auraflow", lora_name)
     try:
         images = PIPELINE(**kwargs).images
         return {"status": True,
@@ -72,6 +70,8 @@ def auraflow_generate(data: AuraFlowRequest = Body(...)):
         kwargs["guidance_scale"] = data.guidance_scale
     if data.seed:
         kwargs["seed"] = data.seed
+    if data.lora_name:
+        kwargs["lora_name"] = data.lora_name
     try:
         response = generate_auraflow(**kwargs)
         if response["status"] is True:

@@ -1,4 +1,3 @@
-import os
 from typing import Any
 import tempfile
 
@@ -8,6 +7,7 @@ from fastapi import FastAPI, Body
 import torch
 
 from pydantic_models import LTXTI2VRequest
+from utils import get_seed_generators, load_loras
 
 PIPELINE: LTXPipeline
 LOADED: bool = False
@@ -27,10 +27,6 @@ def load_ltx_pipeline(model_name="Lightricks/LTX-Video"):
     PIPELINE.enable_model_cpu_offload()
     PIPELINE.vae.enable_tiling()
 
-def get_seed_generators(amount, seed):
-    generator = [torch.Generator(device="cuda").manual_seed(seed + i) for i in range(amount)]
-    return generator
-
 def generate_ltx_ti2v(prompt: str,
                       video = None,
                       negative_prompt: str = None,
@@ -41,7 +37,8 @@ def generate_ltx_ti2v(prompt: str,
                       width: int = 704,
                       seed: int = None,
                       steps: int = 50,
-                      model_name: str = None):
+                      model_name: str = None,
+                      lora_name=None):
     global PIPELINE
     global LOADED
     if model_name is None:
@@ -61,6 +58,8 @@ def generate_ltx_ti2v(prompt: str,
         kwargs["generator"] = get_seed_generators(1, seed)
     kwargs["width"] = width
     kwargs["height"] = height
+    if lora_name is not None:
+        PIPELINE = load_loras(PIPELINE, "ltx", lora_name)
     try:
         output = PIPELINE(**kwargs).frames[0]
         return {"status": True,
@@ -91,6 +90,8 @@ def ltx_ti2v_generate(data: LTXTI2VRequest = Body(...)):
         kwargs["model_name"] = data.model_name
     if data.steps:
         kwargs["steps"] = data.steps
+    if data.lora_name:
+        kwargs["lora_name"] = data.lora_name
     try:
         response = generate_ltx_ti2v(**kwargs)
         if response["status"] is True:

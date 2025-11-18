@@ -7,6 +7,7 @@ from fastapi import FastAPI, Body
 import torch
 
 from pydantic_models import HunyuanTI2VRequest
+from utils import get_seed_generators, load_loras
 
 PIPELINE: HunyuanVideoPipeline
 LOADED: bool = False
@@ -20,10 +21,6 @@ def load_hunyuan_pipeline(model_name="Meatfucker/HunyuanVideo-bnb-nf4", flow_shi
     PIPELINE.enable_model_cpu_offload()
     PIPELINE.vae.enable_tiling()
 
-def get_seed_generators(amount, seed):
-    generator = [torch.Generator(device="cuda").manual_seed(seed + i) for i in range(amount)]
-    return generator
-
 def generate_hunyuan_ti2v(prompt: str,
                           video = None,
                           negative_prompt: str = None,
@@ -34,7 +31,8 @@ def generate_hunyuan_ti2v(prompt: str,
                           width: int = None,
                           seed: int = None,
                           steps: int = 50,
-                          model_name: str = None):
+                          model_name: str = None,
+                          lora_name = None):
     global PIPELINE
     global LOADED
     if model_name is None:
@@ -60,6 +58,8 @@ def generate_hunyuan_ti2v(prompt: str,
         kwargs["height"] = height
     else:
         kwargs["height"] = 480
+    if lora_name is not None:
+        PIPELINE = load_loras(PIPELINE, "hunyuan", lora_name)
     try:
         output = PIPELINE(**kwargs).frames[0]
 
@@ -89,6 +89,8 @@ def hunyuan_ti2v_generate(data: HunyuanTI2VRequest = Body(...)):
         kwargs["seed"] = data.seed
     if data.model_name:
         kwargs["model_name"] = data.model_name
+    if data.lora_name:
+        kwargs["lora_name"] = data.lora_name
     try:
         response = generate_hunyuan_ti2v(**kwargs)
         if response["status"] is True:

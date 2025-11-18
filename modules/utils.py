@@ -104,6 +104,7 @@ class ServerManager:
 
                 await asyncio.sleep(interval)
 
+
 def base64_to_image(base64_string):
     """Takes a base64 image and converts it to a PIL image"""
     if ',' in base64_string:
@@ -112,53 +113,12 @@ def base64_to_image(base64_string):
     image = Image.open(BytesIO(image_data))
     return image
 
-def image_to_base64(image):
-    """Takes a PIL image and converts it to base64"""
-    buffered = BytesIO()
-    image.save(buffered, format="PNG")
-    return base64.b64encode(buffered.getvalue()).decode("utf-8")
 
-def get_memory():
-    ram = psutil.virtual_memory()
-    pynvml.nvmlInit()
-    device = torch.cuda.current_device()
-    handle = pynvml.nvmlDeviceGetHandleByIndex(device)
-    vram_used = pynvml.nvmlDeviceGetMemoryInfo(handle).used / 1024 ** 2  # MB
-    pynvml.nvmlShutdown()
-    current_memory = f"VRAM Allocated:{vram_used:.2f}MB / RAM Allocated:{ram.used / 1024**2:.2f}MB"
-    return current_memory
-
-def print_memory(heading: str = None):
-    if heading is not None:
-        print(heading)
-    process = psutil.Process()
-    print(f"VRAM Allocated:{torch.cuda.memory_allocated() / 1024 ** 2:.2f}MB VRAM Reserved:{torch.cuda.memory_reserved() / 1024 ** 2:.2f}MB RAM Allocated:{process.memory_info().rss / 1024 ** 2:.2f}MB")
-    return
-
-def resize_by_pixels(width, height, target_pixels=1024*1024, keep_if_within=0.0):
-    """
-    Return (new_width, new_height) so total pixels ~= target_pixels,
-    preserving aspect ratio. If current pixels are within ±keep_if_within
-    (e.g. 0.25 for 25%), the original size is returned.
-    """
-    current = width * height
-    if keep_if_within > 0 and abs(current - target_pixels) / target_pixels <= keep_if_within:
-        return width, height
-
-    scale = math.sqrt(target_pixels / current)
-    new_w = max(1, int(round(width * scale)))
-    new_h = max(1, int(round(height * scale)))
-    return new_w, new_h
-
-def return_loras(path):
-    """Returns a list of available loras in the supplied directory"""
-    try:
-        if not os.path.exists(path):
-            return {"error": "Directory not found"}
-        filenames = [f for f in os.listdir(path) if os.path.isfile(os.path.join(path, f))]
-        return filenames
-    except Exception as e:
-        return e
+def cleanup_and_stream(tmp_path):
+    with open(tmp_path, "rb") as f:
+        yield from f
+    os.remove(tmp_path)  # Remove temp file after streaming
+    return FileResponse(cleanup_and_stream(tmp_path), media_type="video/mp4")
 
 async def forward_post_request(url: str, data) -> dict:
     """
@@ -206,13 +166,76 @@ async def forward_stream_request(url: str, data) -> StreamingResponse:
             )
         except httpx.RequestError as exc:
             logger.error(f"Error while forwarding request: {exc}")
-            return {"error": "Failed to reach ACE generation server"}
+            return {"error": "Failed to reach generation server"}
         except httpx.HTTPStatusError as exc:
             logger.error(f"Bad response from ACE generation server: {exc}")
-            return {"error": f"ACE generation failed with status {exc.response.status_code}"}
+            return {"error": f"Generation failed with status {exc.response.status_code}"}
 
-def cleanup_and_stream(tmp_path):
-    with open(tmp_path, "rb") as f:
-        yield from f
-    os.remove(tmp_path)  # Remove temp file after streaming
-    return FileResponse(cleanup_and_stream(tmp_path), media_type="video/mp4")
+def get_memory():
+    ram = psutil.virtual_memory()
+    pynvml.nvmlInit()
+    device = torch.cuda.current_device()
+    handle = pynvml.nvmlDeviceGetHandleByIndex(device)
+    vram_used = pynvml.nvmlDeviceGetMemoryInfo(handle).used / 1024 ** 2  # MB
+    pynvml.nvmlShutdown()
+    current_memory = f"VRAM Allocated:{vram_used:.2f}MB / RAM Allocated:{ram.used / 1024**2:.2f}MB"
+    return current_memory
+
+def get_seed_generators(amount, seed):
+    generator = [torch.Generator(device="cuda").manual_seed(seed + i) for i in range(amount)]
+    return generator
+
+def image_to_base64(image):
+    """Takes a PIL image and converts it to base64"""
+    buffered = BytesIO()
+    image.save(buffered, format="PNG")
+    return base64.b64encode(buffered.getvalue()).decode("utf-8")
+
+def load_loras(pipeline, arch, lora_name):
+    try:
+        lora_list = []
+        for lora in lora_name:
+            try:
+                lora_name = os.path.splitext(lora)[0].strip('.')
+                pipeline.load_lora_weights(f"./loras/{arch}/{lora}", adapter_name=lora_name)
+                lora_list.append(lora_name)
+            except Exception as e:
+                print(f"FLUX LORA ERROR: {e}")
+        pipeline.set_adapters(lora_list)
+    except Exception as e:
+        logger.error(f"{arch} LORA LOAD ERROR:{e}")
+        pass
+    return pipeline
+
+def print_memory(heading: str = None):
+    if heading is not None:
+        print(heading)
+    process = psutil.Process()
+    print(f"VRAM Allocated:{torch.cuda.memory_allocated() / 1024 ** 2:.2f}MB VRAM Reserved:{torch.cuda.memory_reserved() / 1024 ** 2:.2f}MB RAM Allocated:{process.memory_info().rss / 1024 ** 2:.2f}MB")
+    return
+
+def resize_by_pixels(width, height, target_pixels=1024*1024, keep_if_within=0.0):
+    """
+    Return (new_width, new_height) so total pixels ~= target_pixels,
+    preserving aspect ratio. If current pixels are within ±keep_if_within
+    (e.g. 0.25 for 25%), the original size is returned.
+    """
+    current = width * height
+    if keep_if_within > 0 and abs(current - target_pixels) / target_pixels <= keep_if_within:
+        return width, height
+
+    scale = math.sqrt(target_pixels / current)
+    new_w = max(1, int(round(width * scale)))
+    new_h = max(1, int(round(height * scale)))
+    return new_w, new_h
+
+def return_loras(path):
+    """Returns a list of available loras in the supplied directory"""
+    try:
+        if not os.path.exists(path):
+            return {"error": "Directory not found"}
+        filenames = [f for f in os.listdir(path) if os.path.isfile(os.path.join(path, f))]
+        return filenames
+    except Exception as e:
+        return e
+

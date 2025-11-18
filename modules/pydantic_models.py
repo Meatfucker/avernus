@@ -25,6 +25,7 @@ class AuraFlowRequest(BaseModel):
     guidance_scale: Optional[float] = Field(None, example=5.0)
     seed: Optional[int] = Field(None, example=42)
     model_name: Optional[str] = Field(None, example="fal/AuraFlow")
+    lora_name: Optional[Union[str, List[str]]] = Field(None, example="lora_name.safetensors")
 
 class ChromaRequest(BaseModel):
     prompt: str = Field(..., example="A big green monster")
@@ -38,6 +39,7 @@ class ChromaRequest(BaseModel):
     guidance_scale: Optional[float] = Field(None, example=5.0)
     seed: Optional[int] = Field(None, example=42)
     model_name: Optional[str] = Field(None, example="Meatfucker/Flux.1-dev-bnb-nf4")
+    lora_name: Optional[Union[str, List[str]]] = Field(None, example="lora_name.safetensors")
 
 class ChronoEditRequest(BaseModel):
     prompt: str = Field(..., example="A big green monster")
@@ -102,6 +104,7 @@ class FramepackRequest(BaseModel):
     guidance_scale: Optional[float] = Field(None, example=6.0)
     seed: Optional[int] = Field(None, example=42)
     model_name: Optional[str] = Field(None, example="Meatfucker/HunyuanVideo-bnb-nf4")
+    lora_name: Optional[Union[str, List[str]]] = Field(None, example="lora_name.safetensors")
 
 class HiDreamRequest(BaseModel):
     prompt: str = Field(..., example="A big green monster")
@@ -113,6 +116,7 @@ class HiDreamRequest(BaseModel):
     guidance_scale: Optional[float] = Field(None, example=5.0)
     seed: Optional[int] = Field(None, example=42)
     model_name: Optional[str] = Field(None, example="Meatfucker/Flux.1-dev-bnb-nf4")
+    lora_name: Optional[Union[str, List[str]]] = Field(None, example="lora_name.safetensors")
 
 class HunyuanTI2VRequest(BaseModel):
     prompt: str = Field(..., example="A big green monster")
@@ -126,6 +130,7 @@ class HunyuanTI2VRequest(BaseModel):
     guidance_scale: Optional[float] = Field(None, example=5.0)
     seed: Optional[int] = Field(None, example=42)
     model_name: Optional[str] = Field(None, example="Meatfucker/HunyuanVideo-bnb-nf4")
+    lora_name: Optional[Union[str, List[str]]] = Field(None, example="lora_name.safetensors")
 
 class ImageResponse(GenericResponse):
     images: Optional[List[str]] = Field(None, example=["kajsdflsadfsadf....", "lkjdsaflkjsadlkfjsa3423....", "lwerewjrlwkejrwewr..."])
@@ -149,6 +154,7 @@ class KandinskyT2VRequest(BaseModel):
     guidance_scale: Optional[float] = Field(None, example=5.0)
     seed: Optional[int] = Field(None, example=42)
     model_name: Optional[str] = Field(None, example="Meatfucker/HunyuanVideo-bnb-nf4")
+    lora_name: Optional[Union[str, List[str]]] = Field(None, example="lora_name.safetensors")
 
 class LLMRequest(BaseModel):
     prompt: str = Field(..., example="Who is the best at hackey sack?")
@@ -173,6 +179,7 @@ class LTXTI2VRequest(BaseModel):
     guidance_scale: Optional[float] = Field(None, example=5.0)
     seed: Optional[int] = Field(None, example=42)
     model_name: Optional[str] = Field(None, example="Wan-AI/Wan2.2-TI2V-5B-Diffusers")
+    lora_name: Optional[Union[str, List[str]]] = Field(None, example="lora_name.safetensors")
 
 class LuminaRequest(BaseModel):
     prompt: str = Field(..., example="A big green monster")
@@ -184,6 +191,7 @@ class LuminaRequest(BaseModel):
     guidance_scale: Optional[float] = Field(None, example=5.0)
     seed: Optional[int] = Field(None, example=42)
     model_name: Optional[str] = Field(None, example="Meatfucker/Flux.1-dev-bnb-nf4")
+    lora_name: Optional[Union[str, List[str]]] = Field(None, example="lora_name.safetensors")
 
 class QwenImageInpaintRequest(BaseModel):
     prompt: str = Field(..., example="A big green monster")
@@ -253,6 +261,7 @@ class SanaSprintRequest(BaseModel):
     guidance_scale: Optional[float] = Field(None, example=4.5)
     seed: Optional[int] = Field(None, example=42)
     model_name: Optional[str] = Field(None, example="Meatfucker/Flux.1-dev-bnb-nf4")
+    lora_name: Optional[Union[str, List[str]]] = Field(None, example="lora_name.safetensors")
 
 class SD15Request(BaseModel):
     prompt: str = Field(..., example="A big green monster")
@@ -346,6 +355,7 @@ class WanTI2VRequest(BaseModel):
     guidance_scale: Optional[float] = Field(None, example=5.0)
     seed: Optional[int] = Field(None, example=42)
     model_name: Optional[str] = Field(None, example="Wan-AI/Wan2.2-TI2V-5B-Diffusers")
+    lora_name: Optional[Union[str, List[str]]] = Field(None, example="lora_name.safetensors")
 
 class WanVACERequest(BaseModel):
     prompt: str = Field(..., example="A big green monster")
@@ -360,3 +370,4 @@ class WanVACERequest(BaseModel):
     guidance_scale: Optional[float] = Field(None, example=5.0)
     seed: Optional[int] = Field(None, example=42)
     model_name: Optional[str] = Field(None, example="Wan-AI/Wan2.2-TI2V-5B-Diffusers")
+    lora_name: Optional[Union[str, List[str]]] = Field(None, example="lora_name.safetensors")

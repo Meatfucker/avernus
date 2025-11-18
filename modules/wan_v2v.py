@@ -4,8 +4,9 @@ import tempfile
 from diffusers import WanVideoToVideoPipeline, UniPCMultistepScheduler, AutoencoderKLWan
 from diffusers.utils import export_to_video, load_video
 from fastapi import FastAPI, Form, UploadFile, File
-
 import torch
+
+from utils import get_seed_generators, load_loras
 
 
 PIPELINE: WanVideoToVideoPipeline
@@ -22,10 +23,6 @@ def load_wan_pipeline(model_name="Meatfucker/Wan2.1-T2V-1.3B-nf4-bnb", flow_shif
     PIPELINE.enable_model_cpu_offload()
     PIPELINE.vae.enable_tiling()
 
-def get_seed_generators(amount, seed):
-    generator = [torch.Generator(device="cuda").manual_seed(seed + i) for i in range(amount)]
-    return generator
-
 def generate_wan_v2v(prompt: str,
                      video = None,
                      negative_prompt: str = None,
@@ -35,7 +32,8 @@ def generate_wan_v2v(prompt: str,
                      width: int = None,
                      seed: int = None,
                      steps: int = 50,
-                     model_name: str = None):
+                     model_name: str = None,
+                     lora_name=None):
     try:
         global PIPELINE
         global LOADED
@@ -64,6 +62,8 @@ def generate_wan_v2v(prompt: str,
             kwargs["negative_prompt"] = ""
         if video is not None:
             kwargs["video"] = load_video(video)
+        if lora_name is not None:
+            PIPELINE = load_loras(PIPELINE, "wan", lora_name)
         try:
             output = PIPELINE(**kwargs).frames[0]
         except Exception as e:
@@ -86,7 +86,8 @@ def wan_v2v_generate(prompt: str = Form(...),
                      flow_shift: float | None = Form(None),
                      seed: int | None = Form(None),
                      model_name: str | None = Form(None),
-                     video: UploadFile | None = File(None)
+                     video: UploadFile | None = File(None),
+                     lora_name: Any | None = Form(None)
                      ):
     kwargs: dict[str, Any] = {"prompt": prompt}
 
@@ -107,6 +108,8 @@ def wan_v2v_generate(prompt: str = Form(...),
         kwargs["seed"] = seed
     if model_name:
         kwargs["model_name"] = model_name
+    if lora_name:
+        kwargs["lora_name"] = lora_name
     try:
         if video:
             # Save uploaded video temporarily

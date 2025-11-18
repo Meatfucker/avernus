@@ -7,7 +7,7 @@ from fastapi import FastAPI, Body
 import torch
 
 from pydantic_models import FramepackRequest
-from utils import base64_to_image
+from utils import base64_to_image, get_seed_generators, load_loras
 
 PIPELINE: HunyuanVideoFramepackPipeline
 LOADED: bool = False
@@ -21,11 +21,6 @@ def load_framepack_pipeline(model_name: str = "Meatfucker/FramepackI2V-HY-bnb-nf
     PIPELINE.enable_model_cpu_offload()
     PIPELINE.transformer.enable_layerwise_casting(storage_dtype=torch.float8_e4m3fn, compute_dtype=torch.bfloat16)
     PIPELINE.vae.enable_tiling()
-    
-
-def get_seed_generators(amount, seed):
-    generator = [torch.Generator(device="cuda").manual_seed(seed + i) for i in range(amount)]
-    return generator
 
 def generate_framepack(prompt: str,
                        image = None,
@@ -37,7 +32,8 @@ def generate_framepack(prompt: str,
                        width: int = None,
                        seed: int = None,
                        steps: int = 50,
-                       model_name: str = None):
+                       model_name: str = None,
+                       lora_name=None):
     global PIPELINE
     global LOADED
     if model_name is None:
@@ -66,7 +62,8 @@ def generate_framepack(prompt: str,
     kwargs["image"] = image
     if last_image is not None:
         kwargs["last_image"] = last_image
-
+    if lora_name is not None:
+        PIPELINE = load_loras(PIPELINE, "framepack", lora_name)
     try:
         output = PIPELINE(**kwargs).frames[0]
         return {"status": True,
@@ -99,6 +96,8 @@ def framepack_generate(data: FramepackRequest = Body(...)):
         kwargs["last_image"] = base64_to_image(data.last_image)
     if data.model_name:
         kwargs["model_name"] = data.model_name
+    if data.lora_name:
+        kwargs["lora_name"] = data.lora_name
     try:
         response = generate_framepack(**kwargs)
         if response["status"] is True:

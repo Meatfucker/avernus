@@ -5,7 +5,7 @@ from fastapi import FastAPI, Body
 import torch
 
 from pydantic_models import SanaSprintRequest, ImageResponse
-from utils import image_to_base64
+from utils import image_to_base64, get_seed_generators, load_loras
 
 PIPELINE: SanaSprintPipeline
 LOADED: bool = False
@@ -19,11 +19,6 @@ def load_sana_sprint_pipeline(model_name="Efficient-Large-Model/Sana_Sprint_1.6B
     PIPELINE.enable_model_cpu_offload()
     PIPELINE.vae.enable_slicing()
 
-def get_seed_generators(amount, seed):
-    generator = [torch.Generator(device="cuda").manual_seed(seed + i) for i in range(amount)]
-    return generator
-
-
 def generate_sana_sprint(prompt,
                          width,
                          height,
@@ -33,7 +28,8 @@ def generate_sana_sprint(prompt,
                          seed=None,
                          max_timesteps=None,
                          intermediate_timesteps=None,
-                         model_name=None):
+                         model_name=None,
+                         lora_name=None):
     global PIPELINE
     global LOADED
     if not LOADED:
@@ -54,6 +50,8 @@ def generate_sana_sprint(prompt,
         kwargs["intermediate_timesteps"] = intermediate_timesteps
     if seed is not None:
         kwargs["generator"] = get_seed_generators(kwargs["num_images_per_prompt"], seed)
+    if lora_name is not None:
+        PIPELINE = load_loras(PIPELINE, "sana_sprint", lora_name)
     try:
         images = PIPELINE(**kwargs).images
         return {"status": True,
@@ -80,6 +78,8 @@ def sana_sprint_generate(data: SanaSprintRequest = Body(...)):
         kwargs["guidance_scale"] = data.guidance_scale
     if data.seed:
         kwargs["seed"] = data.seed
+    if data.lora_name:
+        kwargs["lora_name"] = data.lora_name
     try:
         response = generate_sana_sprint(**kwargs)
         if response["status"] is True:

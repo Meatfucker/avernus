@@ -2,12 +2,11 @@ import os
 from typing import Any
 
 from diffusers import FluxKontextPipeline
-from diffusers.quantizers import PipelineQuantizationConfig
 from fastapi import FastAPI, Body
 import torch
 
 from pydantic_models import FluxRequest, ImageResponse
-from utils import base64_to_image, image_to_base64, resize_by_pixels
+from utils import base64_to_image, image_to_base64, resize_by_pixels, get_seed_generators, load_loras
 
 PIPELINE: FluxKontextPipeline
 LOADED: bool = False
@@ -19,10 +18,6 @@ def load_flux_kontext_pipeline():
     PIPELINE = FluxKontextPipeline.from_pretrained("Meatfucker/Flux.1-Kontext-dev-bnb-nf4",
                                                     torch_dtype=dtype).to("cuda")
 
-def get_seed_generators(amount, seed):
-    generator = [torch.Generator(device="cuda").manual_seed(seed + i) for i in range(amount)]
-    return generator
-
 def load_ip_adapters(strength):
     global PIPELINE
     try:
@@ -30,21 +25,6 @@ def load_ip_adapters(strength):
                                                   weight_name="ip_adapter.safetensors",
                                                   image_encoder_pretrained_model_name_or_path="openai/clip-vit-large-patch14")
         PIPELINE.set_ip_adapter_scale(strength)
-    except Exception:
-        pass
-
-def load_flux_loras(lora_name):
-    global PIPELINE
-    try:
-        lora_list = []
-        for lora in lora_name:
-            try:
-                lora_name = os.path.splitext(lora)[0]
-                PIPELINE.load_lora_weights(f"./loras/flux/{lora}", adapter_name=lora_name)
-                lora_list.append(lora_name)
-            except Exception as e:
-                print(f"FLUX LORA ERROR: {e}")
-        PIPELINE.set_adapters(lora_list)
     except Exception:
         pass
 
@@ -94,7 +74,7 @@ def generate_flux_kontext(prompt,
         except Exception:
             pass
     if lora_name is not None:
-        load_flux_loras(lora_name)
+        PIPELINE = load_loras(PIPELINE, "flux", lora_name)
     PIPELINE.enable_model_cpu_offload() # This has to be after the ip adapter load or else you'll have tensor location problems
     PIPELINE.vae.enable_slicing()
     try:

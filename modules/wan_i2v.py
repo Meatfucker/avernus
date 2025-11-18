@@ -7,7 +7,7 @@ from fastapi import FastAPI, Body
 import torch
 
 from pydantic_models import WanTI2VRequest
-from utils import base64_to_image, resize_by_pixels
+from utils import base64_to_image, resize_by_pixels, get_seed_generators, load_loras
 
 PIPELINE: WanImageToVideoPipeline
 LOADED: bool = False
@@ -23,10 +23,6 @@ def load_wan_pipeline(model_name="Meatfucker/Wan2.2-TI2V-5B-bnb-nf4", flow_shift
     PIPELINE.enable_model_cpu_offload()
     PIPELINE.vae.enable_slicing()
 
-def get_seed_generators(amount, seed):
-    generator = [torch.Generator(device="cuda").manual_seed(seed + i) for i in range(amount)]
-    return generator
-
 def generate_wan_ti2v(prompt: str,
                       image = None,
                       negative_prompt: str = None,
@@ -37,7 +33,8 @@ def generate_wan_ti2v(prompt: str,
                       width: int = None,
                       seed: int = None,
                       steps: int = 50,
-                      model_name: str = None):
+                      model_name: str = None,
+                      lora_name=None):
     global PIPELINE
     global LOADED
     if model_name is None:
@@ -67,6 +64,8 @@ def generate_wan_ti2v(prompt: str,
     kwargs["width"] = int(round(kwargs["width"] / 16) * 16)
     kwargs["height"] = int(round(kwargs["width"] / 16) * 16)
     kwargs["image"] = image
+    if lora_name is not None:
+        PIPELINE = load_loras(PIPELINE, "wan", lora_name)
     try:
         output = PIPELINE(**kwargs).frames[0]
         return {"status": True,
@@ -99,6 +98,8 @@ def wan_ti2v_generate(data: WanTI2VRequest = Body(...)):
         kwargs["image"] = base64_to_image(data.image)
     if data.model_name:
         kwargs["model_name"] = data.model_name
+    if data.lora_name:
+        kwargs["lora_name"] = data.lora_name
     try:
         response = generate_wan_ti2v(**kwargs)
         if response["status"] is True:

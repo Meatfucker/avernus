@@ -5,7 +5,7 @@ from fastapi import FastAPI, Body
 import torch
 
 from pydantic_models import LuminaRequest, ImageResponse
-from utils import image_to_base64
+from utils import image_to_base64, get_seed_generators, load_loras
 
 PIPELINE: Lumina2Pipeline
 LOADED: bool = False
@@ -25,11 +25,6 @@ def load_lumina2_pipeline(model_name="Alpha-VLLM/Lumina-Image-2.0"):
     PIPELINE.enable_model_cpu_offload()
     PIPELINE.vae.enable_slicing()
 
-def get_seed_generators(amount, seed):
-    generator = [torch.Generator(device="cuda").manual_seed(seed + i) for i in range(amount)]
-    return generator
-
-
 def generate_lumina2(prompt,
                      width,
                      height,
@@ -37,7 +32,8 @@ def generate_lumina2(prompt,
                      batch_size,
                      guidance_scale=None,
                      seed=None,
-                     model_name="Alpha-VLLM/Lumina-Image-2.0"):
+                     model_name="Alpha-VLLM/Lumina-Image-2.0",
+                     lora_name=None):
     global PIPELINE
     global LOADED
     if not LOADED:
@@ -51,6 +47,8 @@ def generate_lumina2(prompt,
               "guidance_scale": guidance_scale if guidance_scale is not None else 4.0}
     if seed is not None:
         kwargs["generator"] = get_seed_generators(kwargs["num_images_per_prompt"], seed)
+    if lora_name is not None:
+        PIPELINE = load_loras(PIPELINE, "lumina2", lora_name)
     try:
         images = PIPELINE(**kwargs).images
         return {"status": True,
@@ -73,6 +71,8 @@ def lumina2_generate(data: LuminaRequest = Body(...)):
         kwargs["guidance_scale"] = data.guidance_scale
     if data.seed:
         kwargs["seed"] = data.seed
+    if data.lora_name:
+        kwargs["lora_name"] = data.lora_name
     try:
         response = generate_lumina2(**kwargs)
         if response["status"] is True:

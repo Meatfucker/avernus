@@ -1,4 +1,3 @@
-import os
 from typing import Any
 
 from diffusers import (StableDiffusionInpaintPipeline, DPMSolverMultistepScheduler, DDIMScheduler, DDPMScheduler,
@@ -10,7 +9,7 @@ from fastapi import FastAPI, Body
 import torch
 
 from pydantic_models import SD15InpaintRequest, ImageResponse
-from utils import base64_to_image, image_to_base64
+from utils import base64_to_image, image_to_base64, get_seed_generators, load_loras
 
 PIPELINE: StableDiffusionInpaintPipeline
 LOADED: bool = False
@@ -23,25 +22,6 @@ def load_sd15_inpaint_pipeline(model_name):
                                                          torch_dtype=dtype,
                                                          use_safetensors=True).to("cuda")
     PIPELINE.vae.enable_slicing()
-
-def get_seed_generators(amount, seed):
-    generator = [torch.Generator(device="cuda").manual_seed(seed + i) for i in range(amount)]
-    return generator
-
-def load_sd15_loras(lora_name):
-    global PIPELINE
-    try:
-        lora_list = []
-        for lora in lora_name:
-            try:
-                lora_name = os.path.splitext(lora)[0]
-                PIPELINE.load_lora_weights(f"loras/sd15/{lora}", adapter_name=lora_name)
-                lora_list.append(lora_name)
-            except Exception:
-                pass
-        PIPELINE.set_adapters(lora_list)
-    except Exception:
-        pass
 
 def generate_sd15_inpaint(prompt,
                           negative_prompt,
@@ -82,7 +62,7 @@ def generate_sd15_inpaint(prompt,
     if scheduler is not None:
         set_scheduler(scheduler)
     if lora_name is not None:
-        load_sd15_loras(lora_name)
+        PIPELINE = load_loras(PIPELINE, "sd15", lora_name)
     try:
         images = PIPELINE(**kwargs).images
         return {"status": True,

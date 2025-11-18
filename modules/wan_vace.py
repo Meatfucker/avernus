@@ -8,7 +8,7 @@ import PIL.Image
 import torch
 
 from pydantic_models import WanVACERequest
-from utils import base64_to_image
+from utils import base64_to_image, get_seed_generators, load_loras
 
 PIPELINE: WanVACEPipeline
 LOADED: bool = False
@@ -23,10 +23,6 @@ def load_wan_pipeline(model_name="Meatfucker/Wan2.1-VACE-1.3B-nf4-bnb", flow_shi
     PIPELINE.scheduler = UniPCMultistepScheduler.from_config(PIPELINE.scheduler.config, flow_shift=flow_shift)
     PIPELINE.enable_model_cpu_offload()
     PIPELINE.vae.enable_tiling()
-
-def get_seed_generators(amount, seed):
-    generator = [torch.Generator(device="cuda").manual_seed(seed + i) for i in range(amount)]
-    return generator
 
 def prepare_i2v_video_and_mask(img: PIL.Image.Image, height: int, width: int, num_frames: int):
     img = img.resize((width, height))
@@ -70,7 +66,8 @@ def generate_wan_vace(prompt: str,
                       seed: int = None,
                       steps: int = 50,
                       model_name: str = None,
-                      flow_shift = 3.0):
+                      flow_shift = 3.0,
+                      lora_name=None):
     global PIPELINE
     global LOADED
     if model_name is None:
@@ -118,6 +115,8 @@ def generate_wan_vace(prompt: str,
     except Exception as e:
         return {"status": False,
                 "status_message": e}
+    if lora_name is not None:
+        PIPELINE = load_loras(PIPELINE, "wan", lora_name)
     try:
         output = PIPELINE(**kwargs).frames[0]
         return {"status": True,
@@ -150,6 +149,8 @@ def wan_vace_generate(data: WanVACERequest = Body(...)):
         kwargs["last_frame"] = base64_to_image(data.last_frame)
     if data.model_name:
         kwargs["model_name"] = data.model_name
+    if data.lora_name:
+        kwargs["lora_name"] = data.lora_name
     try:
         response = generate_wan_vace(**kwargs)
         if response["status"] is True:

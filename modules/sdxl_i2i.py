@@ -1,4 +1,3 @@
-import os
 from typing import Any
 from diffusers import (StableDiffusionXLImg2ImgPipeline, DPMSolverMultistepScheduler, DDIMScheduler, DDPMScheduler,
                        LMSDiscreteScheduler, EulerDiscreteScheduler, HeunDiscreteScheduler,
@@ -9,7 +8,7 @@ from fastapi import FastAPI, Body
 import torch
 
 from pydantic_models import SDXLRequest, ImageResponse
-from utils import base64_to_image, image_to_base64
+from utils import base64_to_image, image_to_base64, get_seed_generators, load_loras
 
 PIPELINE: StableDiffusionXLImg2ImgPipeline
 LOADED: bool = False
@@ -23,10 +22,6 @@ def load_sdxl_pipeline(model_name):
                                                          use_safetensors=True).to("cuda")
     PIPELINE.vae.enable_slicing()
 
-def get_seed_generators(amount, seed):
-    generator = [torch.Generator(device="cuda").manual_seed(seed + i) for i in range(amount)]
-    return generator
-
 def load_ip_adapters(strength):
     global PIPELINE
     try:
@@ -35,21 +30,6 @@ def load_ip_adapters(strength):
                                  weight_name="ip-adapter_sdxl.bin",
                                  device="cuda")
         PIPELINE.set_ip_adapter_scale(strength)
-    except Exception:
-        pass
-
-def load_sdxl_loras(lora_name):
-    global PIPELINE
-    try:
-        lora_list = []
-        for lora in lora_name:
-            try:
-                lora_name = os.path.splitext(lora)[0]
-                PIPELINE.load_lora_weights(f"loras/sdxl/{lora}", adapter_name=lora_name)
-                lora_list.append(lora_name)
-            except Exception:
-                pass
-        PIPELINE.set_adapters(lora_list)
     except Exception:
         pass
 
@@ -101,7 +81,7 @@ def generate_sdxl(prompt,
         except Exception:
             pass
     if lora_name is not None:
-        load_sdxl_loras(lora_name)
+        PIPELINE = load_loras(PIPELINE, "sdxl", lora_name)
     kwargs["image"] = image
     kwargs["strength"] = strength
     try:
