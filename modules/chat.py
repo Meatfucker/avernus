@@ -16,7 +16,7 @@ def load_pipeline(model_name=None):
     try:
         PIPELINE = pipeline(task="text-generation",
                             model=model_name,
-                            model_kwargs={"torch_dtype": torch.bfloat16})
+                            model_kwargs={"dtype": torch.bfloat16})
     except Exception as e:
         print(f"LOADING EXCEPTION: {e}")
 
