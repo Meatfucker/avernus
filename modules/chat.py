@@ -24,11 +24,8 @@ def generate_chat(prompt, model_name, messages=None):
     global PIPELINE
     global LOADED
     if not LOADED:
-        print(model_name)
-        print("loading pipeline")
         load_pipeline(model_name)
         LOADED = True
-        print("pipeline loaded")
     if messages:
         messages.append({"role": "user", "content": prompt})
     else:
