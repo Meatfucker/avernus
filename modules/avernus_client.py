@@ -257,6 +257,33 @@ class AvernusClient:
             print(f"ERROR: {e}")
             return {"ERROR": str(e)}
 
+    async def flux2_image(self, prompt, negative_prompt=None, image=None, model_name=None, lora_name=None, width=None,
+                         height=None, steps=None, batch_size=None, seed=None, guidance_scale=None, true_cfg_scale=None):
+        """This takes a prompt and optional other variables and returns a list of base64 encoded images"""
+        url = f"http://{self.base_url}/flux2_generate"
+        data = {"prompt": prompt,
+                "negative_prompt": negative_prompt,
+                "image": image,
+                "model_name": model_name,
+                "lora_name": lora_name,
+                "width": width,
+                "height": height,
+                "steps": steps,
+                "batch_size": batch_size,
+                "seed": seed,
+                "guidance_scale": guidance_scale,
+                "true_cfg_scale": true_cfg_scale}
+        try:
+            async with httpx.AsyncClient(timeout=None) as client:
+                response = await client.post(url, json=data)
+            if response.status_code == 200:
+                return response.json()
+            else:
+                print(f"FLUX2 ERROR: {response.status_code}")
+        except Exception as e:
+            print(f"ERROR: {e}")
+            return {"ERROR": str(e)}
+
     async def framepack(self, prompt, image, negative_prompt=None, width=None, height=None, steps=None, num_frames=None,
                        guidance_scale=None, last_image=None, seed=None, model_name=None, lora_name=None):
         """This takes a prompt and returns a video"""
@@ -422,6 +449,21 @@ class AvernusClient:
                 return {"ERROR": response.text}
         except Exception as e:
             print(f"list_flux_loras ERROR: {e}")
+            return {"ERROR": str(e)}
+
+    async def list_models(self):
+        """Fetches a list of available model types and models"""
+        url = f"http://{self.base_url}/list_models"
+        try:
+            async with httpx.AsyncClient(timeout=5.0) as client:
+                response = await client.get(url)
+            if response.status_code == 200:
+                return response.json()
+            else:
+                print(f"MODEL LIST ERROR: {response.status_code}, Response: {response.text}")
+                return {"ERROR": response.text}
+        except Exception as e:
+            print(f"list_models ERROR: {e}")
             return {"ERROR": str(e)}
 
     async def list_qwen_image_loras(self):

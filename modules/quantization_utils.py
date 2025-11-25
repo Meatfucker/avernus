@@ -1,6 +1,7 @@
 from diffusers import (AutoModel,
                        ChromaPipeline,
                        FluxPipeline, FluxFillPipeline, FluxKontextPipeline, FluxPriorReduxPipeline,
+                       Flux2Pipeline,
                        HiDreamImagePipeline, HiDreamImageTransformer2DModel,
                        HunyuanVideoPipeline, HunyuanVideoFramepackPipeline, HunyuanVideoFramepackTransformer3DModel,
                        QwenImagePipeline, QwenImageEditPipeline, QwenImageEditPlusPipeline, QwenImageTransformer2DModel,
@@ -212,6 +213,18 @@ def quantize_flux():
                                             quantization_config=pipeline_quant_config,
                                             torch_dtype=dtype).to("cuda")
     generator.save_pretrained("../models/Flux.1-dev")
+
+def quantize_flux2():
+    print("loading Flux2Pipeline")
+    pipeline_quant_config = PipelineQuantizationConfig(
+        quant_backend="bitsandbytes_4bit",
+        quant_kwargs={"load_in_4bit": True, "bnb_4bit_quant_type": "nf4", "bnb_4bit_compute_dtype": torch.bfloat16},
+        components_to_quantize=["transformer", "text_encoder_2"],
+    )
+    generator = FluxPipeline.from_pretrained("black-forest-labs/FLUX.2-dev",
+                                            quantization_config=pipeline_quant_config,
+                                            torch_dtype=dtype).to("cuda")
+    generator.save_pretrained("../models/Flux.2-dev")
 
 def quantize_framepack_i2v():
     pipeline_quant_config = PipelineQuantizationConfig(

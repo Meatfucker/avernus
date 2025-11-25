@@ -7,7 +7,7 @@ from modules.tests import (ACETest,
                            ChromaTest, ChromaI2ITest, ChromaLoraListTest,
                            ChronoEditTest,
                            FluxI2ITest, FluxInpaintTest, FluxIPAdapterTest, FluxKontextTest,
-                           FluxLoraI2ITest, FluxLoraListTest, FluxLoraTest, FluxTest,
+                           FluxLoraI2ITest, FluxLoraListTest, FluxLoraTest, FluxTest, Flux2Test,
                            FramepackTest,
                            HiDreamTest,
                            HunyuanVideoTest,
@@ -16,6 +16,7 @@ from modules.tests import (ACETest,
                            LlmChatTest,
                            LTXTest,
                            Lumina2Test, Lumina2SingleFileTest,
+                           ModelListTest,
                            QwenImageTest, QwenImageInpaintTest, QwenImageI2ITest, QwenImageEditTest, QwenImageLoraListTest,
                            RealESRGANTest,
                            SanaSprintTest, SanaSprintI2ITest,
@@ -41,12 +42,14 @@ check_status = CheckStatus("CHECK STATUS")
 
 #flux_lora_list = FluxLoraListTest("FLUX LORA LIST")
 #flux = FluxTest("FLUX")
-flux_lora = FluxLoraTest("FLUX LORA")
+#flux_lora = FluxLoraTest("FLUX LORA")
 #flux_i2i = FluxI2ITest("FLUX I2I")
 #flux_inpaint = FluxInpaintTest("FLUX INPAINT")
 #flux_lora_i2i = FluxLoraI2ITest("FLUX I2I LORA")
 #flux_ipadapter = FluxIPAdapterTest("FLUX IP ADAPTER")
 #flux_kontext_test = FluxKontextTest("FLUX KONTEXT")
+
+flux2_test = Flux2Test("FLUX2")
 
 #framepack = FramepackTest("FRAMEPACK")
 
@@ -64,6 +67,8 @@ flux_lora = FluxLoraTest("FLUX LORA")
 
 #lumina2 = Lumina2Test("LUMINA2")
 #lumina2_single = Lumina2SingleFileTest("LUMINA2_SINGLE_FILE")
+
+#model_list = ModelListTest("MODEL LIST")
 
 #qwen = QwenImageTest("QWEN_IMAGE")
 #qwen_i2i = QwenImageI2ITest("QWEN IMAGE I2I")
@@ -84,7 +89,7 @@ flux_lora = FluxLoraTest("FLUX LORA")
 #sdxl_lora_list = SDXLLoraListTest("SDXL LORA LIST")
 #sdxl_controlnet_list = SDXLControlnetListTest("SDXL CONTROLNET LIST")
 #sdxl_scheduler_list = SDXLSchedulerListTest("SDXL SCHEDULERS LIST")
-sdxl = SDXLTest("SDXL")
+#sdxl = SDXLTest("SDXL")
 #sdxl_lora = SDXLLoraTest("matlighty man. Watercolor backgrounds and cel-shaded characters, ethereal lighting,"
 #                         " fantastical natural environments, whimsical yet haunting.",
 #                         ["DarkGhibliMJ7SDXL.safetensors", "lighty.safetensors"], "SDXL LORA")
@@ -100,7 +105,7 @@ sdxl = SDXLTest("SDXL")
 #swin2sr = Swin2SRTest("SWIN2SR")
 
 #wan = WANTest("WAN")
-wan_i2v = WANI2VTest("WAN_I2V")
+#wan_i2v = WANI2VTest("WAN_I2V")
 
 end_time = time.time()
 elapsed_time = end_time - start_time

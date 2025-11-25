@@ -163,6 +163,12 @@ class FluxTest(TimedTest):
         await base64_image_to_file(response["images"], "flux")
         return response["status"]
 
+class Flux2Test(TimedTest):
+    async def run_test(self):
+        response = await self.client.flux2_image("anime image of camping under the stars", batch_size=1)
+        await base64_image_to_file(response["images"], "flux2")
+        return response["status"]
+
 class FramepackTest(TimedTest):
     async def run_test(self):
         image = Image.open("tests/mushroom.png")
@@ -258,6 +264,13 @@ class Lumina2SingleFileTest(TimedTest):
                                                    batch_size=1,
                                                    model_name="https://huggingface.co/neta-art/Neta-Lumina/blob/main/neta-lumina-v1.0-all-in-one.safetensors")
         await base64_image_to_file(response["images"], "lumina2_single")
+        return response["status"]
+
+class ModelListTest(TimedTest):
+    async def run_test(self):
+        response = await self.client.list_models()
+        if response["status"] is True:
+            print(response["models"])
         return response["status"]
 
 class QwenImageTest(TimedTest):

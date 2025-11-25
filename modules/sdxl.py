@@ -18,9 +18,13 @@ avernus_sdxl = FastAPI()
 
 def load_sdxl_pipeline(model_name):
     global PIPELINE
-    PIPELINE = StableDiffusionXLPipeline.from_pretrained(model_name,
-                                                         torch_dtype=dtype,
-                                                         use_safetensors=True).to("cuda")
+    if model_name.endswith(".safetensors"):
+        PIPELINE = StableDiffusionXLPipeline.from_single_file(model_name,
+                                                              torch_dtype=dtype).to("cuda")
+    else:
+        PIPELINE = StableDiffusionXLPipeline.from_pretrained(model_name,
+                                                             torch_dtype=dtype,
+                                                             use_safetensors=True).to("cuda")
     PIPELINE.vae.enable_slicing()
 
 def load_ip_adapters(strength):

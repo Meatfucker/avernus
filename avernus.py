@@ -29,12 +29,14 @@ from modules.pydantic_models import (ACEStepRequest,
                                      StatusResponse,
                                      Swin2SRRequest,
                                      WanTI2VRequest, WanVACERequest)
-from modules.utils import ServerManager, return_loras, forward_post_request, setup_logging
+from modules.server_utils import ModelManager, ServerManager, forward_post_request
+from modules.utils import return_loras, setup_logging
 
 os.environ["TOKENIZERS_PARALLELISM"] = "false"
 setup_logging()
 avernus = FastAPI()
 server_manager = ServerManager()
+model_manager = ModelManager()
 pipeline_lock = asyncio.Lock()
 
 
@@ -113,6 +115,15 @@ async def flux_kontext_generate(data: FluxRequest = Body(...)):
         url = "http://127.0.0.1:6970/flux_kontext_generate"
         return await get_image_request(url, data)
 
+@avernus.post("/flux2_generate", response_model=ImageResponse)
+async def flux2_generate(data: FluxRequest = Body(...)):
+    """Generates some number of Flux2 images based on user inputs"""
+    logger.info("flux2_generate request received")
+    async with pipeline_lock:
+        await server_manager.set_pipeline("flux2", data.model_name)
+        url = "http://127.0.0.1:6970/flux2_generate"
+        return await get_image_request(url, data)
+
 @avernus.post("/framepack_generate")
 async def framepack_generate(data: FramepackRequest = Body(...)):
     logger.info("framepack_generate request received")
@@ -168,6 +179,19 @@ async def list_flux_loras():
     """Returns a list of the files located in the flux loras directory"""
     logger.info("list_flux_loras request received")
     return await get_lora_list("flux")
+
+@avernus.get("/list_models")
+async def list_models():
+    """Returns a dict containing available model architectures and models"""
+    logger.info("list_models request received")
+    model_manager.build_model_index()
+    try:
+        return {"models": model_manager.get_index(),
+                "status": True}
+    except Exception as e:
+        return {"status": False,
+                "status_message": e}
+
 
 @avernus.get("/list_qwen_image_loras", response_model=LoraListResponse)
 async def list_qwen_image_loras():
