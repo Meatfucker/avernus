@@ -25,7 +25,8 @@ from modules.tests import (ACETest,
                            SDXLControlnetLoraTest, SDXLControlnetTest, SDXLI2ILoraTest, SDXLI2ITest, SDXLInpaintTest,
                            SDXLIPAdapterTest, SDXLLoraListTest, SDXLLoraTest, SDXLTest, SDXLSchedulerListTest,
                            Swin2SRTest,
-                           WANTest, WANI2VTest)
+                           WANTest, WANI2VTest,
+                           ZImageTest)
 
 start_time = time.time()
 check_status = CheckStatus("CHECK STATUS")
@@ -49,7 +50,7 @@ check_status = CheckStatus("CHECK STATUS")
 #flux_ipadapter = FluxIPAdapterTest("FLUX IP ADAPTER")
 #flux_kontext_test = FluxKontextTest("FLUX KONTEXT")
 
-flux2_test = Flux2Test("FLUX2")
+#flux2_test = Flux2Test("FLUX2")
 
 #framepack = FramepackTest("FRAMEPACK")
 
@@ -106,6 +107,8 @@ flux2_test = Flux2Test("FLUX2")
 
 #wan = WANTest("WAN")
 #wan_i2v = WANI2VTest("WAN_I2V")
+
+zimage = ZImageTest("ZImage")
 
 end_time = time.time()
 elapsed_time = end_time - start_time

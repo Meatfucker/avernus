@@ -52,7 +52,6 @@ def generate_flux2(prompt,
               "num_inference_steps": steps if steps is not None else 30,
               "num_images_per_prompt": batch_size if batch_size is not None else 4}
     kwargs["guidance_scale"] = guidance_scale if guidance_scale is not None else 4
-    #kwargs["true_cfg_scale"] = true_cfg_scale if true_cfg_scale is not None else 1.0
     if seed is not None:
         kwargs["generator"] = get_seed_generators(kwargs["num_images_per_prompt"], seed)
     if negative_prompt is not None:

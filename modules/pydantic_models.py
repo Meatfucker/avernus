@@ -371,3 +371,16 @@ class WanVACERequest(BaseModel):
     seed: Optional[int] = Field(None, example=42)
     model_name: Optional[str] = Field(None, example="Wan-AI/Wan2.2-TI2V-5B-Diffusers")
     lora_name: Optional[Union[str, List[str]]] = Field(None, example="lora_name.safetensors")
+
+class ZImageRequest(BaseModel):
+    prompt: str = Field(..., example="A big green monster")
+    negative_prompt: Optional[str] = Field(None, example="blurry")
+    width: Optional[int] = Field(None, example=1024)
+    height: Optional[int] = Field(None, example=1024)
+    steps: Optional[int] = Field(None, example=9)
+    batch_size: Optional[int] = Field(None, example=4)
+    strength: Optional[float] = Field(None, example=0.9)
+    guidance_scale: Optional[float] = Field(None, example=5.0)
+    seed: Optional[int] = Field(None, example=42)
+    model_name: Optional[str] = Field(None, example="Meatfucker/Flux.1-dev-bnb-nf4")
+    lora_name: Optional[Union[str, List[str]]] = Field(None, example="lora_name.safetensors")

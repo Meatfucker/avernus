@@ -28,7 +28,8 @@ from modules.pydantic_models import (ACEStepRequest,
                                      SDXLControlnetListResponse, SDXLSchedulerListResponse,
                                      StatusResponse,
                                      Swin2SRRequest,
-                                     WanTI2VRequest, WanVACERequest)
+                                     WanTI2VRequest, WanVACERequest,
+                                     ZImageRequest)
 from modules.server_utils import ModelManager, ServerManager, forward_post_request
 from modules.utils import return_loras, setup_logging
 
@@ -180,6 +181,12 @@ async def list_flux_loras():
     logger.info("list_flux_loras request received")
     return await get_lora_list("flux")
 
+@avernus.get("/list_flux2_loras", response_model=LoraListResponse)
+async def list_flux_loras():
+    """Returns a list of the files located in the flux2 loras directory"""
+    logger.info("list_flux2_loras request received")
+    return await get_lora_list("flux2")
+
 @avernus.get("/list_models")
 async def list_models():
     """Returns a dict containing available model architectures and models"""
@@ -248,6 +255,12 @@ async def list_sdxl_schedulers():
         logger.error(f"list_sdxl_loras ERROR: {e}")
         return {"status_message": str(e),
                 "status": False}
+
+@avernus.get("/list_zimage_loras", response_model=LoraListResponse)
+async def list_zimage_loras():
+    """Returns a list of the files located in the flux2 loras directory"""
+    logger.info("list_zimage_loras request received")
+    return await get_lora_list("zimage")
 
 @avernus.post("/llm_chat", response_model=LLMResponse)
 async def llm_chat(data: LLMRequest = Body(...)):
@@ -512,6 +525,15 @@ async def wan_v2v_generate(prompt: str = Form(...),
         except Exception as e:
             server_manager.kill_pipeline()
             return JSONResponse({"status": False, "status_message": str(e)}, status_code=500)
+
+@avernus.post("/zimage_generate", response_model=ImageResponse)
+async def zimage_generate(data: ZImageRequest = Body(...)):
+    """Generates some number of ZImage images based on user inputs"""
+    logger.info("zimage_generate request received")
+    async with pipeline_lock:
+        await server_manager.set_pipeline("zimage", data.model_name)
+        url = "http://127.0.0.1:6970/zimage_generate"
+        return await get_image_request(url, data)
 
 async def get_audio_request(url, data):
     try:

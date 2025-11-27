@@ -451,6 +451,23 @@ class AvernusClient:
             print(f"list_flux_loras ERROR: {e}")
             return {"ERROR": str(e)}
 
+    async def list_flux2_loras(self):
+        """Fetches the list of flux2 LoRA filenames from the server."""
+        url = f"http://{self.base_url}/list_flux2_loras"
+
+        try:
+            async with httpx.AsyncClient(timeout=5.0) as client:
+                response = await client.get(url)
+            if response.status_code == 200:
+                return response.json()
+            else:
+                print(f"LIST FLUX2 LORAS ERROR: {response.status_code}, Response: {response.text}")
+                return {"ERROR": response.text}
+        except Exception as e:
+            print(f"list_flux2_loras ERROR: {e}")
+            return {"ERROR": str(e)}
+
+
     async def list_models(self):
         """Fetches a list of available model types and models"""
         url = f"http://{self.base_url}/list_models"
@@ -1116,6 +1133,31 @@ class AvernusClient:
             else:
                 print(f"WAN TI2V ERROR: {response.status_code} - {response.text}")
                 return None
+        except Exception as e:
+            print(f"ERROR: {e}")
+            return {"ERROR": str(e)}
+
+    async def zimage_image(self, prompt, negative_prompt=None, model_name=None, lora_name=None, width=None,
+                           height=None, steps=None, batch_size=None, seed=None, guidance_scale=None):
+        """This takes a prompt and optional other variables and returns a list of base64 encoded images"""
+        url = f"http://{self.base_url}/zimage_generate"
+        data = {"prompt": prompt,
+                "negative_prompt": negative_prompt,
+                "model_name": model_name,
+                "lora_name": lora_name,
+                "width": width,
+                "height": height,
+                "steps": steps,
+                "batch_size": batch_size,
+                "seed": seed,
+                "guidance_scale": guidance_scale}
+        try:
+            async with httpx.AsyncClient(timeout=None) as client:
+                response = await client.post(url, json=data)
+            if response.status_code == 200:
+                return response.json()
+            else:
+                print(f"ZIMAGE ERROR: {response.status_code}")
         except Exception as e:
             print(f"ERROR: {e}")
             return {"ERROR": str(e)}

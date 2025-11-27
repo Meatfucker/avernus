@@ -568,6 +568,12 @@ class WANI2VTest(TimedTest):
         print(temp_file.name)
         return response["status"]
 
+class ZImageTest(TimedTest):
+    async def run_test(self):
+        response = await self.client.zimage_image("A supermodel robot wearing a form fitting silk evening dress", batch_size=1)
+        await base64_image_to_file(response["images"], "zimage")
+        return response["status"]
+
 async def base64_image_to_file(base64_images, prefix=""):
     for i, b64_img in enumerate(base64_images):
         img_data = base64.b64decode(b64_img)  # Decode base64 string
