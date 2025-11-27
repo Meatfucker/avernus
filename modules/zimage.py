@@ -42,7 +42,7 @@ def generate_zimage(prompt,
               "width": width if width is not None else 1024,
               "height": height if height is not None else 1024,
               "num_inference_steps": steps if steps is not None else 9,
-              "num_images_per_prompt": batch_size if batch_size is not None else 4,
+              "num_images_per_prompt": batch_size if batch_size is not None else 1,
               "guidance_scale": guidance_scale if guidance_scale is not None else 0.0}
     if seed is not None:
         kwargs["generator"] = get_seed_generators(kwargs["num_images_per_prompt"], seed)
