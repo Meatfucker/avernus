@@ -3,6 +3,7 @@ from io import BytesIO
 import os
 from typing import Optional
 import subprocess
+import sys
 
 from fastapi.responses import StreamingResponse
 import httpx
@@ -50,7 +51,7 @@ class ServerManager:
             logger.info(f"Starting {model_type}, {model_name} server...")
             try:
                 path = f"modules/{model_type}.py"
-                self.current_process = subprocess.Popen(["python", path])
+                self.current_process = subprocess.Popen([sys.executable, path])
                 await self.wait_until_online("http://localhost:6970/online", interval=1.0, timeout=60.0)
                 self.model_type = model_type
                 self.model_name = model_name
