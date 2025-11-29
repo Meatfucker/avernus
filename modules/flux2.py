@@ -59,7 +59,7 @@ def generate_flux2(prompt,
     if image is not None:
         kwargs["image"] = image
     kwargs["prompt"] = prompt
-    if lora_name is not None:
+    if lora_name is not None or lora_name is not "NONE":
         PIPELINE = load_loras(PIPELINE, "flux2", lora_name)
 
     try:
