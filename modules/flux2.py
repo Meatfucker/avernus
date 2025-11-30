@@ -6,7 +6,7 @@ from fastapi import FastAPI, Body
 import torch
 from transformers import Mistral3ForConditionalGeneration
 
-from pydantic_models import FluxRequest, ImageResponse
+from pydantic_models import Flux2Request, ImageResponse
 from utils import base64_to_image, image_to_base64, get_seed_generators, load_loras
 
 PIPELINE: Flux2Pipeline
@@ -59,7 +59,8 @@ def generate_flux2(prompt,
     if image is not None:
         kwargs["image"] = image
     kwargs["prompt"] = prompt
-    if lora_name is not None or lora_name is not "NONE":
+    #if lora_name is not None or lora_name is not "NONE":
+    if lora_name is not None:
         PIPELINE = load_loras(PIPELINE, "flux2", lora_name)
 
     try:
@@ -74,7 +75,7 @@ def generate_flux2(prompt,
 
 
 @avernus_flux2.post("/flux2_generate", response_model=ImageResponse)
-def flux2_generate(data: FluxRequest = Body(...)):
+def flux2_generate(data: Flux2Request = Body(...)):
     """Generates some number of Flux images based on user inputs"""
     kwargs: dict[str, Any] = {"prompt": data.prompt,
                               "width": data.width,
@@ -88,7 +89,10 @@ def flux2_generate(data: FluxRequest = Body(...)):
     if data.negative_prompt:
         kwargs["negative_prompt"] = data.negative_prompt
     if data.image:
-        kwargs["image"] = base64_to_image(data.image)
+        kwargs["image"] = []
+        for image in data.image:
+            cur_image = base64_to_image(image)
+            kwargs["image"].append(cur_image)
     if data.model_name:
         kwargs["model_name"] = data.model_name
     if data.guidance_scale:

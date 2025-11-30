@@ -92,6 +92,20 @@ class FluxRequest(BaseModel):
     model_name: Optional[str] = Field(None, example="Meatfucker/Flux.1-dev-bnb-nf4")
     true_cfg_scale: Optional[float] = Field(None, example=1.0)
 
+class Flux2Request(BaseModel):
+    prompt: str = Field(..., example="A big green monster")
+    negative_prompt: Optional[str] = Field(None, example="clams")
+    width: Optional[int] = Field(None, example=1024)
+    height: Optional[int] = Field(None, example=1024)
+    steps: Optional[int] = Field(None, example=30)
+    batch_size: Optional[int] = Field(None, example=4)
+    lora_name: Optional[Union[str, List[str]]] = Field(None, example="lora_name.safetensors")
+    image: Optional[list[str]] = Field(None, example=["a9d8fp0sa9dfpasdfllkajsdflkjadslf...", "a9d8fp0sa9dfpasdfllkajsdflkjadslf..."])
+    guidance_scale: Optional[float] = Field(None, example=5.0)
+    seed: Optional[int] = Field(None, example=42)
+    model_name: Optional[str] = Field(None, example="diffusers/FLUX.2-dev-bnb-4bit")
+    true_cfg_scale: Optional[float] = Field(None, example=1.0)
+
 class FramepackRequest(BaseModel):
     prompt: str = Field(..., example="A big green monster")
     negative_prompt: Optional[str] = Field(None, example="a blue dog")

@@ -10,6 +10,7 @@ from modules.pydantic_models import (ACEStepRequest,
                                      AuraFlowRequest,
                                      ChromaRequest,
                                      ChronoEditRequest, FluxInpaintRequest, FluxRequest,
+                                     Flux2Request,
                                      FramepackRequest,
                                      HiDreamRequest,
                                      HunyuanTI2VRequest,
@@ -117,7 +118,7 @@ async def flux_kontext_generate(data: FluxRequest = Body(...)):
         return await get_image_request(url, data)
 
 @avernus.post("/flux2_generate", response_model=ImageResponse)
-async def flux2_generate(data: FluxRequest = Body(...)):
+async def flux2_generate(data: Flux2Request = Body(...)):
     """Generates some number of Flux2 images based on user inputs"""
     logger.info("flux2_generate request received")
     async with pipeline_lock:
