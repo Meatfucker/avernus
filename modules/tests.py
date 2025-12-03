@@ -570,7 +570,7 @@ class WANI2VTest(TimedTest):
 
 class ZImageTest(TimedTest):
     async def run_test(self):
-        response = await self.client.zimage_image("A supermodel robot wearing a form fitting silk evening dress", batch_size=1)
+        response = await self.client.zimage_image("A supermodel robot wearing a form fitting silk evening dress", batch_size=2)
         await base64_image_to_file(response["images"], "zimage")
         return response["status"]
 

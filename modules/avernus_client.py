@@ -1,7 +1,6 @@
 import aiofiles
 import httpx
 import os
-import tempfile
 
 class AvernusClient:
     """This is the client for the avernus API server"""
