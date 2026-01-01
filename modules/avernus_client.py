@@ -562,6 +562,22 @@ class AvernusClient:
             print(f"list_sdxl_schedulers ERROR: {e}")
             return {"ERROR": str(e)}
 
+    async def list_zimage_loras(self):
+        """Fetches the list of zimage LoRA filenames from the server."""
+        url = f"http://{self.base_url}/list_zimage_loras"
+
+        try:
+            async with httpx.AsyncClient(timeout=5.0) as client:
+                response = await client.get(url)
+            if response.status_code == 200:
+                return response.json()
+            else:
+                print(f"LIST ZIMAGE LORAS ERROR: {response.status_code}, Response: {response.text}")
+                return {"ERROR": response.text}
+        except Exception as e:
+            print(f"list_zimage_loras ERROR: {e}")
+            return {"ERROR": str(e)}
+
     async def llm_chat(self, prompt, model_name=None, messages=None):
         """This takes a prompt, and optionally a model name and chat history, then returns a response"""
         url = f"http://{self.base_url}/llm_chat"

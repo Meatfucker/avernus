@@ -23,6 +23,21 @@ import torch
 rank = 32
 dtype = torch.bfloat16
 
+def combine_qwen_2512():
+    print("loading Qwen 2512")
+    transformer = QwenImageTransformer2DModel.from_pretrained("OzzyGT/Qwen-Image-2512-bnb-4bit-transformer",
+                                                              torch_dtype=torch.bfloat16,
+                                                              device_map="cpu")
+    text_encoder = Qwen2_5_VLForConditionalGeneration.from_pretrained("OzzyGT/Qwen-Image-2512-bnb-4bit-text-encoder",
+                                                                      torch_dtype=torch.bfloat16,
+                                                                      device_map="cpu")
+
+    generator = QwenImagePipeline.from_pretrained("Qwen/Qwen-Image-2512",
+                                             transformer=transformer,
+                                             text_encoder=text_encoder,
+                                             torch_dtype=torch.bfloat16)
+    generator.save_pretrained("../models/Qwen-Image-2512-bnb-nf4")
+
 def quantize_chroma():
     print("loading ChromaPipeline")
     pipeline_quant_config = PipelineQuantizationConfig(
@@ -1060,4 +1075,4 @@ def quantize_llm(model_name=None):
     tokenizer = AutoTokenizer.from_pretrained("cognitivecomputations/Llama-3-8B-Instruct-abliterated-v2")
     tokenizer.save_pretrained("../models/Llama-3-8B-Instruct-abliterated-v2")
 
-quantize_qwen_image()
+combine_qwen_2512()
